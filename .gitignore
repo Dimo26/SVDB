@@ -9,3 +9,5 @@ dist/
 *.vcf
 *.vcf.gz
 *.db
+*.DS_Store
+
