@@ -53,7 +53,7 @@ This module is used to construct structural variant databases from vcf files. Th
     print a help message
         svdb  --build --help  
     Construct a database, from a set of vcf files:
-        svdb --build --vcf sample1.vcf sample2.vcf sample3.vcf
+        svdb --build --files sample1.vcf sample2.vcf sample3.vcf
     construct a database from vcf files stored in a folder
         svdb --build --folder SV_analysis_folder/
         
