@@ -24,4 +24,8 @@ cursor.execute("SELECT DISTINCT var FROM SVDB;")
 var_types = cursor.fetchall()
 print(f"\nVariant types: {[v[0] for v in var_types]}")
 
+
+
+# Count variants by type
+
 conn.close()
