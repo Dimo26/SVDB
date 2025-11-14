@@ -7,7 +7,6 @@ import os
 
 from . import database, readVCF, readBAM
 
-
 def populate_db(args):
     db = database.DB(args.db)
     tables = db.tables
@@ -124,6 +123,9 @@ def populate_db(args):
                                             posB, ci_B_lower, ci_B_upper, sample_names[sample_index], idx))
                                 idx += 1
                             sample_index += 1
+        else:
+            print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bam are supported.")
+            continue
 
             # insert EVERYTHING into the database, the user may then query it in different ways(at least until the DB gets to large to function properly)
             if var:
@@ -134,9 +136,8 @@ def populate_db(args):
         db.create_index(name='CHR', columns='(chrA, chrB)')
         return sample_IDs
 
-
     def main(args):
         args.db = args.prefix
         if not args.files and args.folder:
-            args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + glob.glob(os.path.join(args.folder, "*.vcf.gz"))
+            args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + glob.glob(os.path.join(args.folder, "*.vcf.gz")) + glob.glob(os.path.join(args.folder, "*.bam"))
         populate_db(args)
