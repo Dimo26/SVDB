@@ -119,9 +119,9 @@ def main():
             '--folder', type=str, help="create a db using all the vcf and bam files in the folders")
         parser.add_argument('--prefix', type=str, default="SVDB",
                             help="the prefix of the output file, default = SVDB")
-        parser.add_arguement('--min_sv_size', type=int, default=50,
+        parser.add_argument('--min_sv_size', type=int, default=50,
                             help="minimum SV size to extract from bam to files (default = 50)")
-        parser.add_arguement('--min_maoq', type=int, default=20,
+        parser.add_argument('--min_mapq', type=int, default=20,
                             help="minimum mapping quality for bam files processing (default = 20)")
         args = parser.parse_args()
         args.version = version
