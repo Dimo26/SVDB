@@ -43,7 +43,7 @@ def populate_db(args):
         if input_file.endswith('.bam'):
             print(f'Processing BAM file: {input_file}')
             variants = readBAM.read_bam_file(input_file, sample_name, min_sv_size = args.min_sv_size if hasattr(args, "min_sv_size") else 50, min_mapq = args.min_mapq if hasattr(args, "min_mapq") else 20)
-            for chrA, posA, chrB, posB, event_type, INFO, FORMAT in variants:
+            for chrA, posA, chrB, posB, event_type, INFO, FORMAT, bam_sample_name in variants:
                 if args.passonly:
                     pass
                 ci_A_lower = 0
@@ -51,14 +51,14 @@ def populate_db(args):
                 ci_B_lower = 0
                 ci_B_upper = 0
 
-            if "GT" not in FORMAT:
-                var.append((event_type, chrA, chrB, posA, ci_A_lower,ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx))
-                idx += 1
-            else:
-                for genotype in FORMAT["GT"]:
-                    if genotype not in ["0/0", "./."]:
-                        var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,posB, ci_B_lower, ci_B_upper, sample_name, idx))
-                        idx += 1
+                if "GT" not in FORMAT:
+                    var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx))
+                    idx += 1
+                else:
+                    for genotype in FORMAT["GT"]:
+                        if genotype not in ["0/0", "./."]:
+                            var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx))
+                            idx += 1
         
         elif input_file.endswith('.vcf') or input_file.endswith('.vcf.gz'):
             print(f'Processing VCF file: {input_file}')
@@ -127,17 +127,17 @@ def populate_db(args):
             print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bam are supported.")
             continue
 
-            # insert EVERYTHING into the database, the user may then query it in different ways(at least until the DB gets to large to function properly)
-            if var:
-                db.insert_many(var)
+        # insert EVERYTHING into the database, the user may then query it in different ways(at least until the DB gets to large to function properly)
+        if var:
+            db.insert_many(var)
 
-        db.create_index(name='SV', columns='(var, chrA, chrB, posA, posA, posB, posB)')
-        db.create_index(name='IDX', columns='(idx)')
-        db.create_index(name='CHR', columns='(chrA, chrB)')
-        return sample_IDs
+    db.create_index(name='SV', columns='(var, chrA, chrB, posA, posA, posB, posB)')
+    db.create_index(name='IDX', columns='(idx)')
+    db.create_index(name='CHR', columns='(chrA, chrB)')
+    return sample_IDs
 
-    def main(args):
-        args.db = args.prefix
-        if not args.files and args.folder:
-            args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + glob.glob(os.path.join(args.folder, "*.vcf.gz")) + glob.glob(os.path.join(args.folder, "*.bam"))
-        populate_db(args)
+def main(args):
+    args.db = args.prefix
+    if not args.files and args.folder:
+        args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + glob.glob(os.path.join(args.folder, "*.vcf.gz")) + glob.glob(os.path.join(args.folder, "*.bam"))
+    populate_db(args)
