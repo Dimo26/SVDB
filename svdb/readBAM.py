@@ -47,23 +47,24 @@ def _analyze_alignment_pair(aln1, aln2, min_sv_size):
     chr2 = aln2.reference_name
     pos2 = aln2.reference_start
 
-    if chr1 == chr2:
-        distance = abs(pos2 - pos1)
-        if distance < min_sv_size:
-            return None, None
-    same_strand = aln1.is_reverse == aln2.is_reverse
-    if same_strand:
-        if distance > min_sv_size:
-            sv_type = "DEL" 
-            evidence = SVEvidence(chr1, min(pos1, pos2), chr2, max(pos1, pos2), sv_type, [aln1.query_name])
-            return sv_type, evidence
-    else:
-        sv_type = "BND"  
+    if chr1 != chr2:
+        sv_type = "BND"
         if chr1 > chr2:
             chr1, chr2 = chr2, chr1
             pos1, pos2 = pos2, pos1
         evidence = SVEvidence(chr1, pos1, chr2, pos2, sv_type, [aln1.query_name])
         return sv_type, evidence
+
+    distance = abs(pos2 - pos1)
+    if distance < min_sv_size:
+        return None, None
+    
+    same_strand = aln1.is_reverse == aln2.is_reverse
+    if same_strand:
+        sv_type = "DEL"
+        evidence = SVEvidence(chr1, min(pos1, pos2), chr2, max(pos1, pos2), sv_type, [aln1.query_name])
+        return sv_type, evidence
+
     return None, None
 
 def extract_sv_from_cigar(bam_file, min_indel_size=50):
