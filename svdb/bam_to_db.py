@@ -80,16 +80,11 @@ def main():
     
     args = parser.parse_args()
     
-    print("=" * 60)
-    print("SVDB BAM to Database Converter")
-    print("=" * 60)
-    print()
     
-    # Extract SVs from BAM
-    print(f"[1/3] Extracting SVs from BAM: {args.bam_file}")
-    print(f"      Sample: {args.sample}")
-    print(f"      Min SV size: {args.min_sv_size} bp")
-    print(f"      Min MAPQ: {args.min_mapq}")
+    print(f"Extracting SVs from BAM: {args.bam_file}")
+    print(f" Sample: {args.sample}")
+    print(f" Min SV size: {args.min_sv_size} bp")
+    print(f" Min MAPQ: {args.min_mapq}")
     print()
     
     try:
@@ -137,28 +132,15 @@ def main():
         if result.stderr:
             print(result.stderr)
     except subprocess.CalledProcessError as e:
-        print(f"✗ Error building database: {e}")
+        print(f" Error building database: {e}")
         print(e.stdout)
         print(e.stderr)
         return 1
     except FileNotFoundError:
-        print("✗ svdb command not found")
+        print("svdb command not found")
         print("   Try: python -m svdb --build --files {} --prefix {}".format(vcf_file, args.prefix))
         return 1
-    
-    print()
-    print("=" * 60)
-    print("✓ SUCCESS!")
-    print("=" * 60)
-    print()
-    print("Files created:")
-    print(f"  - {vcf_file} (VCF with extracted SVs)")
-    print(f"  - {args.prefix}.db (SVDB database)")
-    print()
-    print("Next steps:")
-    print(f"  1. Export: svdb --export --db {args.prefix}.db --prefix exported")
-    print(f"  2. View: cat exported.vcf")
-    print()
+
     
     return 0
 
