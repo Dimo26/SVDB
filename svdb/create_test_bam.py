@@ -86,20 +86,7 @@ def create_synthetic_bam(output_bam="test_sample.bam", n_reads=1000):
     
     size_mb = os.path.getsize(output_bam) / (1024 * 1024)
     
-    print(f"\n✓ Created: {output_bam} ({size_mb:.2f} MB)")
-    print(f"✓ Index: {output_bam}.bai")
-    print("\nExpected SVs to detect:")
-    print("  - 3 deletions (from split reads): 5kb, 10kb, 2kb")
-    print("  - 3 deletions (from CIGAR): 500bp, 1kb, 200bp")
-    print("  - 2 insertions (from CIGAR): 150bp, 100bp")
-    print("  - 2 translocations (BND): chr1-chr2, chr1-chr3")
-    print("\nTotal: ~10 structural variants")
-    print("\nTest with:")
-    print(f"  svdb --build --files {output_bam} --prefix test_db")
-
-
 def create_normal_read(read_name, chrom, pos, header_dict):
-    """Create a normal read with no SV evidence"""
     read = pysam.AlignedSegment()
     read.query_name = read_name
     
@@ -119,9 +106,7 @@ def create_normal_read(read_name, chrom, pos, header_dict):
     read.query_qualities = [30] * 100
     return read
 
-
 def create_read(read_name, chrom, pos, header_dict, is_reverse=False, is_supplementary=False):
-    """Create a read with specified properties"""
     read = pysam.AlignedSegment()
     read.query_name = read_name
     
@@ -139,7 +124,6 @@ def create_read(read_name, chrom, pos, header_dict, is_reverse=False, is_supplem
     read.cigar = [(0, 100)]  # 100M
     read.query_qualities = [30] * 100
     
-    # Set flags
     read.flag = 0
     if is_reverse:
         read.flag |= 0x10  # Read reverse strand
@@ -148,9 +132,7 @@ def create_read(read_name, chrom, pos, header_dict, is_reverse=False, is_supplem
     
     return read
 
-
 def create_read_with_deletion(read_name, chrom, pos, deletion_size, header_dict):
-    """Create a read with a large deletion in CIGAR"""
     read = pysam.AlignedSegment()
     read.query_name = read_name
     
@@ -168,14 +150,12 @@ def create_read_with_deletion(read_name, chrom, pos, deletion_size, header_dict)
     read.query_sequence = "ACGT" * 25  
     read.mapping_quality = 60
     
- 
     read.cigar = [(0, 50), (2, deletion_size), (0, 50)] 
     
     read.query_qualities = [30] * 100
     read.flag = 0
     
     return read
-
 
 def create_read_with_insertion(read_name, chrom, pos, insertion_size, header_dict):
     read = pysam.AlignedSegment()
@@ -201,7 +181,6 @@ def create_read_with_insertion(read_name, chrom, pos, insertion_size, header_dic
     read.flag = 0
     
     return read
-
 
 def validate_bam(bam_file):
     print(f"\nValidating {bam_file}...")
@@ -236,31 +215,10 @@ def validate_bam(bam_file):
         return True
         
     except Exception as e:
-        print(f"✗ Error validating BAM: {e}")
+        print(f" Error validating BAM: {e}")
         return False
 
-
 if __name__ == "__main__":
-    print("=" * 60)
-    print("SYNTHETIC BAM FILE GENERATOR")
-    print("=" * 60)
-    print("\nThis will create a small test BAM file (~100 KB)")
-    print("with simulated structural variant evidence.\n")
-    
-    # Create the BAM file
     create_synthetic_bam("test_sample.bam", n_reads=1000)
-    
-    # Validate it
     validate_bam("test_sample.bam")
     
-    print("\n" + "=" * 60)
-    print("NEXT STEPS")
-    print("=" * 60)
-    print("\n1. Test BAM processing:")
-    print("   svdb --build --files test_sample.bam --prefix test_db")
-    print("\n2. Check results:")
-    print("   svdb --export --db test_db.db --prefix exported")
-    print("   cat exported.vcf")
-    print("\n3. Expected output:")
-    print("   You should see ~10 structural variants")
-    print("=" * 60)
