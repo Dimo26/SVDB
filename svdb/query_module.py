@@ -29,7 +29,6 @@ def main(args, output_file=None):
             min_sv_size=args.ins_distance if hasattr(args, 'ins_distance') else 50,
             min_mapq=20
         )
-        
         # Write minimal VCF header for BAM queries
         writer("##fileformat=VCFv4.1\n")
         writer("##source=SVDB_BAM_Query\n")
@@ -291,9 +290,7 @@ def queryVCFDB(DBvariants, query_variant, args, use_OCC_tag):
             hits = [0, 0]
     else:
         hits = len(samples)
-
     return hits
-
 
 def SQDB(query_variant, args, db):
     distance = args.bnd_distance
@@ -319,8 +316,6 @@ def SQDB(query_variant, args, db):
 
             if similar:
                 match.add(var["index"])
-
         else:
             match.add(hit[0])
-
     return len(match)
