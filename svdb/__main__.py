@@ -3,7 +3,6 @@ import os
 
 from . import build_module, export_module, merge_vcf_module, query_module
 
-
 def make_query_calls (args, queries, keyword):
     if len(queries) > 1 and args.prefix:
         if all(variable is not None for variable in [args.in_occ, args.out_occ, args.in_frq, args.out_frq]):
@@ -31,9 +30,11 @@ def make_query_calls (args, queries, keyword):
                         args.prefix = orig_prefix
                         output_file  = args.prefix + "_query.vcf"
                     query_module.main(args, output_file)
-                    if ind > 0:
+                    # Only update query_vcf if we're using VCF (not BAM)
+                    if ind > 0 and args.query_vcf:
                         os.remove(args.query_vcf)
-                    args.query_vcf = output_file
+                    if args.query_vcf:
+                        args.query_vcf = output_file
         else:
             print("please ensure that both count and frequency tags are specified for all samples")
     elif len(queries) > 1 and not args.prefix:
@@ -63,13 +64,15 @@ def main():
         parser = argparse.ArgumentParser(
             """SVDB.{}: query module""".format(version))
         parser.add_argument('--query', help="query a db", required=False, action="store_true")
-        parser.add_argument('--query_vcf', type=str, help="a vcf used to query the db", required=True)
+        parser.add_argument('--query_vcf', type=str, help="a vcf used to query the db", required=False)
         parser.add_argument('--db', type=str, help="path to a SVDB db vcf or a comma separated list of vcfs")
         parser.add_argument('--sqdb', type=str, help="path to a SVDB sqlite db or a comma separated list of dbs")
         parser.add_argument('--bedpedb', type=str,
                             help="path to a SV database of the following format chrA-posA-chrB-posB-type-count-frequency, or a or a comma separated list of dbs")
         parser.add_argument('--in_occ', type=str,
                             help="The allele count tag, if used, this tag must be present in the INFO column of the input DB(usually set to AC or OCC), required if multiple databases are queried. Use default (as shown in the example in README) if you'd like to use default tag for a specific database")
+        parser.add_argument('--query_bam', type=str, 
+                    help="a BAM file used to query the db (alternative to --query_vcf)")
         parser.add_argument('--in_frq', type=str,
                             help="The frequency count tag, if used, this tag must be present in the INFO column of the input DB(usually set to AF or FRQ), required if multiple databases are queried. Use default (as shown in the example in README) if you'd like to use default tag for a specific database")
         parser.add_argument('--out_occ', type=str, default="OCC",
@@ -92,11 +95,16 @@ def main():
                             help="count overlaping variants of different type as hits in the db", required=False, action="store_true")
         args = parser.parse_args()
         args.version = version
+        
+        # Validate that at least one query input is provided
+        if not args.query_vcf and not args.query_bam:
+            print("ERROR: Please provide either --query_vcf or --query_bam")
+            quit()
 
         if(args.db or args.sqdb or args.bedpedb):
             if(args.db):
                 queries = args.db.split(",")
-                make_query_calls(args, queries, "db")
+                make_query_calls(args, queries, 'db')
             if(args.sqdb):
                 queries = args.sqdb.split(",")
                 make_query_calls(args, queries, "sqdb")
