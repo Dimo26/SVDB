@@ -29,7 +29,6 @@ def main(args, output_file=None):
             min_sv_size=args.ins_distance if hasattr(args, 'ins_distance') else 50,
             min_mapq=20
         )
-        # Write minimal VCF header for BAM queries
         writer("##fileformat=VCFv4.1\n")
         writer("##source=SVDB_BAM_Query\n")
         writer(f'##INFO=<ID={args.out_occ},Number=1,Type=Integer,Description="The number of occurrences of the event in the database {db_path}">\n')
@@ -80,17 +79,13 @@ def main(args, output_file=None):
                         writer(line)
                     continue
 
-                # in this case I need to store a query
                 chrA, posA, chrB, posB, event_type, INFO, FORMAT = readVCF.readVCFLine(line)
-                # plus a counter and the variation
                 queries.append([chrA, int(posA), chrB, int(posB), event_type, FORMAT, line])
     
     else:
         print("ERROR: No query file provided (use --query_vcf or --query_bam)")
         quit()
 
-    # at this point queries contains an entry for each variation
-    # now query each sample.db present in the given folder and store the occurences
 
     if args.bedpedb or args.db:
         if args.bedpedb:
@@ -250,7 +245,7 @@ def queryVCFDB(DBvariants, query_variant, args, use_OCC_tag):
                 return([0, 0])
             else:
                 return 0
-        # check if this variation is already present
+        # check if this variation is present
         for candidate in candidates[0]:
             event = DBvariants[chrA][chrB][var]["coordinates"][candidate]
             sample_list = DBvariants[chrA][chrB][var]["samples"][candidate]
