@@ -1,6 +1,6 @@
 
 import numpy as np
-from collections import deque
+import matplotlib.pyplot as plt
 
 class OPTICS:
     def __init__(self, min_samples=2, max_eps=2000, metric='euclidean'):
@@ -121,7 +121,9 @@ def test_optics():
     cluster2 = np.random.normal(loc=(5000,5000), scale=100, size=(30,2))
     cluster3 = np.random.normal(loc=(9000,1000), scale=100, size=(30,2))
     noise = np.random.uniform([0,0], [10000,10000], size=(10,2))
-    plt.scatter(data[:,0], data[:,1], c='labels')
+    data = np.vstack([cluster1, cluster2, cluster3, noise])
+    labels = optics_cluster(data)
+    plt.scatter(data[:,0], data[:,1], c=labels)
     plt.title('OPTICS Clustering Result')
     plt.xlabel('Position A') 
     plt.ylabel('Position B')
