@@ -78,19 +78,16 @@ class AlgorithmBenchmark:
               # Calculate metrics
               n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
 
-              # Silhouette score (only if we have at least 2 clusters)
               if n_clusters >= 2:
                   silhouette = silhouette_score(self.coordinates, labels)
               else:
                   silhouette = -1
              
-             # Adjusted Rand Index (if we have ground truth)
               if self.true_labels is not None:
                   ari = adjusted_rand_score(self.true_labels, labels)
               else:
                  ari = None
              
-             # Store results
               self.results[algorithm_name] = {
                   'runtime': runtime,
                  'n_clusters': n_clusters,
@@ -145,25 +142,24 @@ def plot_runtime_comparison(results_df, output_path='runtime_comparison.png'):
     pass  # Remove this when you implement
 
 def plot_quality_metrics(results_df, output_path='quality_metrics.png'):
-    """
-    Create grouped bar plot comparing quality metrics
-    
-    WHAT YOU NEED TO DO:
-    1. Create subplot with 2 plots (silhouette and ARI)
-    2. Plot both metrics side by side
-    3. Add labels and legend
-    
-    IMPLEMENTATION HINTS:
-    - Use plt.subplots(1, 2, figsize=(15, 6))
-    - First subplot: silhouette scores
-    - Second subplot: ARI scores
-    - Use different colors for each metric
-    """
-    
-    # TODO: YOUR CODE HERE
-    plt.subplots(1, 2, figsize=(15, 6))
+    output_path = 'Assets/' + output_path
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    ax1.bar(results_df['Algorithm'], results_df['Silhouette'], color='skyblue')
+    ax1.set_xlabel('Algorithm')
+    ax1.set_ylabel('Silhouette Score')
+    ax1.set_title('Silhouette Score Comparison')
+    ax1.tick_params(axis='x', rotation=45)
 
-    pass  # Remove this when you implement
+    ax2.bar(results_df['Algorithm'], results_df['ARI'], color='lightgreen')
+    ax2.set_xlabel('Algorithm')
+    ax2.set_ylabel('Adjusted Rand Index (ARI)')
+    ax2.set_title('Adjusted Rand Index Comparison')
+    ax2.tick_params(axis='x', rotation=45)
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300)
+    print(f"Saved quality metrics comparison to {output_path}")
+
 
 
 def plot_scalability_test(n_variants_list, results_dict, output_path='scalability.png'):
@@ -195,6 +191,7 @@ def plot_scalability_test(n_variants_list, results_dict, output_path='scalabilit
     fig, ax = plt.subplots(figsize=(10, 6))
     for alg_name, runtimes in results_dict.items():
          ax.plot(n_variants_list, runtimes, marker='o', label=alg_name)
+         ax.set_yscale('log')
          ax.set_xlabel('Number of Variants')
          ax.set_ylabel('Runtime (seconds)')
          ax.set_title('Algorithm Scalability')
