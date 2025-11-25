@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from memory_profiler import profile  # You'll need: pip install memory-profiler --break-system-packages
+from memory_profiler import profile  
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import pandas as pd
 import gzip 
@@ -163,29 +163,6 @@ def plot_quality_metrics(results_df, output_path='quality_metrics.png'):
 
 
 def plot_scalability_test(n_variants_list, results_dict, output_path='scalability.png'):
-    """
-    Test how algorithms scale with increasing data size
-    
-    WHAT YOU NEED TO DO:
-    1. Run each algorithm with increasing dataset sizes
-    2. Plot runtime vs. dataset size for each algorithm
-    3. This shows which algorithms scale better (O(n), O(n log n), O(n²))
-    
-    Parameters:
-    -----------
-    n_variants_list : list
-        List of dataset sizes to test (e.g., [100, 500, 1000, 5000, 10000])
-    results_dict : dict
-        Dictionary mapping algorithm name to list of runtimes
-    output_path : str
-        Where to save the plot
-    
-    IMPLEMENTATION HINTS:
-    - Use plt.plot() for line plots
-    - Different color for each algorithm
-    - Log scale might be useful: plt.yscale('log')
-    - Add legend with plt.legend()
-    """
     
     # TODO: YOUR CODE HERE
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -197,26 +174,12 @@ def plot_scalability_test(n_variants_list, results_dict, output_path='scalabilit
          ax.set_title('Algorithm Scalability')
          ax.legend()
          plt.savefig(output_path, dpi=300)
+    print(f"Saved scalability plot to {output_path}")
     
     pass  # Remove this when you implement
 
 
 def plot_clustering_results(coordinates, labels, algorithm_name, output_path=None):
-    """
-    Visualize clustering results as scatter plot
-    
-    WHAT YOU NEED TO DO:
-    1. Create scatter plot with posA on x-axis, posB on y-axis
-    2. Color points by cluster label
-    3. Mark noise points (label -1) differently
-    
-    IMPLEMENTATION HINTS:
-    - Use plt.scatter() with c=labels for coloring
-    - Use different marker for noise: labels == -1
-    - Add colorbar if many clusters
-    """
-    
-    # TODO: YOUR CODE HERE
     plt.figure(figsize=(8, 8))
     plt.scatter(coordinates[:, 0], coordinates[:, 1], c=labels, cmap='tab20', s=10)
     plt.xlabel('Position A')
