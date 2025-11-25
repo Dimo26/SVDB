@@ -115,3 +115,19 @@ def optics_cluster(coordinates, min_samples=2, max_eps=2000):
     clusterer = OPTICS(min_samples=min_samples, max_eps=max_eps)
     labels = clusterer.fit_predict(coordinates)
     return labels
+
+def test_optics():
+    cluster1 = np.random.normal(loc=(1000,1000), scale=100, size=(30,2))
+    cluster2 = np.random.normal(loc=(5000,5000), scale=100, size=(30,2))
+    cluster3 = np.random.normal(loc=(9000,1000), scale=100, size=(30,2))
+    noise = np.random.uniform([0,0], [10000,10000], size=(10,2))
+    plt.scatter(data[:,0], data[:,1], c=labels')
+    plt.title('OPTICS Clustering Result')
+    plt.xlabel('Position A') 
+    plt.ylabel('Position B')
+    plt.colorbar(label='Clusters')
+    plt.show()
+
+
+if __name__ == "__main__":
+    test_optics()
