@@ -1,18 +1,15 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from memory_profiler import profile  
+#from memory_profiler import profile  
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import pandas as pd
 import gzip 
 from svdb.readVCF import readVCFLine
 
-# TODO: Import algos once youve written them
-# from dbscan_improved import DBSCAN_Cluster
-from SVDB.optics_clustering import optics_cluster as optics_function
-# from interval_tree_overlap import IntervalTree_Overlap
-# from rtree_spatial import RTree_Spatial
-# from graph_clustering import ConnectedComponents_Cluster
+# TODO: Import algos once algos are done
+from svdb.optics_clustering import optics_cluster as optics_function
+from svdb.export_module import DBSCAN as dbscan_function
 
 def generate_test_sv_data(n_variants=1000, n_clusters=5, noise_ratio=0.1):
 
@@ -20,7 +17,7 @@ def generate_test_sv_data(n_variants=1000, n_clusters=5, noise_ratio=0.1):
     true_labels = []
 
     cluster_centers = np.random.randint(1000000, 10000000, size=(n_clusters, 2))
-    # 
+
     for cluster_id in range(n_clusters):
         center = cluster_centers[cluster_id]
         n_points = (n_variants * (1 - noise_ratio)) // n_clusters
@@ -58,7 +55,6 @@ def load_real_vcf_data(vcf_path, max_variants=None):
 
     return np.array(coordinates), chr_types
 
-
 class AlgorithmBenchmark:
     def __init__(self, coordinates, true_labels=None):
         self.coordinates = coordinates
@@ -71,7 +67,6 @@ class AlgorithmBenchmark:
               labels = algorithm_func(self.coordinates, **algorithm_params)
               runtime = time.time() - start_time
        
-              # Calculating metrics
               n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
 
               if n_clusters >= 2:
@@ -116,8 +111,6 @@ class AlgorithmBenchmark:
                   })        
         df = pd.DataFrame(data)
         return df.sort_values('Runtime (s)')
-        
-
 
 def plot_runtime_comparison(results_df, output_path='runtime_comparison.png'):
     output_path = 'Assets/' + output_path
@@ -131,8 +124,6 @@ def plot_runtime_comparison(results_df, output_path='runtime_comparison.png'):
     plt.savefig(output_path, dpi=300)
     print(f"Saved runtime comparison to {output_path}")
     
-
-
 def plot_quality_metrics(results_df, output_path='quality_metrics.png'):
     output_path = 'Assets/' + output_path
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
@@ -152,8 +143,6 @@ def plot_quality_metrics(results_df, output_path='quality_metrics.png'):
     plt.savefig(output_path, dpi=300)
     print(f"Saved quality metrics comparison to {output_path}")
 
-
-
 def plot_scalability_test(n_variants_list, results_dict, output_path='scalability.png'):
     
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -166,9 +155,6 @@ def plot_scalability_test(n_variants_list, results_dict, output_path='scalabilit
          ax.legend()
          plt.savefig(output_path, dpi=300)
     print(f"Saved scalability plot to {output_path}")
-    
-
-
 
 def plot_clustering_results(coordinates, labels, algorithm_name, output_path=None):
     plt.figure(figsize=(8, 8))
@@ -190,8 +176,8 @@ def main():
     algorithms = {
          'DBSCAN': (dbscan_function, {'epsilon': 1000, 'min_pts': 2}),
          'OPTICS': (optics_function, {'min_samples': 2, 'max_eps': 2000}),
-         'IntervalTree': (interval_tree_function, {'max_distance': 1000}),
-         'RTree': (rtree_function, {'max_distance': 1000})}
+         'IntervalTree': (interval_tree_function, {'max_distance': 1000}), #upcoming algorithm-in the works
+         'RTree': (rtree_function, {'max_distance': 1000})} #upcoming algorithm in the works
     
     print("\n3. Running benchmarks...")
     benchmark = AlgorithmBenchmark(coordinates, true_labels)
