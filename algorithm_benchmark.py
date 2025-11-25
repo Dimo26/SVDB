@@ -9,12 +9,10 @@ from svdb.readVCF import readVCFLine
 
 # TODO: Import algos once youve written them
 # from dbscan_improved import DBSCAN_Cluster
-# from optics_clustering import OPTICS_Cluster
+from SVDB.optics_clustering import optics_cluster as optics_function
 # from interval_tree_overlap import IntervalTree_Overlap
 # from rtree_spatial import RTree_Spatial
 # from graph_clustering import ConnectedComponents_Cluster
-
-
 
 def generate_test_sv_data(n_variants=1000, n_clusters=5, noise_ratio=0.1):
 
@@ -45,22 +43,20 @@ def load_real_vcf_data(vcf_path, max_variants=None):
               if line.startswith('#'):
                   continue
               record = readVCFLine(line)
-    posA = record['POS']
-    posB = record['INFO'].get('END', posA)
-    chrA = record['CHROM']
-    chrB = record['INFO'].get('CHR2', chrA)
-    sv_type = record['INFO'].get('SVTYPE', 'UNK')
-    if posB >= posA:
-        coordinates.append([posA, posB])
-        chr_types['chrA'].append(chrA)
-        chr_types['chrB'].append(chrB)
-        chr_types['variant_type'].append(sv_type)
-    if max_variants and len(coordinates) >= max_variants:
-        break
+              posA = record['POS']
+              posB = record['INFO'].get('END', posA)
+              chrA = record['CHROM']
+              chrB = record['INFO'].get('CHR2', chrA)
+              sv_type = record['INFO'].get('SVTYPE', 'UNK')
+              if posB >= posA:
+                  coordinates.append([posA, posB])
+                  chr_types['chrA'].append(chrA)
+                  chr_types['chrB'].append(chrB)
+                  chr_types['variant_type'].append(sv_type)
+              if max_variants and len(coordinates) >= max_variants:
+                  break
 
     return np.array(coordinates), chr_types
-    pass  # Remove this when you implement
-
 
 
 class AlgorithmBenchmark:
@@ -75,7 +71,7 @@ class AlgorithmBenchmark:
               labels = algorithm_func(self.coordinates, **algorithm_params)
               runtime = time.time() - start_time
        
-              # Calculate metrics
+              # Calculating metrics
               n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
 
               if n_clusters >= 2:
@@ -100,15 +96,11 @@ class AlgorithmBenchmark:
         except Exception as e:
               print(f"Algorithm {algorithm_name} failed: {e}")
               self.results[algorithm_name] = {'error': str(e)}
-        
-        pass  # Remove this when you implement
-    
+         
     def run_all_benchmarks(self, algorithms_dict):
         for name, (func, params) in algorithms_dict.items():
              print(f"Benchmarking {name}...")
              self.benchmark_algorithm(name, func, **params)
-        
-        pass  # Remove this when you implement
     
     def get_results_dataframe(self):
 
@@ -125,7 +117,7 @@ class AlgorithmBenchmark:
         df = pd.DataFrame(data)
         return df.sort_values('Runtime (s)')
         
-        pass  # Remove this when you implement
+
 
 def plot_runtime_comparison(results_df, output_path='runtime_comparison.png'):
     output_path = 'Assets/' + output_path
@@ -139,7 +131,7 @@ def plot_runtime_comparison(results_df, output_path='runtime_comparison.png'):
     plt.savefig(output_path, dpi=300)
     print(f"Saved runtime comparison to {output_path}")
     
-    pass  # Remove this when you implement
+
 
 def plot_quality_metrics(results_df, output_path='quality_metrics.png'):
     output_path = 'Assets/' + output_path
@@ -164,7 +156,6 @@ def plot_quality_metrics(results_df, output_path='quality_metrics.png'):
 
 def plot_scalability_test(n_variants_list, results_dict, output_path='scalability.png'):
     
-    # TODO: YOUR CODE HERE
     fig, ax = plt.subplots(figsize=(10, 6))
     for alg_name, runtimes in results_dict.items():
          ax.plot(n_variants_list, runtimes, marker='o', label=alg_name)
@@ -176,7 +167,7 @@ def plot_scalability_test(n_variants_list, results_dict, output_path='scalabilit
          plt.savefig(output_path, dpi=300)
     print(f"Saved scalability plot to {output_path}")
     
-    pass  # Remove this when you implement
+
 
 
 def plot_clustering_results(coordinates, labels, algorithm_name, output_path=None):
@@ -188,7 +179,6 @@ def plot_clustering_results(coordinates, labels, algorithm_name, output_path=Non
     if output_path:
          plt.savefig(output_path, dpi=300)
          print(f"Saved clustering plot to {output_path}")
-    pass  # Remove this when you implement
 
 def main():
 
@@ -198,9 +188,9 @@ def main():
 
     print("\n2. Setting up algorithms...")
     algorithms = {
-         #'DBSCAN': (dbscan_function, {'epsilon': 1000, 'min_pts': 2}),
-         #'OPTICS': (optics_function, {'min_samples': 2, 'max_eps': 2000}),
-         #'IntervalTree': (interval_tree_function, {'max_distance': 1000}),
+         'DBSCAN': (dbscan_function, {'epsilon': 1000, 'min_pts': 2}),
+         'OPTICS': (optics_function, {'min_samples': 2, 'max_eps': 2000}),
+         'IntervalTree': (interval_tree_function, {'max_distance': 1000}),
          'RTree': (rtree_function, {'max_distance': 1000})}
     
     print("\n3. Running benchmarks...")
