@@ -1,0 +1,190 @@
+
+import numpy as np
+from collections import namedtuple
+
+# Named tuple for storing interval with metadata
+Interval = namedtuple('Interval', ['start', 'end', 'index', 'data'])
+
+
+class IntervalNode:
+
+    def __init__(self, intervals, depth=0, max_depth=20):
+
+        self.intervals_by_start = []  # Center intervals sorted by start
+        self.intervals_by_end = []    # Center intervals sorted by end
+        self.center = None
+        self.left = None
+        self.right = None
+        
+        if not intervals or depth >= max_depth:
+              self.intervals_by_start = sorted(intervals, key=lambda x: x.start)
+              return
+        all_points = []
+        for interval in intervals:
+            all_points.extend([interval.start, interval.end])
+            self.center = np.median(all_points)
+
+            left_intervals = []
+            center_intervals = []
+            right_intervals = []
+
+            if interval.end < self.center:
+                left_intervals.append(interval)
+            elif interval.start > self.center:
+                right_intervals.append(interval)
+            else:
+                center_intervals.append(interval)
+            self.interval_by_start = sorted(center_intervals, key= lambda x: x.start)
+            self.interval_by_end = sorted(center_intervals, key = lambda x: x.end )
+            if left_intervals:
+                self.left = IntervalNode(left_intervals, depth+1, max_depth)
+            if right_intervals:
+                self.right = IntervalNode(right_intervals, depth+1, max_depth)
+    
+    def query(self, start, end):
+        results = []
+        if self.center is not None and start <= self.center <= end:
+            for interval in self.intervals_by_start:
+                if self.intervals_overlap(start, end, interval.start, interval.end):
+                    results.append(interval)
+        elif self.center is not None:  
+                for interval in self.intervals_by_end:
+                    if self.intervals_overlap(start, end, interval.start, interval.end):
+                            results.append(interval) 
+        if self.left and start < self.center:
+                results.extend(self.left.query(start,end))
+        if self.right and end > self.center:
+                results.extend(self.right.query(start,end))
+        return results
+
+
+
+    def _intervals_overlap(self, start1, end1, start2, end2):
+         return start1 <= end2 and start2 <= end1
+    
+
+
+class IntervalTree:
+    
+    def __init__(self):
+        self.intervals = []
+        self.root = None
+    
+    def add(self, start, end, index=None, data=None):
+        interval = Interval(start=start, end=end, index = index, data=data)
+        self.intervals.append(interval)
+    
+    def build(self):
+        if self.intervals:
+             self.root = IntervalNode(self.intervals)
+
+    def query(self, start, end):
+        if self.root is None:
+             raise ValueError('Must call build() before query()')
+        return self.root.query(start,end)
+
+    
+    def query_indices(self, start, end):
+
+        results = self.query(start, end)
+        return [interval.index for interval in results]
+
+class SVIntervalTree:
+
+    def __init__(self):
+        self.trees = {}
+        self.variants = []
+
+    
+    def add_variant(self, chrA, posA, chrB, posB, variant_type, index=None, **metadata):
+        key = (chrA, chrB)
+        if key not in self.trees:
+             self.trees[key] = IntervalTree()
+             data = {'chrA': chrA, 'posA': posA, 'chrB': chrB, 'posB': posB,
+                     'variant_type': variant_type, **metadata}
+             self.trees[key].add(posA, posB, index=index, data=data)
+             self.variant.append(data)
+
+    
+    def build(self):
+        for tree in self.trees.values():
+             tree.build()
+
+    
+    def query_overlaps(self, chrA, posA, chrB, posB, distance=1000):
+        key = (chrA, chrB)
+        if key not in self.trees:
+            return []
+        results = self.trees[key].query(posA-distance, posB+distance)
+        overlapping = []
+        for interval in results:
+             var_data = interval.data
+             if (abs(posA - var_data['posA']) <= distance and abs(posB - var_data['posB']) <= distance):
+                  overlapping.append(var_data)
+        return overlapping
+
+
+def interval_tree_cluster(coordinates, max_distance=1000):
+
+    n = len(coordinates)
+    tree = IntervalTree()
+    for i, (posA, posB) in enumerate(coordinates):
+         tree.add(posA,posB, index=i)
+    tree.build()
+    adjacency = {i: set() for i in range(n)}
+    for i, (posA, posB) in enumerate(coordinates):
+        overlaps = tree.query(posA - max_distance. posB + max_distance)
+        for interval in overlaps:
+             j = interval.index
+             if i != j:
+                if (abs(coordinates[i][0] - coordinates[j][0]) <= max_distance and
+                    abs(coordinates[i][1] - coordinates[j][1]) <= max_distance):
+                    adjacency[i].add(j)
+                    adjacency[j].add(i)
+        labels = np.full(n, -1)
+        current_cluster = 0
+        visited = set()
+
+    def dfs(node, cluster_id):
+        visited.add(node)
+        labels[node] = cluster_id
+        for neighbor in adjacency[node]:
+             if neighbor not in visited:
+                  dfs(neighbor, cluster_id)
+    for i in range(n):
+         if i not in visited:
+              dfs(i, current_cluster)
+              current_cluster +=1
+    return labels
+
+
+def test_interval_tree():
+    tree = IntervalTree()
+
+    tree.add(1000, 2000, index=0, data={'type': 'DEL'})
+    tree.add(1500, 2500, index=1, data={'type': 'DEL'})
+    tree.add(5000, 6000, index=2, data={'type': 'DUP'})
+    tree.add(5500, 6500, index=3, data={'type': 'DUP'})
+    tree.build()
+
+    print("\nQuery [1200, 1800]:")
+    results = tree.query(1200, 1800)
+    print(f"Found {len(results)} overlapping intervals:")
+    for interval in results:
+        print(f"  [{interval.start}, {interval.end}] - {interval.data}")
+    
+    print("\nQuery [5200, 5800]:")
+    results = tree.query(5200, 5800)
+    print(f"Found {len(results)} overlapping intervals:")
+    for interval in results:
+        print(f"  [{interval.start}, {interval.end}] - {interval.data}")
+
+    print("\nTesting clustering:")
+    coordinates = np.array([ [1000, 2000], [1100, 2100], [5000, 6000], [5100, 6100], [9000, 10000]])
+    
+    labels = interval_tree_cluster(coordinates, max_distance=500)
+    print(f"Cluster labels: {labels}")
+    print(f"Found {len(set(labels))} clusters")
+
+if __name__ == "__main__":
+    test_interval_tree()
