@@ -130,6 +130,5 @@ def test_optics():
     plt.colorbar(label='Clusters')
     plt.show()
 
-
 if __name__ == "__main__":
     test_optics()
