@@ -70,7 +70,6 @@ class IntervalNode:
         return start1 <= end2 and start2 <= end1
     
 
-
 class IntervalTree:
     
     def __init__(self):
