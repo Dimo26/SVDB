@@ -1,7 +1,74 @@
 import re
+import numpy as np
+
+class sveEvidence:
+    def __init__(self, chrom_a, pos_a, chrom_b, pos_b, sv_type, support_reads):
+        self.chrA = chrom_a
+        self.posA = pos_a
+        self.chrB = chrom_b
+        self.posB = pos_b
+        self.sv_type = sv_type
+        self.support_reads = support_reads
+        self.ci_a_lower = 0
+        self.ci_a_upper = 0
+        self.ci_b_lower = 0
+        self.ci_b_upper = 0
 
 
-# TODO: Should be part of a VCF class
+def cluster_sv_evidence(sv_evidence_list, distance_threshold=500, algorithm='interval_tree'):
+    if not sv_evidence_list:
+        return []
+
+    coordinates = np.array([[e.posA, e.posB] for e in sv_evidence_list])
+    
+    if algorithm == 'interval_tree':
+        from interval_tree_overlap import interval_tree_cluster
+        labels = interval_tree_cluster(coordinates, distance_threshold)
+    elif algorithm == 'optics':
+        from optics_clustering import optics_cluster
+        labels = optics_cluster(coordinates, min_samples=2, max_eps=distance_threshold)
+    elif algorithm == 'dbscan':
+        from export_module import DBSCAN
+        labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
+    else:
+        from interval_tree_overlap import interval_tree_cluster
+        labels = interval_tree_cluster(coordinates, distance_threshold)
+
+    clusters = {}
+    for i, label in enumerate(labels):
+          if label not in clusters:
+              clusters[label] = []
+          clusters[label].append(sv_evidence_list[i])
+    
+    clustered = []
+    for cluster_evidence in clusters.values():
+          merged = _merge_evidence_cluster(cluster_evidence)
+          clustered.append(merged)
+    
+    return clustered
+
+
+def _merge_evidence_cluster(evidence_list):
+    pos_a_list = [e.posA for e in evidence_list]
+    pos_b_list = [e.posB for e in evidence_list]
+    
+    pos_a_median = sorted(pos_a_list)[len(pos_a_list) // 2]
+    pos_b_median = sorted(pos_b_list)[len(pos_b_list) // 2]
+    
+    all_reads = []
+    for evidence in evidence_list:
+        all_reads.extend(evidence.support_reads)
+    
+    merged = sveEvidence(evidence_list[0].chrA, pos_a_median, evidence_list[0].chrB, pos_b_median, evidence_list[0].sv_type, all_reads)
+    
+    merged.ci_a_lower = pos_a_median - min(pos_a_list)
+    merged.ci_a_upper = max(pos_a_list) - pos_a_median
+    merged.ci_b_lower = pos_b_median - min(pos_b_list)
+    merged.ci_b_upper = max(pos_b_list) - pos_b_median
+    
+    return merged
+
+
 def readVCFLine(line):
     if line[0].startswith("#"):
         return None
@@ -59,7 +126,6 @@ def readVCFLine(line):
         elif "SVLEN" in description:
             posB = posA + abs(int(description["SVLEN"]))
 
-        # sometimes the fermikit intra chromosomal events are inverted i.e the end pos is a lower position than the start pos
         if posB < posA:
             tmp = posB
             posB = posA
@@ -108,11 +174,9 @@ def readVCFLine(line):
             chrB = chrT
             posA, posB = posB, posA
 
-        #intrachromosomal variant
-        if chrA == chrB:
+        if chrA == chrB: #intrachromosomal
             if posB < posA:
                 posA, posB = posB, posA
-
 
         event_type = "BND"
 

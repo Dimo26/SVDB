@@ -101,7 +101,7 @@ class SVIntervalTree:
         self.trees = {}
         self.variants = []
 
-    
+ 
     def add_variant(self, chrA, posA, chrB, posB, variant_type, index=None, **metadata):
         key = (chrA, chrB)
         if key not in self.trees:
