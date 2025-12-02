@@ -1,7 +1,8 @@
 import argparse
 import os
 
-from . import build_module, export_module, merge_vcf_module, query_module
+from . import build_module, export_module, merge_vcf_module, query_module 
+import algorithm_benchmark 
 
 def make_query_calls (args, queries, keyword):
     if len(queries) > 1 and args.prefix:
@@ -161,6 +162,12 @@ def main():
             '--DBSCAN', help="use dbscan to cluster the variants", required=False, action="store_true")
         parser.add_argument('--epsilon', type=float, default=500,
                             help="used together with --DBSCAN; sets the epsilon paramter(default = 500)", required=False)
+        parser.add_argument('--algorithm', type=str, default="DBSCAN", choices=['DBSCAN', 'CONNECTED_COMPONENTS', 'OPTICS', 'INTERVAL_TREE'], help='Clustering algorithm to use where default is DBSCAN')
+
+        parser.add_argument('--distance_metric', type=str, default="euclidean", choices=['euclidean', 'hausdorff', 'weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
+
+        parser.add_argument('--benchmark', action = 'store_true', help= 'Run algorithm benchmark before export')
+
         parser.add_argument('--min_pts', type=int, default=2,
                             help="used together with 1--DBSCAN; sets the min_pts parameter(default = 2)", required=False)
         parser.add_argument('--prefix', type=str, default="SVDB",
@@ -170,6 +177,9 @@ def main():
         args = parser.parse_args()
 
         # merging will be impossible
+        if args.benchmark:
+            print('Running algorithm benchmark')
+
         if args.no_merge:
             args.overlap = float("inf")
             args.bnd_distance = -1
