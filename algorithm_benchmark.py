@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-#from memory_profiler import profile  
+from memory_profiler import profile  
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import pandas as pd
 import gzip 
@@ -10,6 +10,8 @@ from svdb.readVCF import readVCFLine
 # TODO: Import algos once algos are done
 from svdb.optics_clustering import optics_cluster as optics_function
 from svdb.export_module import DBSCAN as dbscan_function
+from svdb.overlap_module import interval_tree_cluster as interval_tree_function
+from svdb.overlap_module import rtree_cluster as rtree_function
 
 def generate_test_sv_data(n_variants=1000, n_clusters=5, noise_ratio=0.1):
 
