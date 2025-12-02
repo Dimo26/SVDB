@@ -240,6 +240,37 @@ def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     return i + len(clusters)
 
 
+def cluster_insertions_with_sequences(coordinates, indexes, db, position_distance, epsilon, max_hamming_distance=0.2):
+    sequences = []
+    for idx in indexes:
+        query = f'SELECT var_info FROM SVDB WHERE idx = {idx}'  # can be adjusted
+        result = db.query(query)
+        # result is expected to be a list of rows like [(var_info,)], handle missing data
+        if result and len(result) > 0 and result[0] and result[0][0] is not None:
+            sequences.append(result[0][0])
+        else:
+            sequences.append(None)
+
+    n = len(coordinates)
+    similarity_matrix = np.zeros((n, n))
+    for i in range(n):
+        for j in range(i + 1, n):
+            pos_similar, pos_match = overlap_module.precise_overlap(
+                coordinates[i][0], coordinates[i][1],
+                coordinates[j][0], coordinates[j][1],
+                position_distance
+            )
+
+            if pos_match and sequences[i] is not None and sequences[j] is not None:
+                seq_sim, seq_match = overlap_module.compare_insertion_sequences(sequences[i], sequences[j], max_hamming_distance)
+                if seq_match:
+                    similarity_matrix[i][j] = 1.0
+                    similarity_matrix[j][i] = 1.0
+
+    return DBSCAN.main(coordinates, epsilon, 2)
+    
+
+
 def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
     f = open(args.prefix + ".vcf", 'a')
     chr_db = fetch_variants(variant, chrA, chrB, db)
@@ -250,7 +281,6 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
     # Determine which algorithm to use
     algorithm = getattr(args, 'algorithm', 'DBSCAN')  # Default to DBSCAN if not specified
     
-
     if algorithm == 'OPTICS' and HAS_OPTICS:
         if "INS" in variant:
             cluster_labels = optics_cluster(chr_db[variant]["coordinates"],min_samples=2, max_eps=args.ins_distance)
@@ -260,15 +290,26 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
         if "INS" in variant:
             cluster_labels = interval_tree_cluster(chr_db[variant]["coordinates"], max_distance=args.ins_distance)
         else:
-            cluster_labels = interval_tree_cluster(chr_db[variant]["coordinates"],max_distance=args.bnd_distance)
     else:
+        # Default clustering fallback
         if args.DBSCAN:
             cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.epsilon, args.min_pts)
         elif "INS" in variant:
-            cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.ins_distance, 2)        
+            # For insertions optionally use sequence-aware clustering
+            if hasattr(args, 'use_hamming') and getattr(args, 'use_hamming'):
+                cluster_labels = cluster_insertions_with_sequences(
+                    chr_db[variant]["coordinates"],
+                    chr_db[variant]["index"],
+                    db,
+                    args.ins_distance,
+                    args.epsilon if args.DBSCAN else args.ins_distance,
+                    max_hamming_distance=0.2
+                )
+            else:
+                cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.ins_distance, 2)
         else:
+            # Non-insertion fallback
             cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.bnd_distance, 2)
-    
     dbscan = cluster_labels  
     unique_labels = set(dbscan)
     unique_xy = chr_db[variant]["coordinates"][dbscan == -1]

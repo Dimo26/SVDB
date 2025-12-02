@@ -162,8 +162,14 @@ def main():
             '--DBSCAN', help="use dbscan to cluster the variants", required=False, action="store_true")
         parser.add_argument('--epsilon', type=float, default=500,
                             help="used together with --DBSCAN; sets the epsilon paramter(default = 500)", required=False)
-        parser.add_argument('--algorithm', type=str, default="DBSCAN", choices=['DBSCAN', 'CONNECTED_COMPONENTS', 'OPTICS', 'INTERVAL_TREE'], help='Clustering algorithm to use where default is DBSCAN')
-
+        parser.add_argument('--algorithm', type=str, default="DBSCAN", choices=['DBSCAN', 'OPTICS', 'INTERVAL_TREE'], help='Clustering algorithm to use where default is DBSCAN')
+        parser.add_argument('--min_pts', type=int, default=2,
+                    help="used together with 1--DBSCAN; sets the min_pts parameter(default = 2)", required=False)
+        
+        parser.add_argument('--use_hamming', action='store_true', 
+                      help="Use Hamming distance for insertion sequence comparison")
+        parser.add_argument('--max_hamming', type=float, default=0.2,
+                     help="Maximum normalized Hamming distance for insertions (default=0.2)")
         parser.add_argument('--distance_metric', type=str, default="euclidean", choices=['euclidean', 'hausdorff', 'weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
 
         parser.add_argument('--benchmark', action = 'store_true', help= 'Run algorithm benchmark before export')

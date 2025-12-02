@@ -2,6 +2,10 @@ import pysam
 from collections import defaultdict
 import numpy as np
 
+from interval_tree_overlap import interval_tree_cluster
+from optics_clustering import optics_cluster
+from export_module import DBSCAN
+
 class SVEvidence:
     def __init__(self, chrom_a, pos_a, chrom_b, pos_b, sv_type, support_reads):
         self.chrA = chrom_a
@@ -15,6 +19,7 @@ class SVEvidence:
         self.ci_b_lower = 0
         self.ci_b_upper = 0
         self.confidence = None  # Added for storing mapping quality
+        self.inserted_sequence = None
 
 def extract_sv_from_split_reads(bam_file, min_mapq=20, min_sv_size=50):
     sv_evidence = []
@@ -112,9 +117,16 @@ def extract_sv_from_cigar(bam_file, min_indel_size=50):
                 sv_evidence.append(evidence)
                 ref_pos += length
             elif op == 1 and length >= min_indel_size:  # Insertion
+                read_pos = 0
+                for operation, op_length in read.cigartuples:
+                    if operation in [0,1,4,7,8]:
+                        read_pos += op_length
+                ins_start = read_pos - length
+                ins_end = read_pos
+                inserted_seq = read.query_sequence[ins_start: ins_end]
                 evidence = SVEvidence(read.reference_name, ref_pos, read.reference_name, ref_pos, "INS", [read.query_name])
-                evidence.confidence = read.mapping_quality
-                sv_evidence.append(evidence) 
+                sv_evidence.append(evidence)
+
             elif op in [0, 2, 3, 7, 8]:  # Consumes reference
                 ref_pos += length
     samfile.close()
@@ -132,6 +144,10 @@ def bam_to_vcf_format(sv_evidence_list, sample_name):
         INFO['SVTYPE'] = evidence.sv_type
         INFO['support'] = str(len(evidence.support_reads))
 
+        if evidence.sv_type == 'INS' and hasattr(evidence, 'inserted_sequence'):
+            if evidence.inserted_sequence is not None:
+                INFO['INSSEQ'] = evidence.inserted_seqeunce
+
         vcf_like_variants.append((evidence.chrA, evidence.posA, evidence.chrB, evidence.posB, evidence.sv_type, INFO, FORMAT, sample_name))
     return vcf_like_variants
 
@@ -143,19 +159,12 @@ def cluster_sv_evidence(sv_evidence_list, distance_threshold=500, algorithm='int
     coordinates = np.array([[e.posA, e.posB] for e in sv_evidence_list])
     
     if algorithm == 'interval_tree':
-        from interval_tree_overlap import interval_tree_cluster
         labels = interval_tree_cluster(coordinates, distance_threshold)
     elif algorithm == 'optics':
-        from optics_clustering import optics_cluster
         labels = optics_cluster(coordinates, min_samples=2, max_eps=distance_threshold)
     elif algorithm == 'dbscan':
-
-        from export_module import DBSCAN
         labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
-    else:
-        from interval_tree_overlap import interval_tree_cluster
-        labels = interval_tree_cluster(coordinates, distance_threshold)
-
+    
     clusters = {}
     for i, label in enumerate(labels):
           if label not in clusters:

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-
+from scipy.spatial.distance import directed_hausdorff
 # check the "overlap" of interchromosomaltranslocations
 
 
@@ -35,6 +35,28 @@ def isSameVariation(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio,
     else:
         return None, False
 
+ci_A_query = 0
+ci_B_query = 0
+ci_A_db = 0
+ci_B_db = 0
+
+def hausdorff_distance(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db):
+
+    query_points = [[chrApos_query - ci_A_query, chrBpos_query - ci_B_query],
+    [chrApos_query + ci_A_query, chrBpos_query + ci_B_query],
+    [chrApos_query, chrBpos_query]]
+
+    db_points = [[chrApos_db - ci_A_db, chrBpos_db - ci_B_db],
+    [chrApos_db + ci_A_db, chrBpos_db + ci_B_db],
+    [chrApos_db, chrBpos_db]]
+
+    dist1 = directed_hausdorff(query_points, db_points)[0]
+    dist2 = directed_hausdorff(db_points, query_points)[0]
+    distance = max(dist1, dist2)
+    threshold = 1000  
+    is_similar = distance < threshold
+    return distance, is_similar
+
 
 def variant_overlap(chrA, chrB, chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio, distance):
     match = False
@@ -46,3 +68,69 @@ def variant_overlap(chrA, chrB, chrApos_query, chrBpos_query, chrApos_db, chrBpo
         overlap, match = precise_overlap(
             chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance)
     return overlap, match
+
+def weighted_reciprocal_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db,
+                                 distance_weight=0.3, overlap_weight=0.7):
+
+    dist_A = abs(chrApos_query - chrApos_db)
+    dist_B = abs(chrBpos_query - chrBpos_db)
+    avg_distance = (dist_A + dist_B) / 2
+
+    max_expected_distance = 10000  # Adjust based on your data
+    normalized_distance = min(avg_distance / max_expected_distance, 1.0)
+
+    region_start = min(chrApos_db, chrApos_query)
+    overlap_start = max(chrApos_db, chrApos_query)
+    region_end = max(chrBpos_db, chrBpos_query)
+    overlap_end = min(chrBpos_db, chrBpos_query)
+    
+    overlap_length = max(0, overlap_end - overlap_start + 1)
+    region_length = region_end - region_start + 1
+    overlap_ratio = overlap_length / region_length if region_length > 0 else 0
+
+    similarity_score = (distance_weight * normalized_distance + overlap_weight * (1 - overlap_ratio))
+  
+    threshold = 0.5  # Adjust based on validation
+    is_match = similarity_score < threshold
+
+    return similarity_score, is_match
+    
+
+def hamming_distance(seq1, seq2):
+    if seq1 is None or seq2 is None:
+        return (float('inf'), 1.0)
+    seq1 = seq1.upper()
+    seq2 = seq2.upper()
+    min_length = min(len(seq1), len(seq2))
+    max_length = max(len(seq1), len(seq2))
+
+    mismatches = 0
+    for i in range (0, min_length):
+        if seq1[i] != seq2[i]:
+            mismatches += 1
+
+    length_diff = max_length - min_length
+    total_distance = mismatches + length_diff
+    normalized = total_distance + max_length if max_length > 0 else 0 
+    return (total_distance, normalized)
+    
+def compare_insertion_sequences(seq_query, seq_db, max_hamming_distance=0.2):
+    if seq_query is None or seq_db is None:
+        return (False, None)
+    raw_dist, norm_dist = hamming_distance(seq_query, seq_db)
+    is_match = norm_dist <= max_hamming_distance
+    similarity = 1.0-norm_dist
+    return (similarity, is_match)
+
+def insertion_overlap_with_sequence(chrApos_query, chrBpos_query, seq_query,chrApos_db, chrBpos_db, seq_db,distance, max_hamming=0.2):
+    pos_dist, pos_match = precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance)
+    if not pos_match:
+        return (None, False)
+    seq_simalarity, seq_match = compare_insertion_sequences(seq_query, seq_db, max_hamming)
+    overall_match = pos_match and seq_match
+
+    if overall_match:
+        combined_similarity = (1.0 - pos_dist + seq_simalarity)/2
+        return (combined_similarity, True)
+    else: 
+        return (None, False)

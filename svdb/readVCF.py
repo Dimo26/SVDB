@@ -154,8 +154,17 @@ def readVCFLine(line):
         if "INS" in event_type:
             posA=int(variation[1])
             posB=int(variation[1])
+            insertion_seq = None
+            
+            if "<INS>" not in variation[4]:
 
-    # if the variant is given as a breakpoint, it is stored as a precise variant in the db
+                  insertion_seq = variation[4]
+            else:
+                  if "SEQ" in description:
+                      insertion_seq = description["SEQ"]
+            
+            if insertion_seq is not None:
+                  description["INSSEQ"] = insertion_seq
     else:
         B = variation[4]
         combinations={"[]":"]", "[[":"[", "]]":"]", "][":"["}
