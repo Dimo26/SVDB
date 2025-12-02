@@ -7,11 +7,11 @@ import pandas as pd
 import gzip 
 from svdb.readVCF import readVCFLine
 
-# TODO: Import algos once algos are done
+
 from svdb.optics_clustering import optics_cluster as optics_function
 from svdb.export_module import DBSCAN as dbscan_function
 from svdb.overlap_module import interval_tree_cluster as interval_tree_function
-from svdb.overlap_module import rtree_cluster as rtree_function
+
 
 def generate_test_sv_data(n_variants=1000, n_clusters=5, noise_ratio=0.1):
 
@@ -178,8 +178,7 @@ def main():
     algorithms = {
          'DBSCAN': (dbscan_function, {'epsilon': 1000, 'min_pts': 2}),
          'OPTICS': (optics_function, {'min_samples': 2, 'max_eps': 2000}),
-         'IntervalTree': (interval_tree_function, {'max_distance': 1000}), #upcoming algorithm-in the works
-         'RTree': (rtree_function, {'max_distance': 1000})} #upcoming algorithm in the works
+         'IntervalTree': (interval_tree_function, {'max_distance': 1000})} #upcoming algorithm-in the works
     
     print("\n3. Running benchmarks...")
     benchmark = AlgorithmBenchmark(coordinates, true_labels)
@@ -193,16 +192,25 @@ def main():
     plot_quality_metrics(results_df)
     print("\n6. Testing scalability...")
 
-n_variants_list = [100, 500, 1000, 2000, 5000]
-scalability_results = {}
-for alg_name, (alg_func, params) in algorithms.items():
+    n_variants_list = [100, 500, 1000, 2000, 5000]
+    scalability_results = {}
+    for alg_name, (alg_func, params) in algorithms.items():
          runtimes = []
          for n in n_variants_list:
             test_data, _ = generate_test_sv_data(n_variants=n)
+            start_time = time.time()
+            try:
+                # run the algorithm on the test data and measure runtime
+                _ = alg_func(test_data, **params)
+                runtimes.append(time.time() - start_time)
+            except Exception:
+                # record NaN on failure so the plot can still be generated
+                runtimes.append(float('nan'))
 
          scalability_results[alg_name] = runtimes
-plot_scalability_test(n_variants_list, scalability_results)
-print("\nBenchmarking complete.")
+
+    plot_scalability_test(n_variants_list, scalability_results)
+    print("\nBenchmarking complete.")
 
 if __name__ == "__main__":
     main()
