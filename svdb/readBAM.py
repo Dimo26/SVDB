@@ -28,64 +28,95 @@ def extract_sv_from_split_reads(bam_file, min_mapq=20, min_sv_size=50):
     except Exception as e:
         print(f"Error: Could not open BAM file: {e}")
         return sv_evidence
+    
     read_alignments = defaultdict(list)
+    
     for read in samfile.fetch():
         if read.is_unmapped or read.mapping_quality < min_mapq or read.is_secondary:
             continue
         read_alignments[read.query_name].append(read)
+ 
         if read.has_tag("SA"):
             sa_tags = read.get_tag("SA").split(";")
             for sa in sa_tags:
                 if sa:
                     fields = sa.split(",")
-                    sa_chrom = fields[0]
-                    sa_pos = int(fields[1])
-                    sa_strand = fields[2]  # Keep as string '+' or '-'
-                    sa_mapq = int(fields[4])
-                    if sa_mapq >= min_mapq:
-                        sa_read = pysam.AlignedSegment()
-                        sa_read.query_name = read.query_name
-                        sa_read.reference_name = sa_chrom
-                        sa_read.reference_start = sa_pos
-                        sa_read.is_reverse = (sa_strand == '-')
-                        sa_read.mapping_quality = sa_mapq
-                        read_alignments[read.query_name].append(sa_read)
-                    
+                    if len(fields) >= 6:
+                        sa_chrom = fields[0]
+                        sa_pos = int(fields[1])
+                        sa_strand = fields[2]
+                        sa_mapq = int(fields[4])
+                        
+                        if sa_mapq >= min_mapq:
+                            read_alignments[read.query_name].append({
+                                'chrom': sa_chrom,
+                                'pos': sa_pos,
+                                'is_reverse': (sa_strand == '-'),
+                                'mapq': sa_mapq,
+                                'query_name': read.query_name,
+                                'is_sa': True
+                            })
+    
     for read_name, alignments in read_alignments.items():
         if len(alignments) < 2:
             continue
-        alignments.sort(key=lambda x: (x.reference_name, x.reference_start))
+
+        def get_sort_key(aln):
+            if isinstance(aln, dict):
+                return (aln['chrom'], aln['pos'])
+            else:
+                return (aln.reference_name, aln.reference_start)
+        
+        alignments.sort(key=get_sort_key)
+        
         for i in range(len(alignments) - 1):
             primary = alignments[i]
             supplementary = alignments[i + 1]
             sv_type, evidence = _analyze_alignment_pair(primary, supplementary, min_sv_size)
             if sv_type and evidence:
                 sv_evidence.append(evidence)
+    
     samfile.close()
     return sv_evidence
 
 def _analyze_alignment_pair(aln1, aln2, min_sv_size):
-    chr1 = aln1.reference_name
-    pos1 = aln1.reference_start
-    chr2 = aln2.reference_name
-    pos2 = aln2.reference_start
+    # Handle both AlignedSegment and dict types
+    if isinstance(aln1, dict):
+        chr1 = aln1['chrom']
+        pos1 = aln1['pos']
+        is_reverse1 = aln1['is_reverse']
+        query_name = aln1['query_name']
+    else:
+        chr1 = aln1.reference_name
+        pos1 = aln1.reference_start
+        is_reverse1 = aln1.is_reverse
+        query_name = aln1.query_name
+    
+    if isinstance(aln2, dict):
+        chr2 = aln2['chrom']
+        pos2 = aln2['pos']
+        is_reverse2 = aln2['is_reverse']
+    else:
+        chr2 = aln2.reference_name
+        pos2 = aln2.reference_start
+        is_reverse2 = aln2.is_reverse
 
     if chr1 != chr2:
         sv_type = "BND"
         if chr1 > chr2:
             chr1, chr2 = chr2, chr1
             pos1, pos2 = pos2, pos1
-        evidence = SVEvidence(chr1, pos1, chr2, pos2, sv_type, [aln1.query_name])
+        evidence = SVEvidence(chr1, pos1, chr2, pos2, sv_type, [query_name])
         return sv_type, evidence
 
     distance = abs(pos2 - pos1)
     if distance < min_sv_size:
         return None, None
     
-    same_strand = aln1.is_reverse == aln2.is_reverse
+    same_strand = is_reverse1 == is_reverse2
     if same_strand:
         sv_type = "DEL"
-        evidence = SVEvidence(chr1, min(pos1, pos2), chr2, max(pos1, pos2), sv_type, [aln1.query_name])
+        evidence = SVEvidence(chr1, min(pos1, pos2), chr2, max(pos1, pos2), sv_type, [query_name])
         return sv_type, evidence
 
     return None, None
