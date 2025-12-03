@@ -1,9 +1,13 @@
 from __future__ import absolute_import
 import sys
 import numpy as np
-from . import DBSCAN, database, overlap_module
+from . import database, overlap_module
 
-# Import new clustering algorithms
+try:
+    from . import DBSCAN
+except ImportError:
+    import DBSCAN
+
 try:
     from interval_tree_overlap import IntervalTree, interval_tree_cluster
     HAS_INTERVAL_TREE = True
@@ -121,6 +125,7 @@ def vcf_line(cluster, id_tag, sample_IDs):
     vcf_line.append("\t".join(format_cols))
     return "\t".join(vcf_line)
 
+
 def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
     """
     Find overlapping variants efficiently using interval tree (if available)
@@ -153,7 +158,10 @@ def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
                     similar = True
                     match = True
                 else:
-                    similar, match = overlap_module.isSameVariation(variant["posA"], variant["posB"], var["posA"], var["posB"], overlap, distance)
+                    similar, match = overlap_module.isSameVariation(
+                        variant["posA"], variant["posB"], 
+                        var["posA"], var["posB"], 
+                        overlap, distance)
                 if match:
                     chain_data[i].append(candidate_idx)
             
@@ -163,9 +171,9 @@ def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
     else:
         # Original O(n²) method (fallback)
         chain_data = {}
-        for i,idx in enumerate(chain):
+        for i, idx in enumerate(chain):
             chain_data[i] = []
-            variant=chain[idx]
+            variant = chain[idx]
 
             rows = coordinates[(distance >= abs(coordinates[:, 1] - variant["posA"]))
                                & (distance >= abs(coordinates[:, 2] - variant["posB"]))]
@@ -180,7 +188,9 @@ def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
                     match = True
                 else:
                     similar, match = overlap_module.isSameVariation(
-                        variant["posA"], variant["posB"], var["posA"], var["posB"], overlap, distance)
+                        variant["posA"], variant["posB"], 
+                        var["posA"], var["posB"], 
+                        overlap, distance)
                 if match:
                     chain_data[i].append(candidate)
 
@@ -227,9 +237,11 @@ def fetch_variants(variant, chrA, chrB, db):
 def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     variant_dictionary, coordinates = fetch_index_variant(db, indexes)
     if "INS" in variant:
-        similarity_matrix = expand_chain(variant_dictionary, coordinates, chrA, chrB, args.ins_distance, -1)
+        similarity_matrix = expand_chain(
+            variant_dictionary, coordinates, chrA, chrB, args.ins_distance, -1)
     else:
-        similarity_matrix = expand_chain(variant_dictionary, coordinates, chrA, chrB, args.bnd_distance, args.overlap)
+        similarity_matrix = expand_chain(
+            variant_dictionary, coordinates, chrA, chrB, args.bnd_distance, args.overlap)
 
     clusters = cluster_variants(variant_dictionary, similarity_matrix)
     for clustered_variants in clusters:
@@ -240,80 +252,159 @@ def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     return i + len(clusters)
 
 
-def cluster_insertions_with_sequences(coordinates, indexes, db, position_distance, epsilon, max_hamming_distance=0.2):
+def cluster_insertions_with_sequences(coordinates, indexes, db, position_distance, 
+                                      epsilon, max_hamming_distance=0.2):
+    """
+    Cluster insertions using both position and sequence similarity.
+    
+    NOTE: This is a placeholder implementation. You'll need to:
+    1. Store insertion sequences in your database (add INSSEQ column)
+    2. Fetch sequences properly from the database
+    3. Use the similarity matrix for actual clustering
+    
+    For now, this falls back to position-only clustering.
+    """
+    # TODO: Implement proper sequence extraction
+    # Currently, var_info doesn't contain insertion sequences
+    # You need to modify your database schema to store INSSEQ
     sequences = []
     for idx in indexes:
-        query = f'SELECT var_info FROM SVDB WHERE idx = {idx}'  # can be adjusted
+        # FIXME: This query needs to be updated once you add INSSEQ to database
+        # For now, we're just using None for all sequences
+        query = f'SELECT var_info FROM SVDB WHERE idx = {idx}'
         result = db.query(query)
-        # result is expected to be a list of rows like [(var_info,)], handle missing data
         if result and len(result) > 0 and result[0] and result[0][0] is not None:
+            # Extract INSSEQ if it exists in var_info
+            # This will need to be updated based on how you store sequences
             sequences.append(result[0][0])
         else:
             sequences.append(None)
-
+    
+    # Build similarity matrix based on position AND sequence
     n = len(coordinates)
-    similarity_matrix = np.zeros((n, n))
+    # Create a graph where edges exist between similar variants
+    similar_pairs = []
+    
     for i in range(n):
         for j in range(i + 1, n):
-            pos_similar, pos_match = overlap_module.precise_overlap(
+            # Check position similarity first
+            pos_dist, pos_match = overlap_module.precise_overlap(
                 coordinates[i][0], coordinates[i][1],
                 coordinates[j][0], coordinates[j][1],
                 position_distance
             )
-
-            if pos_match and sequences[i] is not None and sequences[j] is not None:
-                seq_sim, seq_match = overlap_module.compare_insertion_sequences(sequences[i], sequences[j], max_hamming_distance)
-                if seq_match:
-                    similarity_matrix[i][j] = 1.0
-                    similarity_matrix[j][i] = 1.0
-
-    return DBSCAN.main(coordinates, epsilon, 2)
+            
+            # If positions match, check sequences
+            if pos_match:
+                if sequences[i] is not None and sequences[j] is not None:
+                    # Use Hamming distance to compare sequences
+                    seq_sim, seq_match = overlap_module.compare_insertion_sequences(
+                        sequences[i], sequences[j], max_hamming_distance
+                    )
+                    if seq_match:
+                        similar_pairs.append((i, j))
+                else:
+                    # If no sequence data, fall back to position-only
+                    similar_pairs.append((i, j))
     
+    # Use DBSCAN for clustering
+    # NOTE: This doesn't actually use the similarity matrix yet
+    # You could improve this by using the similar_pairs to build a better clustering
+    return DBSCAN.main(coordinates, epsilon, 2)
 
 
 def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
+    """
+    Main clustering function - determines which algorithm to use
+    """
     f = open(args.prefix + ".vcf", 'a')
     chr_db = fetch_variants(variant, chrA, chrB, db)
     if not chr_db:
         f.close()
         return i
 
-    # Determine which algorithm to use
-    algorithm = getattr(args, 'algorithm', 'DBSCAN')  # Default to DBSCAN if not specified
+    # Determine which algorithm to use (default to DBSCAN if not specified)
+    algorithm = getattr(args, 'algorithm', 'DBSCAN')
+    
+    # Initialize cluster_labels variable
+    cluster_labels = None
+    
+    # ========== ALGORITHM SELECTION ==========
     
     if algorithm == 'OPTICS' and HAS_OPTICS:
+        # Use OPTICS clustering
         if "INS" in variant:
-            cluster_labels = optics_cluster(chr_db[variant]["coordinates"],min_samples=2, max_eps=args.ins_distance)
+            cluster_labels = optics_cluster(
+                chr_db[variant]["coordinates"],
+                min_samples=2, 
+                max_eps=args.ins_distance
+            )
         else:
-            cluster_labels = optics_cluster(chr_db[variant]["coordinates"], min_samples=args.min_pts if args.DBSCAN else 2, max_eps=args.epsilon if args.DBSCAN else args.bnd_distance)
+            cluster_labels = optics_cluster(
+                chr_db[variant]["coordinates"], 
+                min_samples=args.min_pts if args.DBSCAN else 2, 
+                max_eps=args.epsilon if args.DBSCAN else args.bnd_distance
+            )
+    
     elif algorithm == 'INTERVAL_TREE' and HAS_INTERVAL_TREE:
+        # Use Interval Tree clustering
         if "INS" in variant:
-            cluster_labels = interval_tree_cluster(chr_db[variant]["coordinates"], max_distance=args.ins_distance)
+            cluster_labels = interval_tree_cluster(
+                chr_db[variant]["coordinates"], 
+                max_distance=args.ins_distance
+            )
         else:
+            cluster_labels = interval_tree_cluster(
+                chr_db[variant]["coordinates"], 
+                max_distance=args.bnd_distance
+            )
+    
+    elif args.DBSCAN:
+        # Use DBSCAN with custom epsilon and min_pts
+        cluster_labels = DBSCAN.main(
+            chr_db[variant]["coordinates"], 
+            args.epsilon, 
+            args.min_pts
+        )
+    
+    elif "INS" in variant:
+        # Special handling for insertions
+        # Check if we should use sequence-aware clustering
+        if hasattr(args, 'use_hamming') and getattr(args, 'use_hamming', False):
+            # Use Hamming distance for sequence comparison
+            cluster_labels = cluster_insertions_with_sequences(
+                chr_db[variant]["coordinates"],
+                chr_db[variant]["index"],
+                db,
+                args.ins_distance,
+                args.epsilon if args.DBSCAN else args.ins_distance,
+                max_hamming_distance=getattr(args, 'max_hamming', 0.2)
+            )
+        else:
+            # Position-only clustering for insertions
+            cluster_labels = DBSCAN.main(
+                chr_db[variant]["coordinates"], 
+                args.ins_distance, 
+                2
+            )
+    
     else:
-        # Default clustering fallback
-        if args.DBSCAN:
-            cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.epsilon, args.min_pts)
-        elif "INS" in variant:
-            # For insertions optionally use sequence-aware clustering
-            if hasattr(args, 'use_hamming') and getattr(args, 'use_hamming'):
-                cluster_labels = cluster_insertions_with_sequences(
-                    chr_db[variant]["coordinates"],
-                    chr_db[variant]["index"],
-                    db,
-                    args.ins_distance,
-                    args.epsilon if args.DBSCAN else args.ins_distance,
-                    max_hamming_distance=0.2
-                )
-            else:
-                cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.ins_distance, 2)
-        else:
-            # Non-insertion fallback
-            cluster_labels = DBSCAN.main(chr_db[variant]["coordinates"], args.bnd_distance, 2)
-    dbscan = cluster_labels  
+        # Default fallback for non-insertions
+        cluster_labels = DBSCAN.main(
+            chr_db[variant]["coordinates"], 
+            args.bnd_distance, 
+            2
+        )
+    
+    # ========== PROCESS CLUSTERS ==========
+    
+    dbscan = cluster_labels  # Assign to dbscan for consistency with original code
     unique_labels = set(dbscan)
+    
+    # Handle noise points (label -1)
     unique_xy = chr_db[variant]["coordinates"][dbscan == -1]
     unique_index = chr_db[variant]["index"][dbscan == -1]
+    
     for xy, indexes in zip(unique_xy, unique_index):
         variant_dictionary = fetch_cluster_variant(db, [indexes])
         representing_var = {}
@@ -330,18 +421,22 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
         cluster = [representing_var, variant_dictionary]
         f.write(vcf_line(cluster, "cluster_{}".format(i), sample_IDs) + "\n")
         i += 1
+    
     del unique_xy
     del unique_index
 
-    # print the clusters
+    # Process actual clusters (non-noise)
     for unique_label in unique_labels:
         if unique_label == -1:
             continue
+        
         class_member_mask = (dbscan == unique_label)
         xy = chr_db[variant]["coordinates"][class_member_mask]
         indexes = chr_db[variant]["index"][class_member_mask]
 
+        # Use centroid-based approach for DBSCAN, OPTICS, and INTERVAL_TREE
         if args.DBSCAN or algorithm in ['OPTICS', 'INTERVAL_TREE']:
+            # Calculate average position as representative
             avg_point = np.array([np.mean(xy[:, 0]), np.mean(xy[:, 1])])
 
             variant_dictionary = fetch_cluster_variant(db, indexes)
@@ -362,7 +457,8 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
             i += 1
 
         else:
-            i = overlap_cluster(db, indexes, variant, chrA,chrB, sample_IDs, args, f, i)
+            # Use overlap-based clustering (original method)
+            i = overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i)
 
     f.close()
     return i
