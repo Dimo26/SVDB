@@ -93,7 +93,6 @@ class OPTICS:
                 median = np.median(valid_reach)
                 max_reach = np.max(valid_reach)
                 
-                # If data is very dense (small IQR relative to median), use more lenient threshold
                 iqr = q75 - q25
                 if iqr < median * 0.6:  # Very dense data
                     # Use 90th percentile or max_eps, whichever is smaller
@@ -129,7 +128,6 @@ class OPTICS:
                     current_cluster += 1
                     in_cluster = False
         
-        # Check final cluster size
         if in_cluster:
             cluster_size = len(ordering) - cluster_start
             if cluster_size < min_cluster_size:
