@@ -13,7 +13,7 @@ def populate_db(args):
 
     idx = 0
     if "SVDB" not in tables:
-        query = "CREATE TABLE SVDB (var TEXT,chrA TEXT, chrB TEXT,posA INT,ci_A_lower INT,ci_A_upper INT,posB INT,ci_B_lower INT,ci_B_upper INT, sample TEXT, idx INT)"
+        query = "CREATE TABLE SVDB (var TEXT,chrA TEXT, chrB TEXT,posA INT,ci_A_lower INT,ci_A_upper INT,posB INT,ci_B_lower INT,ci_B_upper INT, sample TEXT, idx INT, sequence TEXT)"
         db.create(query)
         sample_IDs = []
     else:
@@ -50,14 +50,15 @@ def populate_db(args):
                 ci_A_upper = 0
                 ci_B_lower = 0
                 ci_B_upper = 0
-
+                if "INS" in event_type and "INSSEQ" in INFO:
+                    sequence = INFO.get("INFOSEQ", "")
                 if "GT" not in FORMAT:
-                    var.append((event_type, chrA, chrB, posA, ci_A_lower,ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx))
+                    var.append((event_type, chrA, chrB, posA, ci_A_lower,ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
                     idx += 1
                 else:
                     for genotype in FORMAT["GT"]:
                         if genotype not in ["0/0", "./."]:
-                            var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,posB, ci_B_lower, ci_B_upper, sample_name, idx))
+                            var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
                             idx += 1
         
         elif input_file.endswith('.vcf') or input_file.endswith('.vcf.gz'):
@@ -110,17 +111,27 @@ def populate_db(args):
                         else:
                             ci_B_lower = abs(int(ci[0]))
                             ci_B_upper = abs(int(ci[0]))
+                    sequence = ""
+                    if "INS" in event_type:
+                        vcf_columns = line.strip().split("\t")
+                        alt_field = vcf_columns[4] if len(vcf_columns) > 4 else ""
 
+                        if "<INS>" not in alt_field and alt_field not in ["", ".", "N"]:
+                            sequence = alt_field
+                        elif "INSSEQ" in INFO:
+                            seqeunce = INFO["INSSEQ"]
+                        elif "SEQ" in INFO:
+                            sequence = INFO["SEQ"]
                     if "GT" not in FORMAT or not len(sample_names):
                         var.append((event_type, chrA, chrB, posA, ci_A_lower,
-                                    ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx))
+                                    ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
                         idx += 1
                     else:
                         sample_index = 0
                         for genotype in FORMAT["GT"]:
                             if genotype not in ["0/0", "./."]:
                                 var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,
-                                            posB, ci_B_lower, ci_B_upper, sample_names[sample_index], idx))
+                                            posB, ci_B_lower, ci_B_upper, sample_names[sample_index], idx, sequence))
                                 idx += 1
                             sample_index += 1
         else:
