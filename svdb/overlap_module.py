@@ -134,3 +134,4 @@ def insertion_overlap_with_sequence(chrApos_query, chrBpos_query, seq_query,chrA
         return (combined_similarity, True)
     else: 
         return (None, False)
+
