@@ -449,7 +449,6 @@ def export(args, sample_IDs):
             for variant in var_list:
                 i = svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i)
 
-
 def main(args):
     sample_IDs = []
     if not args.prefix:
