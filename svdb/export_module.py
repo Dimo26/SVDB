@@ -54,6 +54,59 @@ def fetch_cluster_variant(db, index):
     return variant_dict
 
 
+def fetch_variant_sequences(db, index_list):
+    """
+    Fetch sequence information for insertion variants.
+    Returns: dict mapping idx -> sequence string
+    """
+    query = 'SELECT idx, sequence FROM SVDB WHERE idx IN ({})'.format(
+        ", ".join([str(idx) for idx in index_list]))
+    hits = db.query(query)
+    
+    sequences = {}
+    for hit in hits:
+        sequences[int(hit[0])] = hit[1] if hit[1] else ""
+    
+    return sequences
+
+
+def cluster_insertions_by_sequence(variant_dictionary, coordinates, db, max_hamming_distance=0.2):
+    variant_indices = list(variant_dictionary.keys())
+    sequences = fetch_variant_sequences(db, variant_indices)
+    
+    similarity_matrix = {}
+    
+
+    for i in variant_indices:
+        similar_variants = [] 
+        
+        seq_i = sequences.get(i, "")
+
+        if not seq_i:
+            similarity_matrix[i] = np.array([i])  
+            continue
+        
+        for j in variant_indices:
+            seq_j = sequences.get(j, "")
+
+            if not seq_j:
+                continue
+            
+
+            raw_dist, normalized_dist = overlap_module.hamming_distance(seq_i, seq_j)
+            
+
+            if normalized_dist <= max_hamming_distance:
+                similar_variants.append(j)
+
+        if not similar_variants:
+            similar_variants = [i]
+        
+        similarity_matrix[i] = np.array(similar_variants)
+    
+    return similarity_matrix
+
+
 def db_header(args):
     headerString = '##fileformat=VCFv4.1\n'
     headerString += '##source=SVDB\n'
@@ -127,12 +180,8 @@ def vcf_line(cluster, id_tag, sample_IDs):
 
 
 def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
-    """
-    Find overlapping variants efficiently using interval tree (if available)
-    Falls back to original O(n²) method if interval tree not available
-    """
+
     if HAS_INTERVAL_TREE:
-        # Use interval tree for O(n log n) performance
         tree = IntervalTree()
         for i, coord in enumerate(coordinates):
             tree.add(coord[1], coord[2], index=i)
@@ -142,16 +191,13 @@ def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
         for i, idx in enumerate(chain):
             chain_data[i] = []
             variant = chain[idx]
-            
-            # Query interval tree (MUCH FASTER!)
+        
             overlaps = tree.query(variant["posA"] - distance, variant["posB"] + distance)
             
-            # Filter by actual overlap criteria
             for interval in overlaps:
                 candidate_idx = interval.index
                 var = chain[candidate_idx]
                 
-                # Check overlap using your metric
                 similar = False
                 match = False
                 if chrA != chrB:
@@ -252,153 +298,78 @@ def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     return i + len(clusters)
 
 
-def cluster_insertions_with_sequences(coordinates, indexes, db, position_distance, epsilon, max_hamming_distance=0.2):
-    """
-    Cluster insertions using both position and sequence similarity.
-    NOTE: This is a placeholder implementation. You'll need to:
-    1. Store insertion sequences in your database (add INSSEQ column)
-    2. Fetch sequences properly from the database
-    3. Use the similarity matrix for actual clustering
-    For now, this falls back to position-only clustering.
-    """
-    # TODO: Implement proper sequence extraction
-    # Currently, var_info doesn't contain insertion sequences
-    # You need to modify your database schema to store INSSEQ
-    sequences = []
-    for idx in indexes:
-        # FIXME: This query needs to be updated once you add INSSEQ to database
-        # For now, we're just using None for all sequences
-        query = f'SELECT var_info FROM SVDB WHERE idx = {idx}'
-        result = db.query(query)
-        if result and len(result) > 0 and result[0] and result[0][0] is not None:
-            # Extract INSSEQ if it exists in var_info
-            # This will need to be updated based on how you store sequences
-            sequences.append(result[0][0])
-        else:
-            sequences.append(None)
-    
-    # Build similarity matrix based on position AND sequence
-    n = len(coordinates)
-    # Create a graph where edges exist between similar variants
-    similar_pairs = []
-    
-    for i in range(n):
-        for j in range(i + 1, n):
-            # Check position similarity first
-            pos_dist, pos_match = overlap_module.precise_overlap(
-                coordinates[i][0], coordinates[i][1],
-                coordinates[j][0], coordinates[j][1],
-                position_distance
-            )
-            
-            # If positions match, check sequences
-            if pos_match:
-                if sequences[i] is not None and sequences[j] is not None:
-                    # Use Hamming distance to compare sequences
-                    seq_sim, seq_match = overlap_module.compare_insertion_sequences(
-                        sequences[i], sequences[j], max_hamming_distance
-                    )
-                    if seq_match:
-                        similar_pairs.append((i, j))
-                else:
-                    # If no sequence data, fall back to position-only
-                    similar_pairs.append((i, j))
-    
-    # Use DBSCAN for clustering
-    # NOTE: This doesn't actually use the similarity matrix yet
-    # You could improve this by using the similar_pairs to build a better clustering
-    return DBSCAN.main(coordinates, epsilon, 2)
-
-
 def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
-    """
-    Main clustering function - determines which algorithm to use
-    """
+  
     f = open(args.prefix + ".vcf", 'a')
     chr_db = fetch_variants(variant, chrA, chrB, db)
     if not chr_db:
         f.close()
         return i
 
-    # Determine which algorithm to use (default to DBSCAN if not specified)
     algorithm = getattr(args, 'algorithm', 'DBSCAN')
     
-    # Initialize cluster_labels variable
     cluster_labels = None
     
-    # ========== ALGORITHM SELECTION ==========
+    if "INS" in variant:
+        variant_dictionary, coordinates = fetch_index_variant(db, chr_db[variant]["index"])
+
+        similarity_matrix = cluster_insertions_by_sequence(
+            variant_dictionary, 
+            coordinates, 
+            db,
+            max_hamming_distance=0.2  # 80% similarity threshold
+        )
+        
+        dbscan = np.zeros(len(chr_db[variant]["coordinates"])) - 1
+        cluster_id = 0
+        processed = set()
+        
+        for idx in variant_dictionary.keys():
+            if idx in processed:
+                continue
+            
+            similar_indices = similarity_matrix[idx]
+            for sim_idx in similar_indices:
+                if sim_idx not in processed:
+                    pos = list(variant_dictionary.keys()).index(sim_idx)
+                    dbscan[pos] = cluster_id
+                    processed.add(sim_idx)
+            
+            cluster_id += 1
     
-    if algorithm == 'OPTICS' and HAS_OPTICS:
-        # Use OPTICS clustering
-        if "INS" in variant:
-            cluster_labels = optics_cluster(
-                chr_db[variant]["coordinates"],
-                min_samples=2, 
-                max_eps=args.ins_distance
-            )
-        else:
-            cluster_labels = optics_cluster(
-                chr_db[variant]["coordinates"], 
-                min_samples=args.min_pts if args.DBSCAN else 2, 
-                max_eps=args.epsilon if args.DBSCAN else args.bnd_distance
-            )
+    elif algorithm == 'OPTICS' and HAS_OPTICS:
+        cluster_labels = optics_cluster(
+            chr_db[variant]["coordinates"], 
+            min_samples=args.min_pts if args.DBSCAN else 2, 
+            max_eps=args.epsilon if args.DBSCAN else args.bnd_distance
+        )
+        dbscan = cluster_labels
     
     elif algorithm == 'INTERVAL_TREE' and HAS_INTERVAL_TREE:
-        # Use Interval Tree clustering
-        if "INS" in variant:
-            cluster_labels = interval_tree_cluster(
-                chr_db[variant]["coordinates"], 
-                max_distance=args.ins_distance
-            )
-        else:
-            cluster_labels = interval_tree_cluster(
-                chr_db[variant]["coordinates"], 
-                max_distance=args.bnd_distance
-            )
+        cluster_labels = interval_tree_cluster(
+            chr_db[variant]["coordinates"], 
+            max_distance=args.bnd_distance
+        )
+        dbscan = cluster_labels
     
     elif args.DBSCAN:
-        # Use DBSCAN with custom epsilon and min_pts
         cluster_labels = DBSCAN.main(
             chr_db[variant]["coordinates"], 
             args.epsilon, 
             args.min_pts
         )
-    
-    elif "INS" in variant:
-        # Special handling for insertions
-        # Check if we should use sequence-aware clustering
-        if hasattr(args, 'use_hamming') and getattr(args, 'use_hamming', False):
-            # Use Hamming distance for sequence comparison
-            cluster_labels = cluster_insertions_with_sequences(
-                chr_db[variant]["coordinates"],
-                chr_db[variant]["index"],
-                db,
-                args.ins_distance,
-                args.epsilon if args.DBSCAN else args.ins_distance,
-                max_hamming_distance=getattr(args, 'max_hamming', 0.2)
-            )
-        else:
-            # Position-only clustering for insertions
-            cluster_labels = DBSCAN.main(
-                chr_db[variant]["coordinates"], 
-                args.ins_distance, 
-                2
-            )
+        dbscan = cluster_labels
     
     else:
-        # Default fallback for non-insertions
         cluster_labels = DBSCAN.main(
             chr_db[variant]["coordinates"], 
             args.bnd_distance, 
             2
         )
+        dbscan = cluster_labels
     
-    # ========== PROCESS CLUSTERS ==========
-    
-    dbscan = cluster_labels  # Assign to dbscan for consistency with original code
     unique_labels = set(dbscan)
     
-    # Handle noise points (label -1)
     unique_xy = chr_db[variant]["coordinates"][dbscan == -1]
     unique_index = chr_db[variant]["index"][dbscan == -1]
     
@@ -422,7 +393,6 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
     del unique_xy
     del unique_index
 
-    # Process actual clusters (non-noise)
     for unique_label in unique_labels:
         if unique_label == -1:
             continue
@@ -431,9 +401,7 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
         xy = chr_db[variant]["coordinates"][class_member_mask]
         indexes = chr_db[variant]["index"][class_member_mask]
 
-        # Use centroid-based approach for DBSCAN, OPTICS, and INTERVAL_TREE
-        if args.DBSCAN or algorithm in ['OPTICS', 'INTERVAL_TREE']:
-            # Calculate average position as representative
+        if args.DBSCAN or algorithm in ['OPTICS', 'INTERVAL_TREE'] or "INS" in variant:
             avg_point = np.array([np.mean(xy[:, 0]), np.mean(xy[:, 1])])
 
             variant_dictionary = fetch_cluster_variant(db, indexes)
@@ -454,7 +422,6 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
             i += 1
 
         else:
-            # Use overlap-based clustering (original method)
             i = overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i)
 
     f.close()
@@ -484,6 +451,19 @@ def export(args, sample_IDs):
 
 
 def main(args):
+    sample_IDs = []
+    if not args.prefix:
+        args.prefix = args.db.replace(".db", "")
+
+    db = database.DB(args.db)
+
+    for sample in db.query('SELECT DISTINCT sample FROM SVDB'):
+        sample_IDs.append(sample[0])
+
+    with open(args.prefix + ".vcf", 'w') as f:
+        f.write(db_header(args) + "\n")
+        f.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format("\t".join(sample_IDs)))
+    export(args, sample_IDs)
     sample_IDs = []
     if not args.prefix:
         args.prefix = args.db.replace(".db", "")
