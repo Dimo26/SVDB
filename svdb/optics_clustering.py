@@ -83,7 +83,7 @@ class OPTICS:
         if threshold is None:
             valid_reach = reachability[reachability < np.inf]
             if len(valid_reach) > 0:
-                threshold = np.percentile(valid_reach, 75)
+                threshold = np.percentile(valid_reach, 95)
             else:
                 return labels
          
