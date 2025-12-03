@@ -123,8 +123,9 @@ def extract_sv_from_cigar(bam_file, min_indel_size=50):
                         read_pos += op_length
                 ins_start = read_pos - length
                 ins_end = read_pos
-                inserted_seq = read.query_sequence[ins_start: ins_end]
+                inserted_seq = read.query_sequence[ins_start: ins_end] if read.query_sequence else ""
                 evidence = SVEvidence(read.reference_name, ref_pos, read.reference_name, ref_pos, "INS", [read.query_name])
+                evidence.inserted_sequence = inserted_seq
                 sv_evidence.append(evidence)
 
             elif op in [0, 2, 3, 7, 8]:  # Consumes reference
