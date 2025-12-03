@@ -31,7 +31,6 @@ def make_query_calls (args, queries, keyword):
                         args.prefix = orig_prefix
                         output_file  = args.prefix + "_query.vcf"
                     query_module.main(args, output_file)
-                    # Only update query_vcf if we're using VCF (not BAM)
                     if ind > 0 and args.query_vcf:
                         os.remove(args.query_vcf)
                     if args.query_vcf:
