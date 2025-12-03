@@ -8,9 +8,9 @@ import gzip
 from svdb.readVCF import readVCFLine
 
 
-from svdb.optics_clustering import optics_cluster as optics_function
-from svdb.export_module import DBSCAN as dbscan_function
-from svdb.overlap_module import interval_tree_cluster as interval_tree_function
+from .optics_clustering import optics_cluster as optics_function
+from .export_module import DBSCAN as dbscan_function
+
 
 
 def generate_test_sv_data(n_variants=1000, n_clusters=5, noise_ratio=0.1):
@@ -177,8 +177,7 @@ def main():
     print("\n2. Setting up algorithms...")
     algorithms = {
          'DBSCAN': (dbscan_function, {'epsilon': 1000, 'min_pts': 2}),
-         'OPTICS': (optics_function, {'min_samples': 2, 'max_eps': 2000}),
-         'IntervalTree': (interval_tree_function, {'max_distance': 1000})} #upcoming algorithm-in the works
+         'OPTICS': (optics_function, {'min_samples': 2, 'max_eps': 2000})}
     
     print("\n3. Running benchmarks...")
     benchmark = AlgorithmBenchmark(coordinates, true_labels)

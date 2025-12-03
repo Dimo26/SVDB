@@ -252,16 +252,13 @@ def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     return i + len(clusters)
 
 
-def cluster_insertions_with_sequences(coordinates, indexes, db, position_distance, 
-                                      epsilon, max_hamming_distance=0.2):
+def cluster_insertions_with_sequences(coordinates, indexes, db, position_distance, epsilon, max_hamming_distance=0.2):
     """
     Cluster insertions using both position and sequence similarity.
-    
     NOTE: This is a placeholder implementation. You'll need to:
     1. Store insertion sequences in your database (add INSSEQ column)
     2. Fetch sequences properly from the database
     3. Use the similarity matrix for actual clustering
-    
     For now, this falls back to position-only clustering.
     """
     # TODO: Implement proper sequence extraction
