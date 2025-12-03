@@ -36,7 +36,7 @@ class DB:
         self.conn.commit()
 
     def insert_many(self, data):
-        self.cursor.executemany('INSERT INTO SVDB VALUES (?,?,?,?,?,?,?,?,?,?,?)', data)
+        self.cursor.executemany('INSERT INTO SVDB VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', data)
         self.conn.commit()
 
     def create_index(self, name, columns):
