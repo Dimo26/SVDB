@@ -19,7 +19,7 @@ class OPTICS:
             return np.inf
 
         distances = []
-        for neighbor_idx in neighbors: #distance calc for all neighbors
+        for neighbor_idx in neighbors: #distance calc for all neigborinos
             dist = np.linalg.norm(data[point_idx] - data[neighbor_idx])
             distances.append(dist)
 
