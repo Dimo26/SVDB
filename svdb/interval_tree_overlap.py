@@ -1,4 +1,3 @@
-
 import numpy as np
 from collections import namedtuple
 
@@ -49,8 +48,9 @@ class IntervalNode:
             self.right = IntervalNode(right_intervals, depth + 1, max_depth)
     
     def query(self, start, end):
+        if self.center is None:  
+            return []
         results = []
-
         # check center intervals
         for interval in self.intervals_by_start:
             if self.intervals_overlap(start, end, interval.start, interval.end):
@@ -63,8 +63,6 @@ class IntervalNode:
             results.extend(self.right.query(start, end))
 
         return results
-
-
 
     def intervals_overlap(self, start1, end1, start2, end2):
         return start1 <= end2 and start2 <= end1
@@ -86,7 +84,7 @@ class IntervalTree:
 
     def query(self, start, end):
         if self.root is None:
-             raise ValueError('Must call build() before query()')
+             return []  # Return empty list instead of raising error
         return self.root.query(start,end)
 
     

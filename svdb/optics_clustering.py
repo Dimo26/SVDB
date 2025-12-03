@@ -76,26 +76,65 @@ class OPTICS:
 
         return ordering, reachability, core_distances
     
-    def _extract_clusters(self, reachability, ordering, threshold=None):
+    def _extract_clusters(self, reachability, ordering, threshold=None, min_cluster_size=None):
         n_samples = len(reachability)
         labels = np.full(n_samples, -1)  # noise
+        
+        if min_cluster_size is None:
+            min_cluster_size = self.min_samples
          
         if threshold is None:
             valid_reach = reachability[reachability < np.inf]
             if len(valid_reach) > 0:
-                threshold = np.percentile(valid_reach, 95)
+                # Use adaptive threshold based on data characteristics
+                q25 = np.percentile(valid_reach, 25)
+                q75 = np.percentile(valid_reach, 75)
+                q90 = np.percentile(valid_reach, 90)
+                median = np.median(valid_reach)
+                max_reach = np.max(valid_reach)
+                
+                # If data is very dense (small IQR relative to median), use more lenient threshold
+                iqr = q75 - q25
+                if iqr < median * 0.6:  # Very dense data
+                    # Use 90th percentile or max_eps, whichever is smaller
+                    threshold = min(q90 * 1.2, self.max_eps)
+                else:  # Mixed density
+                    threshold = q75
             else:
                 return labels
          
         current_cluster = 0
+        in_cluster = False
+        cluster_start = 0
+        
         for i, point_idx in enumerate(ordering):
             reach_dist = reachability[point_idx]
              
             if reach_dist <= threshold:
+                if not in_cluster:
+                    # Starting a new cluster
+                    cluster_start = i
+                    in_cluster = True
                 labels[point_idx] = current_cluster
             else:
-                if i > 0 and reachability[ordering[i-1]] <= threshold:
+                # Reachability exceeds threshold
+                if in_cluster:
+                    # Check if cluster is large enough
+                    cluster_size = i - cluster_start
+                    if cluster_size < min_cluster_size:
+                        # Mark small cluster as noise
+                        for j in range(cluster_start, i):
+                            labels[ordering[j]] = -1
+                    # Move to next cluster
                     current_cluster += 1
+                    in_cluster = False
+        
+        # Check final cluster size
+        if in_cluster:
+            cluster_size = len(ordering) - cluster_start
+            if cluster_size < min_cluster_size:
+                for j in range(cluster_start, len(ordering)):
+                    labels[ordering[j]] = -1
         
         return labels
     
