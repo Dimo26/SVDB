@@ -2,9 +2,9 @@ import pysam
 from collections import defaultdict
 import numpy as np
 
-from interval_tree_overlap import interval_tree_cluster
-from optics_clustering import optics_cluster
-from export_module import DBSCAN
+from .interval_tree_overlap import interval_tree_cluster 
+from .optics_clustering import optics_cluster
+from .export_module import DBSCAN
 
 class SVEvidence:
     def __init__(self, chrom_a, pos_a, chrom_b, pos_b, sv_type, support_reads):
