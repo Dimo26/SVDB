@@ -3,7 +3,6 @@ from collections import defaultdict
 import numpy as np
 
 from .interval_tree_overlap import interval_tree_cluster 
-from .optics_clustering import optics_cluster
 from .export_module import DBSCAN
 
 class SVEvidence:
@@ -176,9 +175,10 @@ def bam_to_vcf_format(sv_evidence_list, sample_name):
         INFO['SVTYPE'] = evidence.sv_type
         INFO['support'] = str(len(evidence.support_reads))
 
+        # Include insertion sequence in INFO field for tracking
         if evidence.sv_type == 'INS' and hasattr(evidence, 'inserted_sequence'):
-            if evidence.inserted_sequence is not None:
-                INFO['INSSEQ'] = evidence.inserted_seqeunce
+            if evidence.inserted_sequence is not None and len(str(evidence.inserted_sequence)) > 0:
+                INFO['INSSEQ'] = str(evidence.inserted_sequence)
 
         vcf_like_variants.append((evidence.chrA, evidence.posA, evidence.chrB, evidence.posB, evidence.sv_type, INFO, FORMAT, sample_name))
     return vcf_like_variants
@@ -188,11 +188,29 @@ def cluster_sv_evidence(sv_evidence_list, distance_threshold=500, algorithm='int
     if not sv_evidence_list:
         return []
 
-    coordinates = np.array([[e.posA, e.posB] for e in sv_evidence_list])
+    # Separate insertions from other variants for sequence-based pre-filtering
+    insertions = [e for e in sv_evidence_list if e.sv_type == 'INS']
+    non_insertions = [e for e in sv_evidence_list if e.sv_type != 'INS']
+    
+    # Pre-filter insertions by sequence similarity (Hamming distance)
+    if insertions:
+        print(f"\n=== Insertion Sequence Pre-filtering (Hamming distance) ===")
+        print(f"Starting with {len(insertions)} insertions")
+        insertions = _prefilter_insertions_by_sequence(insertions, max_hamming=0.2)
+        print(f"After sequence pre-filtering: {len(insertions)} insertions remain (grouped by similarity)\n")
+    
+    # Recombine for spatial clustering
+    filtered_evidence = insertions + non_insertions
+    
+    if not filtered_evidence:
+        return []
+    
+    coordinates = np.array([[e.posA, e.posB] for e in filtered_evidence])
     
     if algorithm == 'interval_tree':
         labels = interval_tree_cluster(coordinates, distance_threshold)
     elif algorithm == 'optics':
+        from .optics_clustering import optics_cluster
         labels = optics_cluster(coordinates, min_samples=2, max_eps=distance_threshold)
     elif algorithm == 'dbscan':
         labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
@@ -201,7 +219,7 @@ def cluster_sv_evidence(sv_evidence_list, distance_threshold=500, algorithm='int
     for i, label in enumerate(labels):
           if label not in clusters:
               clusters[label] = []
-          clusters[label].append(sv_evidence_list[i])
+          clusters[label].append(filtered_evidence[i])
     
     clustered = []
     for cluster_evidence in clusters.values():
@@ -209,6 +227,78 @@ def cluster_sv_evidence(sv_evidence_list, distance_threshold=500, algorithm='int
           clustered.append(merged)
     
     return clustered
+
+
+def _hamming_distance(seq1, seq2):
+    """Calculate normalized Hamming distance between two sequences."""
+    if seq1 is None or seq2 is None or len(seq1) == 0 or len(seq2) == 0:
+        return 1.0
+    
+    seq1 = str(seq1).upper()
+    seq2 = str(seq2).upper()
+    min_len = min(len(seq1), len(seq2))
+    max_len = max(len(seq1), len(seq2))
+    
+    mismatches = sum(1 for i in range(min_len) if seq1[i] != seq2[i])
+    length_diff = max_len - min_len
+    total_dist = mismatches + length_diff
+    
+    normalized = total_dist / max_len if max_len > 0 else 0.0
+    return normalized
+
+
+def _prefilter_insertions_by_sequence(insertions, max_hamming=0.2):
+    """
+    Group insertions by sequence similarity using Hamming distance.
+    Prints matching groups for testing and returns grouped insertions.
+    """
+    if not insertions:
+        return insertions
+    
+    # Filter out insertions with no sequence
+    insertions_with_seq = [e for e in insertions if e.inserted_sequence and len(str(e.inserted_sequence)) > 0]
+    insertions_without_seq = [e for e in insertions if not e.inserted_sequence or len(str(e.inserted_sequence)) == 0]
+    
+    if not insertions_with_seq:
+        print(f"  No insertions with sequences to filter. Using {len(insertions_without_seq)} sequences-less insertions.")
+        return insertions
+    
+    # Build sequence groups using Hamming distance
+    groups = []
+    assigned = set()
+    
+    for i, ins in enumerate(insertions_with_seq):
+        if i in assigned:
+            continue
+        
+        group = [i]
+        assigned.add(i)
+        
+        for j in range(i + 1, len(insertions_with_seq)):
+            if j in assigned:
+                continue
+            
+            dist = _hamming_distance(insertions_with_seq[i].inserted_sequence, 
+                                     insertions_with_seq[j].inserted_sequence)
+            if dist <= max_hamming:
+                group.append(j)
+                assigned.add(j)
+        
+        groups.append(group)
+    
+    # Print groups for testing
+    for group_id, group_indices in enumerate(groups):
+        if len(group_indices) > 1:
+            seqs = [str(insertions_with_seq[idx].inserted_sequence)[:20] for idx in group_indices]
+            print(f"  Group {group_id}: {len(group_indices)} insertions with similar sequences:")
+            for idx, seq_preview in zip(group_indices, seqs):
+                print(f"    - {seq_preview}... (support: {len(insertions_with_seq[idx].support_reads)})")
+        else:
+            seq_preview = str(insertions_with_seq[group_indices[0]].inserted_sequence)[:20]
+            print(f"  Group {group_id}: {seq_preview}... (singleton, {len(insertions_with_seq[group_indices[0]].support_reads)} support)")
+    
+    # Return all insertions (with and without seq) — grouping is done, clustering will use spatial coords
+    return insertions_with_seq + insertions_without_seq
 
 
 def _merge_evidence_cluster(evidence_list):
@@ -229,6 +319,10 @@ def _merge_evidence_cluster(evidence_list):
     merged.ci_b_lower = pos_b_median - min(pos_b_list)
     merged.ci_b_upper = max(pos_b_list) - pos_b_median
     
+    # For insertions, preserve a representative sequence
+    if evidence_list[0].sv_type == 'INS' and evidence_list[0].inserted_sequence:
+        merged.inserted_sequence = evidence_list[0].inserted_sequence
+    
     return merged
 
 def read_bam_file(bam_file, sample_name, min_sv_size=50, min_mapq=20, algorithm='interval_tree'):
@@ -243,6 +337,36 @@ def read_bam_file(bam_file, sample_name, min_sv_size=50, min_mapq=20, algorithm=
 
     print(f"Clustered into {len(clustered_evidence)} consensus SVs using {algorithm}")
     
+    # Print insertion sequence frequency for testing
+    _print_insertion_sequence_frequency(clustered_evidence)
+    
     vcf_format_variants = bam_to_vcf_format(clustered_evidence, sample_name)
     
     return vcf_format_variants
+
+
+def _print_insertion_sequence_frequency(clustered_evidence):
+    """
+    Print frequency of insertion sequences for testing/debugging.
+    Shows how many times each unique insertion sequence was found.
+    """
+    insertions = [e for e in clustered_evidence if e.sv_type == 'INS']
+    if not insertions:
+        return
+    
+    seq_counts = {}
+    for ins in insertions:
+        if ins.inserted_sequence and len(str(ins.inserted_sequence)) > 0:
+            seq = str(ins.inserted_sequence)
+            seq_counts[seq] = seq_counts.get(seq, 0) + 1
+    
+    if seq_counts:
+        print(f"\n=== Insertion Sequence Frequency Summary ===")
+        sorted_seqs = sorted(seq_counts.items(), key=lambda x: x[1], reverse=True)
+        for seq, count in sorted_seqs:
+            seq_display = seq if len(seq) <= 30 else seq[:27] + "..."
+            print(f"  Sequence: {seq_display}")
+            print(f"    Frequency: {count} (support reads: {count})")
+        print(f"Total unique insertion sequences: {len(seq_counts)}\n")
+    else:
+        print(f"No insertion sequences captured (insertions may lack sequence data).\n")
