@@ -4,9 +4,9 @@ import glob
 import gzip
 import os
 
-import database
-import readVCF
-import readBAM
+from . import database
+from . import readVCF
+from . import readBAM
 
 def populate_db(args):
     db = database.DB(args.db)
