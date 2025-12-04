@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 from scipy.spatial.distance import directed_hausdorff
-# check the "overlap" of interchromosomaltranslocations
-
 
 def precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance):
     Adist = abs(chrApos_query - chrApos_db)
@@ -9,7 +7,6 @@ def precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distan
     if max([Adist, Bdist]) <= distance:
         return max([Adist, Bdist]), True
     return False, False
-
 
 
 def isSameVariation(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio, distance):
@@ -33,11 +30,6 @@ def isSameVariation(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio,
     else:
         return None, False
 
-ci_A_query = 0
-ci_B_query = 0
-ci_A_db = 0
-ci_B_db = 0
-
 
 def variant_overlap(chrA, chrB, chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio, distance):
     match = False
@@ -50,6 +42,7 @@ def variant_overlap(chrA, chrB, chrApos_query, chrBpos_query, chrApos_db, chrBpo
             chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance)
     return overlap, match
 
+
 def weighted_reciprocal_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db,
                                  distance_weight=0.3, overlap_weight=0.7):
 
@@ -57,7 +50,7 @@ def weighted_reciprocal_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpo
     dist_B = abs(chrBpos_query - chrBpos_db)
     avg_distance = (dist_A + dist_B) / 2
 
-    max_expected_distance = 10000  # Adjust based on  data
+    max_expected_distance = 10000
     normalized_distance = min(avg_distance / max_expected_distance, 1.0)
 
     region_start = min(chrApos_db, chrApos_query)
@@ -71,47 +64,63 @@ def weighted_reciprocal_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpo
 
     similarity_score = (distance_weight * normalized_distance + overlap_weight * (1 - overlap_ratio))
   
-    threshold = 0.5  # Adjust based on validation
+    threshold = 0.5
     is_match = similarity_score < threshold
 
     return similarity_score, is_match
-    
+
 
 def hamming_distance(seq1, seq2):
-    if seq1 is None or seq2 is None:
+    if seq1 is None or seq2 is None or len(seq1) == 0 or len(seq2) == 0:
         return (float('inf'), 1.0)
+    
     seq1 = seq1.upper()
     seq2 = seq2.upper()
     min_length = min(len(seq1), len(seq2))
     max_length = max(len(seq1), len(seq2))
 
     mismatches = 0
-    for i in range (0, min_length):
+    for i in range(min_length):
         if seq1[i] != seq2[i]:
             mismatches += 1
 
     length_diff = max_length - min_length
     total_distance = mismatches + length_diff
-    normalized = total_distance + max_length if max_length > 0 else 0 
-    return (total_distance, normalized)
     
+    if max_length > 0:
+        normalized = total_distance / max_length
+    else:
+        normalized = 0.0
+    
+    return (total_distance, normalized)
+
+
 def compare_insertion_sequences(seq_query, seq_db, max_hamming_distance=0.2):
-    if seq_query is None or seq_db is None:
-        return (False, None)
+    if seq_query is None or seq_db is None or len(seq_query) == 0 or len(seq_db) == 0:
+        return (None, False)
+    
     raw_dist, norm_dist = hamming_distance(seq_query, seq_db)
     is_match = norm_dist <= max_hamming_distance
-    similarity = 1.0-norm_dist
+    similarity = 1.0 - norm_dist
     return (similarity, is_match)
 
-def insertion_overlap_with_sequence(chrApos_query, chrBpos_query, seq_query,chrApos_db, chrBpos_db, seq_db,distance, max_hamming=0.2):
+
+def insertion_overlap_with_sequence(chrApos_query, chrBpos_query, seq_query, chrApos_db, chrBpos_db, seq_db, distance, max_hamming=0.2):
     pos_dist, pos_match = precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance)
     if not pos_match:
         return (None, False)
-    seq_simalarity, seq_match = compare_insertion_sequences(seq_query, seq_db, max_hamming)
+    
+    seq_similarity, seq_match = compare_insertion_sequences(seq_query, seq_db, max_hamming)
+    
+    if seq_similarity is None:
+        return (None, False)
+    
     overall_match = pos_match and seq_match
 
     if overall_match:
-        combined_similarity = (1.0 - pos_dist + seq_simalarity)/2
+        if pos_dist is False:
+            pos_dist = 0
+        combined_similarity = (seq_similarity + (1.0 - pos_dist / distance if distance > 0 else 0)) / 2
         return (combined_similarity, True)
     else: 
         return (None, False)

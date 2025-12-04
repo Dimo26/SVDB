@@ -1,6 +1,4 @@
-
 import numpy as np
-import matplotlib.pyplot as plt
 
 class OPTICS:
     def __init__(self, min_samples=2, max_eps=2000, metric='euclidean'):
@@ -94,7 +92,7 @@ class OPTICS:
                 max_reach = np.max(valid_reach)
                 
                 iqr = q75 - q25
-                if iqr < median * 0.6:  # Very dense data
+                if iqr < median * 0.6:  # dense data
                     # Use 90th percentile or max_eps, whichever is smaller
                     threshold = min(q90 * 1.2, self.max_eps)
                 else:  # Mixed density
@@ -153,19 +151,6 @@ def optics_cluster(coordinates, min_samples=2, max_eps=2000):
     labels = clusterer.fit_predict(coordinates)
     return labels
 
-def test_optics():
-    cluster1 = np.random.normal(loc=(1000,1000), scale=100, size=(30,2))
-    cluster2 = np.random.normal(loc=(5000,5000), scale=100, size=(30,2))
-    cluster3 = np.random.normal(loc=(9000,1000), scale=100, size=(30,2))
-    noise = np.random.uniform([0,0], [10000,10000], size=(10,2))
-    data = np.vstack([cluster1, cluster2, cluster3, noise])
-    labels = optics_cluster(data)
-    plt.scatter(data[:,0], data[:,1], c=labels)
-    plt.title('OPTICS Clustering Result')
-    plt.xlabel('Position A') 
-    plt.ylabel('Position B')
-    plt.colorbar(label='Clusters')
-    plt.show()
 
 if __name__ == "__main__":
     test_optics()

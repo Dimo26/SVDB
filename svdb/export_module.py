@@ -1,39 +1,101 @@
 from __future__ import absolute_import
+
 import sys
+
 import numpy as np
-from . import database
-from . import overlap_module
-from . import DBSCAN
 
-try:
-    from interval_tree_overlap import IntervalTree, interval_tree_cluster
-    HAS_INTERVAL_TREE = True
-except ImportError:
-    HAS_INTERVAL_TREE = False
+from . import database, overlap_module
 
-try:
-    from optics_clustering import optics_cluster
-    HAS_OPTICS = True
-except ImportError:
-    HAS_OPTICS = False
 
+class DBSCAN:
+    def x_coordinate_clustering(data, epsilon, m):
+        clusters = np.zeros(len(data)) - 1
+        cluster_id = -1
+        cluster = False
+
+        for i in range(len(data) - m + 1):
+            current = data[i, :]
+            points = data[i + 1:i + m, :]
+            distances = [abs(point[0] - current[0]) for point in points]
+            if max(distances) < epsilon:
+                if cluster:  
+                    clusters[i + m - 1] = cluster_id
+                else:  
+                    cluster_id += 1
+                    cluster = True
+                    for j in range(i, i + m):
+                        clusters[j] = cluster_id
+            else:
+                cluster = False
+        return clusters, cluster_id
+
+    def y_coordinate_clustering(data, epsilon, m, cluster_id, clusters):
+
+        cluster_id_list = set(clusters)
+        for cluster in cluster_id_list:
+            if cluster == -1:
+                continue
+            class_member_mask = (clusters == cluster)
+            indexes = np.where(class_member_mask)[0]
+            signals = data[class_member_mask]
+
+            y_coordinates = [[signal[1], indexes[i]] for i, signal in enumerate(signals)]
+            y_coordinates.sort(key=lambda x: x[0])
+
+            sub_clusters = np.zeros(len(indexes)) - 1
+
+            active_cluster = False
+            sub_cluster_id = 0
+            y_coordinates = np.array(y_coordinates)
+            for i in range(len(y_coordinates) - m + 1):
+                current = y_coordinates[i, :]
+                distances = [abs(pos[0] - current[0]) for pos in y_coordinates[i + 1:i + m, :]]
+
+                if max(distances) < epsilon:
+                    if active_cluster:
+                        sub_clusters[i + m - 1] = sub_cluster_id
+                    else:
+                        sub_cluster_id += 1
+                        active_cluster = True
+                        for j in range(i, i + m):
+                            sub_clusters[j] = sub_cluster_id
+                else:
+                    active_cluster = False
+
+            for i in range(len(sub_clusters)):
+                if sub_clusters[i] == 1:
+                    clusters[y_coordinates[i][1]] = cluster
+                elif sub_clusters[i] > -1:
+                    clusters[y_coordinates[i][1]] = sub_clusters[i] + cluster_id - 1
+                elif sub_clusters[i] == -1:
+                    clusters[y_coordinates[i][1]] = -1
+            if sub_cluster_id > 1:
+                cluster_id += sub_cluster_id - 1
+        return clusters, cluster_id
+
+    def cluster(data, epsilon, m):
+        clusters, cluster_id = DBSCAN.x_coordinate_clustering(data, epsilon, m)
+        clusters, cluster_id = DBSCAN.y_coordinate_clustering(data, epsilon, m, cluster_id, clusters)
+        return clusters
 
 def fetch_index_variant(db, index):
-    A = 'SELECT posA, ci_A_lower, ci_A_upper, posB, ci_B_lower, ci_B_upper, sample FROM SVDB WHERE idx IN ({}) '.format(
+    A = 'SELECT var, posA, ci_A_lower, ci_A_upper, posB, ci_B_lower, ci_B_upper, sample, sequence FROM SVDB WHERE idx IN ({}) '.format(
         ", ".join([str(idx) for idx in index]))
     hits = db.query(A)
     variant = {}
     coordinates = []
     for i, hit in enumerate(hits):
         variant[i] = {}
-        variant[i]["posA"] = int(hit[0])
-        variant[i]["ci_A_start"] = int(hit[1])
-        variant[i]["ci_A_end"] = int(hit[2])
-        variant[i]["posB"] = int(hit[3])
-        variant[i]["ci_B_start"] = int(hit[4])
-        variant[i]["ci_B_end"] = int(hit[5])
-        variant[i]["sample_id"] = hit[6]
-        coordinates.append([i, int(hit[0]), int(hit[3])])
+        variant[i]["type"] = hit[0]
+        variant[i]["posA"] = int(hit[1])
+        variant[i]["ci_A_start"] = int(hit[2])
+        variant[i]["ci_A_end"] = int(hit[3])
+        variant[i]["posB"] = int(hit[4])
+        variant[i]["ci_B_start"] = int(hit[5])
+        variant[i]["ci_B_end"] = int(hit[6])
+        variant[i]["sample_id"] = hit[7]
+        variant[i]["sequence"] = hit[8] if hit[8] else ""
+        coordinates.append([i, int(hit[1]), int(hit[4])])
     return variant, np.array(coordinates)
 
 
@@ -49,60 +111,6 @@ def fetch_cluster_variant(db, index):
         variant_dict[int(hit[3])]["posB"] = int(hit[1])
         variant_dict[int(hit[3])]["sample_id"] = hit[2]
     return variant_dict
-
-
-def fetch_variant_sequences(db, index_list):
-    """
-    Fetch sequence information for insertion variants.
-    Returns: dict mapping idx -> sequence string
-    """
-    query = 'SELECT idx, sequence FROM SVDB WHERE idx IN ({})'.format(
-        ", ".join([str(idx) for idx in index_list]))
-    hits = db.query(query)
-    
-    sequences = {}
-    for hit in hits:
-        sequences[int(hit[0])] = hit[1] if hit[1] else ""
-    
-    return sequences
-
-
-def cluster_insertions_by_sequence(variant_dictionary, coordinates, db, max_hamming_distance=0.2):
-    variant_indices = list(variant_dictionary.keys())
-    sequences = fetch_variant_sequences(db, variant_indices)
-    
-    similarity_matrix = {}
-    
-
-    for i in variant_indices:
-        similar_variants = [] 
-        
-        seq_i = sequences.get(i, "")
-
-        if not seq_i:
-            similarity_matrix[i] = np.array([i])  
-            continue
-        
-        for j in variant_indices:
-            seq_j = sequences.get(j, "")
-
-            if not seq_j:
-                continue
-            
-
-            raw_dist, normalized_dist = overlap_module.hamming_distance(seq_i, seq_j)
-            
-
-            if normalized_dist <= max_hamming_distance:
-                similar_variants.append(j)
-
-        if not similar_variants:
-            similar_variants = [i]
-        
-        similarity_matrix[i] = np.array(similar_variants)
-    
-    return similarity_matrix
-
 
 def db_header(args):
     headerString = '##fileformat=VCFv4.1\n'
@@ -124,7 +132,6 @@ def db_header(args):
     headerString += '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
     headerString += '##SVDB_version={} cmd=\"{}\"'.format(args.version, " ".join(sys.argv))
     return headerString
-
 
 def vcf_line(cluster, id_tag, sample_IDs):
     info_field = "SVTYPE={};".format(cluster[0]["type"])
@@ -175,89 +182,74 @@ def vcf_line(cluster, id_tag, sample_IDs):
     vcf_line.append("\t".join(format_cols))
     return "\t".join(vcf_line)
 
-
-def expand_chain(chain, coordinates, chrA, chrB, distance, overlap):
-
-    if HAS_INTERVAL_TREE:
-        tree = IntervalTree()
-        for i, coord in enumerate(coordinates):
-            tree.add(coord[1], coord[2], index=i)
-        tree.build()
+def expand_chain(chain, coordinates, chrA, chrB, distance, overlap, use_hamming=False, max_hamming=0.2):
+    try:
+        from .interval_tree_overlap import IntervalTree
+    except ImportError:
+        from interval_tree_overlap import IntervalTree
         
-        chain_data = {}
-        for i, idx in enumerate(chain):
-            chain_data[i] = []
-            variant = chain[idx]
-        
-            overlaps = tree.query(variant["posA"] - distance, variant["posB"] + distance)
-            
-            for interval in overlaps:
-                candidate_idx = interval.index
-                var = chain[candidate_idx]
-                
-                similar = False
-                match = False
-                if chrA != chrB:
-                    similar = True
-                    match = True
-                else:
-                    similar, match = overlap_module.isSameVariation(
-                        variant["posA"], variant["posB"], 
-                        var["posA"], var["posB"], 
-                        overlap, distance)
-                if match:
-                    chain_data[i].append(candidate_idx)
-            
-            chain_data[i] = np.array(chain_data[i])
-        
-        return chain_data
-    else:
-        # Original O(n²) method (fallback)
-        chain_data = {}
-        for i, idx in enumerate(chain):
-            chain_data[i] = []
-            variant = chain[idx]
+    tree = IntervalTree()
+    for i, coord in enumerate(coordinates):
+         tree.add(coord[1], coord[2], index=i)
+    tree.build()
+    
+    chain_data = {}
 
-            rows = coordinates[(distance >= abs(coordinates[:, 1] - variant["posA"]))
-                               & (distance >= abs(coordinates[:, 2] - variant["posB"]))]
+    for i, idx in enumerate(chain):
+          chain_data[i] = [i]  # Always include self
+          variant = chain[idx]
 
-            candidates = rows[:, 0]
-            for candidate in candidates:
-                var = chain[candidate]
-                similar = False
-                match = False
-                if chrA != chrB:
-                    similar = True
-                    match = True
-                else:
-                    similar, match = overlap_module.isSameVariation(
-                        variant["posA"], variant["posB"], 
-                        var["posA"], var["posB"], 
-                        overlap, distance)
-                if match:
-                    chain_data[i].append(candidate)
+          overlaps = tree.query(variant["posA"] - distance, variant["posB"] + distance)
 
-            chain_data[i] = np.array(chain_data[i])
-        return chain_data
+          for interval in overlaps:
+              candidate_idx = interval.index
+              if candidate_idx == i:  # Skip self, already added
+                  continue
+              var = chain[candidate_idx]
 
+              similar = False
+              match = False
+              
+              if "INS" in variant.get("type", "") and use_hamming:
+                  seq1 = variant.get("sequence", None)
+                  seq2 = var.get("sequence", None)
+                  similarity, match = overlap_module.insertion_overlap_with_sequence(
+                      variant["posA"], variant["posB"], seq1,
+                      var["posA"], var["posB"], seq2,
+                      distance, max_hamming
+                  )
+              elif chrA != chrB:
+                  similar = True
+                  match = True
+              else:
+                  similar, match = overlap_module.isSameVariation(variant["posA"], variant["posB"], 
+                                                   var["posA"], var["posB"], overlap, distance)
+              
+              if match:
+                  chain_data[i].append(candidate_idx)
+         
+          chain_data[i] = np.array(chain_data[i])
+    
+    return chain_data
 
 def cluster_variants(variant_dictionary, similarity_matrix):
     cluster_sizes = [[i, len(similarity_matrix[i])] for i in range(len(variant_dictionary))]
 
     clusters = []
+    processed = set()
+    
     for i, _ in sorted(cluster_sizes, key=lambda x: (x[1]), reverse=True):
-        if similarity_matrix[i][0] == -1:
+        if i in processed:
             continue
 
         cluster_dictionary = {}
         for var in similarity_matrix[i]:
-            similarity_matrix[var][0] = -1
+            processed.add(var)
             cluster_dictionary[var] = variant_dictionary[var]
         variant = variant_dictionary[i]
 
         clusters.append([variant, cluster_dictionary])
     return clusters
-
 
 def fetch_variants(variant, chrA, chrB, db):
     chr_db = {}
@@ -279,12 +271,18 @@ def fetch_variants(variant, chrA, chrB, db):
 
 def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     variant_dictionary, coordinates = fetch_index_variant(db, indexes)
+    
+    use_hamming = getattr(args, 'use_hamming', False)
+    max_hamming = getattr(args, 'max_hamming', 0.2)
+    
     if "INS" in variant:
         similarity_matrix = expand_chain(
-            variant_dictionary, coordinates, chrA, chrB, args.ins_distance, -1)
+            variant_dictionary, coordinates, chrA, chrB, args.ins_distance, -1,
+            use_hamming=use_hamming, max_hamming=max_hamming)
     else:
         similarity_matrix = expand_chain(
-            variant_dictionary, coordinates, chrA, chrB, args.bnd_distance, args.overlap)
+            variant_dictionary, coordinates, chrA, chrB, args.bnd_distance, args.overlap,
+            use_hamming=False, max_hamming=0.2)
 
     clusters = cluster_variants(variant_dictionary, similarity_matrix)
     for clustered_variants in clusters:
@@ -295,81 +293,48 @@ def overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i):
     return i + len(clusters)
 
 
-def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
-  
+
+def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i, algorithm = 'DBSCAN'):
     f = open(args.prefix + ".vcf", 'a')
     chr_db = fetch_variants(variant, chrA, chrB, db)
     if not chr_db:
         f.close()
         return i
-
-    algorithm = getattr(args, 'algorithm', 'DBSCAN')
-    
-    cluster_labels = None
-    
-    if "INS" in variant:
-        variant_dictionary, coordinates = fetch_index_variant(db, chr_db[variant]["index"])
-
-        similarity_matrix = cluster_insertions_by_sequence(
-            variant_dictionary, 
-            coordinates, 
-            db,
-            max_hamming_distance=0.2  # 80% similarity threshold
-        )
-        
-        dbscan = np.zeros(len(chr_db[variant]["coordinates"])) - 1
-        cluster_id = 0
-        processed = set()
-        
-        for idx in variant_dictionary.keys():
-            if idx in processed:
-                continue
-            
-            similar_indices = similarity_matrix[idx]
-            for sim_idx in similar_indices:
-                if sim_idx not in processed:
-                    pos = list(variant_dictionary.keys()).index(sim_idx)
-                    dbscan[pos] = cluster_id
-                    processed.add(sim_idx)
-            
-            cluster_id += 1
-    
-    elif algorithm == 'OPTICS' and HAS_OPTICS:
+    if algorithm == 'OPTICS':
+        try:
+            from .optics_clustering import optics_cluster
+        except ImportError:
+            from optics_clustering import optics_cluster
         cluster_labels = optics_cluster(
-            chr_db[variant]["coordinates"], 
-            min_samples=args.min_pts if args.DBSCAN else 2, 
-            max_eps=args.epsilon if args.DBSCAN else args.bnd_distance
+            chr_db[variant]["coordinates"],
+            min_samples=2,
+            max_eps=args.bnd_distance
         )
-        dbscan = cluster_labels
-    
-    elif algorithm == 'INTERVAL_TREE' and HAS_INTERVAL_TREE:
+    elif algorithm == 'INTERVAL_TREE':
+        try:
+            from .interval_tree_overlap import interval_tree_cluster
+        except ImportError:
+            from interval_tree_overlap import interval_tree_cluster
         cluster_labels = interval_tree_cluster(
-            chr_db[variant]["coordinates"], 
+            chr_db[variant]["coordinates"],
             max_distance=args.bnd_distance
         )
-        dbscan = cluster_labels
-    
-    elif args.DBSCAN:
-        cluster_labels = DBSCAN.main(
-            chr_db[variant]["coordinates"], 
-            args.epsilon, 
-            args.min_pts
-        )
-        dbscan = cluster_labels
-    
+    elif args.DBSCAN or algorithm == 'DBSCAN':
+        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.epsilon, args.min_pts)
+        cluster_labels = dbscan
     else:
-        cluster_labels = DBSCAN.main(
-            chr_db[variant]["coordinates"], 
-            args.bnd_distance, 
-            2
-        )
-        dbscan = cluster_labels
-    
+        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.bnd_distance, 2)
+        cluster_labels = dbscan
+    if args.DBSCAN:
+        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.epsilon, args.min_pts)
+    elif "INS" in variant:
+        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.ins_distance, 2)        
+    else:
+        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.bnd_distance, 2)
+
     unique_labels = set(dbscan)
-    
     unique_xy = chr_db[variant]["coordinates"][dbscan == -1]
     unique_index = chr_db[variant]["index"][dbscan == -1]
-    
     for xy, indexes in zip(unique_xy, unique_index):
         variant_dictionary = fetch_cluster_variant(db, [indexes])
         representing_var = {}
@@ -386,19 +351,17 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
         cluster = [representing_var, variant_dictionary]
         f.write(vcf_line(cluster, "cluster_{}".format(i), sample_IDs) + "\n")
         i += 1
-    
     del unique_xy
     del unique_index
 
     for unique_label in unique_labels:
         if unique_label == -1:
             continue
-        
         class_member_mask = (dbscan == unique_label)
         xy = chr_db[variant]["coordinates"][class_member_mask]
         indexes = chr_db[variant]["index"][class_member_mask]
 
-        if args.DBSCAN or algorithm in ['OPTICS', 'INTERVAL_TREE'] or "INS" in variant:
+        if args.DBSCAN:
             avg_point = np.array([np.mean(xy[:, 0]), np.mean(xy[:, 1])])
 
             variant_dictionary = fetch_cluster_variant(db, indexes)
@@ -419,11 +382,11 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i):
             i += 1
 
         else:
-            i = overlap_cluster(db, indexes, variant, chrA, chrB, sample_IDs, args, f, i)
+            i = overlap_cluster(db, indexes, variant, chrA,
+                                chrB, sample_IDs, args, f, i)
 
     f.close()
     return i
-
 
 def export(args, sample_IDs):
     db = database.DB(args.db, memory=args.memory)
@@ -447,19 +410,6 @@ def export(args, sample_IDs):
                 i = svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i)
 
 def main(args):
-    sample_IDs = []
-    if not args.prefix:
-        args.prefix = args.db.replace(".db", "")
-
-    db = database.DB(args.db)
-
-    for sample in db.query('SELECT DISTINCT sample FROM SVDB'):
-        sample_IDs.append(sample[0])
-
-    with open(args.prefix + ".vcf", 'w') as f:
-        f.write(db_header(args) + "\n")
-        f.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format("\t".join(sample_IDs)))
-    export(args, sample_IDs)
     sample_IDs = []
     if not args.prefix:
         args.prefix = args.db.replace(".db", "")
