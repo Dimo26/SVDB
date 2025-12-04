@@ -1,15 +1,14 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from memory_profiler import profile  
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import pandas as pd
 import gzip 
 from svdb.readVCF import readVCFLine
 
 
-from .optics_clustering import optics_cluster as optics_function
-from .export_module import DBSCAN as dbscan_function
+from optics_clustering import optics_cluster as optics_function
+from export_module import DBSCAN as dbscan_function
 
 
 
