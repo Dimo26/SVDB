@@ -8,6 +8,72 @@ from . import database
 from . import readVCF
 from . import readBAM
 
+
+def _hamming_distance(seq1, seq2):
+    """Calculate normalized Hamming distance between two sequences."""
+    if seq1 is None or seq2 is None or len(seq1) == 0 or len(seq2) == 0:
+        return 1.0
+    
+    seq1 = str(seq1).upper()
+    seq2 = str(seq2).upper()
+    min_len = min(len(seq1), len(seq2))
+    max_len = max(len(seq1), len(seq2))
+    
+    mismatches = sum(1 for i in range(min_len) if seq1[i] != seq2[i])
+    length_diff = max_len - min_len
+    total_dist = mismatches + length_diff
+    
+    normalized = total_dist / max_len if max_len > 0 else 0.0
+    return normalized
+
+
+def _prefilter_vcf_insertions_by_sequence(variants_list, max_hamming=0.2):
+    """Pre-filter VCF insertion variants by sequence similarity."""
+    insertions = [(i, v) for i, v in enumerate(variants_list) if len(v) > 11 and v[4] == 'INS' and v[11]]
+    
+    if not insertions:
+        return
+    
+    print(f"\n=== VCF Insertion Sequence Pre-filtering (Hamming distance) ===")
+    print(f"Found {len(insertions)} insertions with sequences")
+    
+    # Build groups
+    groups = []
+    assigned = set()
+    
+    for i, (idx_i, var_i) in enumerate(insertions):
+        if i in assigned:
+            continue
+        group = [i]
+        assigned.add(i)
+        seq_i = var_i[11]
+        
+        for j in range(i + 1, len(insertions)):
+            if j in assigned:
+                continue
+            idx_j, var_j = insertions[j]
+            dist = _hamming_distance(seq_i, var_j[11])
+            if dist <= max_hamming:
+                group.append(j)
+                assigned.add(j)
+        groups.append(group)
+    
+    # Print groups
+    for group_id, group_indices in enumerate(groups):
+        if len(group_indices) > 1:
+            print(f"  Group {group_id}: {len(group_indices)} insertions with similar sequences")
+            for idx in group_indices[:3]:  # Show first 3
+                seq = str(insertions[idx][1][11])[:20]
+                print(f"    - {seq}...")
+            if len(group_indices) > 3:
+                print(f"    ... and {len(group_indices) - 3} more")
+        else:
+            seq = str(insertions[group_indices[0]][1][11])[:20]
+            print(f"  Group {group_id}: {seq}... (singleton)")
+    
+    print(f"VCF insertions grouped into {len(groups)} sequence clusters\n")
+
+
 def populate_db(args):
     db = database.DB(args.db)
     tables = db.tables
@@ -150,6 +216,11 @@ def populate_db(args):
                                             posB, ci_B_lower, ci_B_upper, sample_names[sample_index], idx, sequence))
                                 idx += 1
                             sample_index += 1
+            
+            # Pre-filter VCF insertions by sequence similarity (after all variants collected)
+            if var:
+                _prefilter_vcf_insertions_by_sequence(var, max_hamming=0.2)
+        
         else:
             print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bam are supported.")
             continue
