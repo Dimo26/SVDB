@@ -1,12 +1,9 @@
 from __future__ import absolute_import
 import sys
 import numpy as np
-from . import database, overlap_module
-
-try:
-    from . import DBSCAN
-except ImportError:
-    import DBSCAN
+from . import database
+from . import overlap_module
+from . import DBSCAN
 
 try:
     from interval_tree_overlap import IntervalTree, interval_tree_cluster
