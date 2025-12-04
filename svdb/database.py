@@ -28,6 +28,7 @@ class DB:
     def drop(self, query):
         try:
             self.cursor.execute(query)
+            self.conn.commit()
         except Exception:
             pass
 
@@ -36,19 +37,23 @@ class DB:
         self.conn.commit()
 
     def insert_many(self, data):
+        """Insert many rows with 12 columns (including sequence)."""
         self.cursor.executemany('INSERT INTO SVDB VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', data)
         self.conn.commit()
 
     def create_index(self, name, columns):
         query = "CREATE INDEX {} ON SVDB {}".format(name, columns)
-        self.cursor.execute(query)
-        self.conn.commit()
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+        except Exception as e:
+            pass
 
     @property
     def tables(self):
-        res = self.query("SELECT name FROM sqlite_master WHERE type=\'table\'")
+        res = self.query("SELECT name FROM sqlite_master WHERE type='table'")
         return [table[0] for table in res]
 
     @property
     def sample_ids(self):
-        return [sample for sample in self.query('SELECT DISTINCT sample FROM SVDB')]
+        return [sample[0] for sample in self.query('SELECT DISTINCT sample FROM SVDB')]

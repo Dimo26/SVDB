@@ -10,10 +10,8 @@ def precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distan
         return max([Adist, Bdist]), True
     return False, False
 
-# check if intrachromosomal vaiants overlap
 
 
-# event is in the DB, variation is the new variation I want to insert
 def isSameVariation(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio, distance):
     if abs(chrApos_query - chrApos_db) <= distance and abs(chrBpos_query - chrBpos_db) <= distance:
 
@@ -40,23 +38,6 @@ ci_B_query = 0
 ci_A_db = 0
 ci_B_db = 0
 
-def hausdorff_distance(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db):
-
-    query_points = [[chrApos_query - ci_A_query, chrBpos_query - ci_B_query],
-    [chrApos_query + ci_A_query, chrBpos_query + ci_B_query],
-    [chrApos_query, chrBpos_query]]
-
-    db_points = [[chrApos_db - ci_A_db, chrBpos_db - ci_B_db],
-    [chrApos_db + ci_A_db, chrBpos_db + ci_B_db],
-    [chrApos_db, chrBpos_db]]
-
-    dist1 = directed_hausdorff(query_points, db_points)[0]
-    dist2 = directed_hausdorff(db_points, query_points)[0]
-    distance = max(dist1, dist2)
-    threshold = 1000  
-    is_similar = distance < threshold
-    return distance, is_similar
-
 
 def variant_overlap(chrA, chrB, chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, ratio, distance):
     match = False
@@ -76,7 +57,7 @@ def weighted_reciprocal_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpo
     dist_B = abs(chrBpos_query - chrBpos_db)
     avg_distance = (dist_A + dist_B) / 2
 
-    max_expected_distance = 10000  # Adjust based on your data
+    max_expected_distance = 10000  # Adjust based on  data
     normalized_distance = min(avg_distance / max_expected_distance, 1.0)
 
     region_start = min(chrApos_db, chrApos_query)
@@ -134,4 +115,3 @@ def insertion_overlap_with_sequence(chrApos_query, chrBpos_query, seq_query,chrA
         return (combined_similarity, True)
     else: 
         return (None, False)
-

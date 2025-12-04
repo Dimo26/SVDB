@@ -1,64 +1,76 @@
 from __future__ import absolute_import
 
-from ast import If
 import glob
 import gzip
 import os
 
-from . import database, readVCF, readBAM
+import database
+import readVCF
+import readBAM
 
 def populate_db(args):
     db = database.DB(args.db)
     tables = db.tables
 
     idx = 0
-    if "SVDB" not in tables:
-        query = "CREATE TABLE SVDB (var TEXT,chrA TEXT, chrB TEXT,posA INT,ci_A_lower INT,ci_A_upper INT,posB INT,ci_B_lower INT,ci_B_upper INT, sample TEXT, idx INT, sequence TEXT)"
-        db.create(query)
-        sample_IDs = []
-    else:
-        db.drop("DROP INDEX SV")
-        db.drop("DROP INDEX IDX")
-        db.drop("DROP INDEX CHR")
 
-        sample_IDs = db.sample_ids
-        if sample_IDs:
-            idx = 1 + int(db.query("SELECT MAX(idx) FROM SVDB")[0][0])
+    if "SVDB" in tables:
+        db.drop("DROP TABLE IF EXISTS SVDB")
+        db.drop("DROP INDEX IF EXISTS SV")
+        db.drop("DROP INDEX IF EXISTS IDX")
+        db.drop("DROP INDEX IF EXISTS CHR")
 
-    # populate the tables
+
+    query = "CREATE TABLE SVDB (var TEXT, chrA TEXT, chrB TEXT, posA INT, ci_A_lower INT, ci_A_upper INT, posB INT, ci_B_lower INT, ci_B_upper INT, sample TEXT, idx INT, sequence TEXT)"
+    db.create(query)
+    sample_IDs = []
+
+    # Populate the tables
     for input_file in args.files:
         sample_name = input_file.split("/")[-1].split(".vcf")[0].split(".bam")[0]
         sample_name = sample_name.replace(".", "_")
         sample_IDs.append(sample_name)
+        
         A = 'SELECT sample FROM SVDB WHERE sample == \'{}\' '.format(sample_name)
         hits = [hit for hit in db.query(A)]
         if hits:
             continue
+            
         if not os.path.exists(input_file):
-            print("error: unnable to open {}".format(input_file))
+            print("error: unable to open {}".format(input_file))
             continue
 
         var = []
-        #sample_names = []
+        
         if input_file.endswith('.bam'):
             print(f'Processing BAM file: {input_file}')
-            variants = readBAM.read_bam_file(input_file, sample_name, min_sv_size = args.min_sv_size if hasattr(args, "min_sv_size") else 50, min_mapq = args.min_mapq if hasattr(args, "min_mapq") else 20)
+            variants = readBAM.read_bam_file(input_file, sample_name, 
+                                             min_sv_size=getattr(args, "min_sv_size", 50),
+                                             min_mapq=getattr(args, "min_mapq", 20))
+            
             for chrA, posA, chrB, posB, event_type, INFO, FORMAT, _ in variants:
-                if args.passonly:
-                    pass
+                if hasattr(args, 'passonly') and args.passonly:
+                    pass  # BAM doesn't have FILTER field
+                
                 ci_A_lower = 0
                 ci_A_upper = 0
                 ci_B_lower = 0
                 ci_B_upper = 0
+                sequence = ""
+                
+                # Get sequence for insertions
                 if "INS" in event_type and "INSSEQ" in INFO:
-                    sequence = INFO.get("INFOSEQ", "")
+                    sequence = INFO.get("INSSEQ", "")
+                
                 if "GT" not in FORMAT:
-                    var.append((event_type, chrA, chrB, posA, ci_A_lower,ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
+                    var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper, 
+                               posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
                     idx += 1
                 else:
                     for genotype in FORMAT["GT"]:
                         if genotype not in ["0/0", "./."]:
-                            var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
+                            var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,
+                                       posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
                             idx += 1
         
         elif input_file.endswith('.vcf') or input_file.endswith('.vcf.gz'):
@@ -66,7 +78,6 @@ def populate_db(args):
             vcf = input_file
             sample_names = []
 
-            # TODO: Move this into a VCF class
             opener = gzip.open if vcf.endswith('.vcf.gz') else open
             with opener(vcf, 'rt') as lines:
                 for line in lines:
@@ -81,7 +92,8 @@ def populate_db(args):
                         continue
 
                     chrA, posA, chrB, posB, event_type, INFO, FORMAT = readVCF.readVCFLine(line)
-                    if args.passonly:
+                    
+                    if hasattr(args, 'passonly') and args.passonly:
                         FILTER = line.split("\t")[6]
                         if not (FILTER in ["PASS", "."]):
                             continue
@@ -90,6 +102,8 @@ def populate_db(args):
                     ci_A_upper = 0
                     ci_B_lower = 0
                     ci_B_upper = 0
+                    sequence = ""
+                    
                     if "CIPOS" in INFO:
                         ci = INFO["CIPOS"].replace('(','').replace(')','').split(",")
                         if len(ci) > 1:
@@ -111,7 +125,8 @@ def populate_db(args):
                         else:
                             ci_B_lower = abs(int(ci[0]))
                             ci_B_upper = abs(int(ci[0]))
-                    sequence = ""
+                    
+                    # Extract sequence for insertions
                     if "INS" in event_type:
                         vcf_columns = line.strip().split("\t")
                         alt_field = vcf_columns[4] if len(vcf_columns) > 4 else ""
@@ -119,9 +134,10 @@ def populate_db(args):
                         if "<INS>" not in alt_field and alt_field not in ["", ".", "N"]:
                             sequence = alt_field
                         elif "INSSEQ" in INFO:
-                            seqeunce = INFO["INSSEQ"]
+                            sequence = INFO["INSSEQ"]
                         elif "SEQ" in INFO:
                             sequence = INFO["SEQ"]
+                    
                     if "GT" not in FORMAT or not len(sample_names):
                         var.append((event_type, chrA, chrB, posA, ci_A_lower,
                                     ci_A_upper, posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
@@ -141,13 +157,17 @@ def populate_db(args):
         if var:
             db.insert_many(var)
 
-    db.create_index(name='SV', columns='(var, chrA, chrB, posA, posA, posB, posB)')
+    # Create indexes
+    db.create_index(name='SV', columns='(var, chrA, chrB, posA, posB)')
     db.create_index(name='IDX', columns='(idx)')
     db.create_index(name='CHR', columns='(chrA, chrB)')
+    
     return sample_IDs
 
 def main(args):
     args.db = args.prefix
-    if not args.files and args.folder:
-        args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + glob.glob(os.path.join(args.folder, "*.vcf.gz")) + glob.glob(os.path.join(args.folder, "*.bam"))
+    if not args.files and hasattr(args, 'folder') and args.folder:
+        args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + \
+                     glob.glob(os.path.join(args.folder, "*.vcf.gz")) + \
+                     glob.glob(os.path.join(args.folder, "*.bam"))
     populate_db(args)
