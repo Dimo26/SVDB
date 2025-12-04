@@ -150,7 +150,3 @@ def optics_cluster(coordinates, min_samples=2, max_eps=2000):
     clusterer = OPTICS(min_samples=min_samples, max_eps=max_eps)
     labels = clusterer.fit_predict(coordinates)
     return labels
-
-
-if __name__ == "__main__":
-    test_optics()
