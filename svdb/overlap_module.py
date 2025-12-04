@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from scipy.spatial.distance import directed_hausdorff
+#from scipy.spatial.distance import directed_hausdorff
 
 def precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance):
     Adist = abs(chrApos_query - chrApos_db)
