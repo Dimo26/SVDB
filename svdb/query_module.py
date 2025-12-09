@@ -17,32 +17,32 @@ def main(args, output_file=None):
 
     writer = f.write if args.prefix else sys.stdout.write
 
-    # Handle BAM query files
-    if args.query_bam:
-        from . import readBAM
-        sample_name = args.query_bam.split("/")[-1].split(".bam")[0]
-        
-        # Extract SVs from BAM
-        bam_variants = readBAM.read_bam_file(
-            args.query_bam, 
-            sample_name,
-            min_sv_size=args.ins_distance if hasattr(args, 'ins_distance') else 50,
-            min_mapq=20
-        )
-        writer("##fileformat=VCFv4.1\n")
-        writer("##source=SVDB_BAM_Query\n")
-        writer(f'##INFO=<ID={args.out_occ},Number=1,Type=Integer,Description="The number of occurrences of the event in the database {db_path}">\n')
-        writer(f'##INFO=<ID={args.out_frq},Number=1,Type=Float,Description="The frequency of the event in the database {db_path}">\n')
-        writer(f'##SVDB_version={args.version} cmd="{" ".join(sys.argv)}"\n')
-        writer("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format(sample_name))
-        
-        # Convert BAM variants to query format
-        for chrA, posA, chrB, posB, event_type, INFO, FORMAT, bam_sample in bam_variants:
-            queries.append([chrA, int(posA), chrB, int(posB), event_type, FORMAT, 
-                          f"{chrA}\t{posA}\tid\tN\t<{event_type}>\t.\tPASS\tEND={posB};SVTYPE={event_type}\tGT\t0/1"])
+    # BAM query handling commented out - BCF support via pysam instead
+    # if args.query_bam:
+    #     from . import readBAM
+    #     sample_name = args.query_bam.split("/")[-1].split(".bam")[0]
+    #     
+    #     # Extract SVs from BAM
+    #     bam_variants = readBAM.read_bam_file(
+    #         args.query_bam, 
+    #         sample_name,
+    #         min_sv_size=args.ins_distance if hasattr(args, 'ins_distance') else 50,
+    #         min_mapq=20
+    #     )
+    #     writer("##fileformat=VCFv4.1\n")
+    #     writer("##source=SVDB_BAM_Query\n")
+    #     writer(f'##INFO=<ID={args.out_occ},Number=1,Type=Integer,Description="The number of occurrences of the event in the database {db_path}">\n')
+    #     writer(f'##INFO=<ID={args.out_frq},Number=1,Type=Float,Description="The frequency of the event in the database {db_path}">\n')
+    #     writer(f'##SVDB_version={args.version} cmd="{" ".join(sys.argv)}"\n')
+    #     writer("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format(sample_name))
+    #     
+    #     # Convert BAM variants to query format
+    #     for chrA, posA, chrB, posB, event_type, INFO, FORMAT, bam_sample in bam_variants:
+    #         queries.append([chrA, int(posA), chrB, int(posB), event_type, FORMAT, 
+    #                       f"{chrA}\t{posA}\tid\tN\t<{event_type}>\t.\tPASS\tEND={posB};SVTYPE={event_type}\tGT\t0/1"])
     
-    # Handle VCF query files (existing code)
-    elif args.query_vcf:
+    # Handle VCF query files
+    if args.query_vcf:
         opener = gzip.open if args.query_vcf.endswith(".gz") else open
         
         with opener(args.query_vcf, "rt") as lines:
@@ -83,7 +83,7 @@ def main(args, output_file=None):
                 queries.append([chrA, int(posA), chrB, int(posB), event_type, FORMAT, line])
     
     else:
-        print("ERROR: No query file provided (use --query_vcf or --query_bam)")
+        print("ERROR: No query file provided (use --query_vcf)")  # or --query_bam removed
         quit()
 
 
