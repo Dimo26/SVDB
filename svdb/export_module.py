@@ -328,7 +328,11 @@ def svdb_cluster_main(chrA, chrB, variant, sample_IDs, args, db, i, algorithm = 
     if args.DBSCAN:
         dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.epsilon, args.min_pts)
     elif "INS" in variant:
-        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.ins_distance, 2)        
+        dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.ins_distance, 2)
+        #hamming_cluster to split up clusters based on insertions sequence similarity
+        # not implemented yet some variants wont have anything while others and thpse who dont have can be ignored from hamming. 
+        # less hamming distances counted becuase im comparing one cluster based on a position 
+        # seqeunce identity or similarity check taht out for metrics for different length.        
     else:
         dbscan = DBSCAN.cluster(chr_db[variant]["coordinates"], args.bnd_distance, 2)
 
