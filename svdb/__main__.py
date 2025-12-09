@@ -71,8 +71,9 @@ def main():
                             help="path to a SV database of the following format chrA-posA-chrB-posB-type-count-frequency, or a or a comma separated list of dbs")
         parser.add_argument('--in_occ', type=str,
                             help="The allele count tag, if used, this tag must be present in the INFO column of the input DB(usually set to AC or OCC), required if multiple databases are queried. Use default (as shown in the example in README) if you'd like to use default tag for a specific database")
-        parser.add_argument('--query_bam', type=str, 
-                    help="a BAM file used to query the db (alternative to --query_vcf)")
+        # BAM query support commented out - BCF support via pysam instead
+        # parser.add_argument('--query_bam', type=str, 
+        #             help="a BAM file used to query the db (alternative to --query_vcf)")
         parser.add_argument('--in_frq', type=str,
                             help="The frequency count tag, if used, this tag must be present in the INFO column of the input DB(usually set to AF or FRQ), required if multiple databases are queried. Use default (as shown in the example in README) if you'd like to use default tag for a specific database")
         parser.add_argument('--out_occ', type=str, default="OCC",
@@ -96,9 +97,9 @@ def main():
         args = parser.parse_args()
         args.version = version
         
-        # Validate that at least one query input is provided
-        if not args.query_vcf and not args.query_bam:
-            print("ERROR: Please provide either --query_vcf or --query_bam")
+        # Validate that query input is provided (BAM validation removed)
+        if not args.query_vcf:  # and not args.query_bam:
+            print("ERROR: Please provide --query_vcf")  # or --query_bam removed
             quit()
 
         if(args.db or args.sqdb or args.bedpedb):
@@ -122,15 +123,16 @@ def main():
         parser.add_argument(
             '--passonly', help="Remove filtered variants (i.e anything not labeled  \"PASS\" or \".\")", required=False, action="store_true")
         parser.add_argument('--files', type=str, nargs='*',
-                            help="create a db using the specified vcf or bam files(cannot be used with --folder)")
+                            help="create a db using the specified vcf or bcf files(cannot be used with --folder)")  # bam removed
         parser.add_argument(
-            '--folder', type=str, help="create a db using all the vcf and bam files in the folders")
+            '--folder', type=str, help="create a db using all the vcf and bcf files in the folders")  # bam removed
         parser.add_argument('--prefix', type=str, default="SVDB",
                             help="the prefix of the output file, default = SVDB")
-        parser.add_argument('--min_sv_size', type=int, default=50,
-                            help="minimum SV size to extract from bam to files (default = 50)")
-        parser.add_argument('--min_mapq', type=int, default=20,
-                            help="minimum mapping quality for bam files processing (default = 20)")
+        # BAM-specific arguments commented out
+        # parser.add_argument('--min_sv_size', type=int, default=50,
+        #                     help="minimum SV size to extract from bam to files (default = 50)")
+        # parser.add_argument('--min_mapq', type=int, default=20,
+        #                     help="minimum mapping quality for bam files processing (default = 20)")
         args = parser.parse_args()
         args.version = version
         if (args.files and args.folder):
@@ -161,9 +163,9 @@ def main():
                             help="used together with --DBSCAN; sets the epsilon paramter(default = 500)", required=False)
         parser.add_argument('--algorithm', type=str, default="DBSCAN", choices=['DBSCAN', 'OPTICS', 'INTERVAL_TREE'], help='Clustering algorithm to use where default is DBSCAN')
         parser.add_argument('--min_pts', type=int, default=2,
-                    help="used together with 1--DBSCAN; sets the min_pts parameter(default = 2)", required=False)
+                    help="used together with --DBSCAN; sets the min_pts parameter(default = 2)", required=False)
         parser.add_argument('--use_hamming', action='store_true', 
-                      help="Use Hamming distance for insertion sequence comparison")
+                      help="Use Hamming distance for insertion sequence comparison (applied AFTER spatial clustering)")
         parser.add_argument('--max_hamming', type=float, default=0.2,
                      help="Maximum normalized Hamming distance for insertions (default=0.2)")
         parser.add_argument('--distance_metric', type=str, default="euclidean", choices=['euclidean', 'hausdorff', 'weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
@@ -200,7 +202,7 @@ def main():
         parser.add_argument('--ins_distance', type=int, default=50,
                             help="the maximum distance to merge two insertions(default = 50)")
         parser.add_argument('--overlap', type=float, default=0.95,
-                            help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.95")
+                            help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.95)")
         parser.add_argument(
             '--no_intra', help="no merging of variants within the same vcf", required=False, action="store_true")
         parser.add_argument(
