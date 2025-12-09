@@ -6,72 +6,7 @@ import os
 
 from . import database
 from . import readVCF
-from . import readBAM
-
-
-def _hamming_distance(seq1, seq2):
-    """Calculate normalized Hamming distance between two sequences."""
-    if seq1 is None or seq2 is None or len(seq1) == 0 or len(seq2) == 0:
-        return 1.0
-    
-    seq1 = str(seq1).upper()
-    seq2 = str(seq2).upper()
-    min_len = min(len(seq1), len(seq2))
-    max_len = max(len(seq1), len(seq2))
-    
-    mismatches = sum(1 for i in range(min_len) if seq1[i] != seq2[i])
-    length_diff = max_len - min_len
-    total_dist = mismatches + length_diff
-    
-    normalized = total_dist / max_len if max_len > 0 else 0.0
-    return normalized
-
-
-def _prefilter_vcf_insertions_by_sequence(variants_list, max_hamming=0.2):
-    """Pre-filter VCF insertion variants by sequence similarity."""
-    insertions = [(i, v) for i, v in enumerate(variants_list) if len(v) > 11 and v[4] == 'INS' and v[11]]
-    
-    if not insertions:
-        return
-    
-    print(f"\n=== VCF Insertion Sequence Pre-filtering (Hamming distance) ===")
-    print(f"Found {len(insertions)} insertions with sequences")
-    
-    # Build groups
-    groups = []
-    assigned = set()
-    
-    for i, (idx_i, var_i) in enumerate(insertions):
-        if i in assigned:
-            continue
-        group = [i]
-        assigned.add(i)
-        seq_i = var_i[11]
-        
-        for j in range(i + 1, len(insertions)):
-            if j in assigned:
-                continue
-            idx_j, var_j = insertions[j]
-            dist = _hamming_distance(seq_i, var_j[11])
-            if dist <= max_hamming:
-                group.append(j)
-                assigned.add(j)
-        groups.append(group)
-    
-    # Print groups
-    for group_id, group_indices in enumerate(groups):
-        if len(group_indices) > 1:
-            print(f"  Group {group_id}: {len(group_indices)} insertions with similar sequences")
-            for idx in group_indices[:3]:  # Show first 3
-                seq = str(insertions[idx][1][11])[:20]
-                print(f"    - {seq}...")
-            if len(group_indices) > 3:
-                print(f"    ... and {len(group_indices) - 3} more")
-        else:
-            seq = str(insertions[group_indices[0]][1][11])[:20]
-            print(f"  Group {group_id}: {seq}... (singleton)")
-    
-    print(f"VCF insertions grouped into {len(groups)} sequence clusters\n")
+# from . import readBAM  # BAM integration commented out - BCF support via pysam instead
 
 
 def populate_db(args):
@@ -86,14 +21,13 @@ def populate_db(args):
         db.drop("DROP INDEX IF EXISTS IDX")
         db.drop("DROP INDEX IF EXISTS CHR")
 
-
     query = "CREATE TABLE SVDB (var TEXT, chrA TEXT, chrB TEXT, posA INT, ci_A_lower INT, ci_A_upper INT, posB INT, ci_B_lower INT, ci_B_upper INT, sample TEXT, idx INT, sequence TEXT)"
     db.create(query)
     sample_IDs = []
 
     # Populate the tables
     for input_file in args.files:
-        sample_name = input_file.split("/")[-1].split(".vcf")[0].split(".bam")[0]
+        sample_name = input_file.split("/")[-1].split(".vcf")[0].split(".bcf")[0]  # .split(".bam")[0]
         sample_name = sample_name.replace(".", "_")
         sample_IDs.append(sample_name)
         
@@ -108,36 +42,96 @@ def populate_db(args):
 
         var = []
         
-        if input_file.endswith('.bam'):
-            print(f'Processing BAM file: {input_file}')
-            variants = readBAM.read_bam_file(input_file, sample_name, 
-                                             min_sv_size=getattr(args, "min_sv_size", 50),
-                                             min_mapq=getattr(args, "min_mapq", 20))
+        # BAM processing commented out - BCF support implemented instead
+        # if input_file.endswith('.bam'):
+        #     print(f'Processing BAM file: {input_file}')
+        #     variants = readBAM.read_bam_file(input_file, sample_name, 
+        #                                      min_sv_size=getattr(args, "min_sv_size", 50),
+        #                                      min_mapq=getattr(args, "min_mapq", 20))
+        #     
+        #     for chrA, posA, chrB, posB, event_type, INFO, FORMAT, _ in variants:
+        #         # ... BAM processing code ...
+        
+        if input_file.endswith('.bcf'):
+            # Use pysam to read BCF files
+            import pysam
+            print(f'Processing BCF file: {input_file}')
             
-            for chrA, posA, chrB, posB, event_type, INFO, FORMAT, _ in variants:
-                if hasattr(args, 'passonly') and args.passonly:
-                    pass  # BAM doesn't have FILTER field
+            try:
+                vcf_reader = pysam.VariantFile(input_file, 'rb')
+                sample_names = list(vcf_reader.header.samples) if vcf_reader.header.samples else []
                 
-                ci_A_lower = 0
-                ci_A_upper = 0
-                ci_B_lower = 0
-                ci_B_upper = 0
-                sequence = ""
+                for record in vcf_reader.fetch():
+                    if hasattr(args, 'passonly') and args.passonly:
+                        if record.filter.keys() and 'PASS' not in record.filter.keys() and '.' not in record.filter.keys():
+                            continue
+                    
+                    # Extract basic variant info
+                    chrA = str(record.chrom).replace("chr", "").replace("Chr", "").replace("CHR", "")
+                    posA = record.pos
+                    
+                    # Determine variant type and positions
+                    event_type = record.info.get('SVTYPE', 'UNK') if 'SVTYPE' in record.info else 'UNK'
+                    
+                    # Handle different ALT formats
+                    if record.alts:
+                        alt = str(record.alts[0])
+                        if '<' in alt and '>' in alt:
+                            event_type = alt.strip('<').rstrip('>')
+                            if 'DUP' in event_type:
+                                event_type = 'DUP'
+                    
+                    chrB = chrA
+                    posB = record.info.get('END', posA) if 'END' in record.info else posA
+                    
+                    # Handle BND/translocation
+                    if 'CHR2' in record.info:
+                        chrB = str(record.info['CHR2']).replace("chr", "").replace("Chr", "").replace("CHR", "")
+                        event_type = 'BND'
+                    
+                    # Confidence intervals
+                    ci_A_lower = ci_A_upper = ci_B_lower = ci_B_upper = 0
+                    if 'CIPOS' in record.info:
+                        cipos = record.info['CIPOS']
+                        if isinstance(cipos, (list, tuple)) and len(cipos) >= 2:
+                            ci_A_lower = abs(int(cipos[0]))
+                            ci_A_upper = abs(int(cipos[1]))
+                            ci_B_lower = ci_A_lower
+                            ci_B_upper = ci_A_upper
+                    
+                    if 'CIEND' in record.info:
+                        ciend = record.info['CIEND']
+                        if isinstance(ciend, (list, tuple)) and len(ciend) >= 2:
+                            ci_B_lower = abs(int(ciend[0]))
+                            ci_B_upper = abs(int(ciend[1]))
+                    
+                    # Extract sequence for insertions
+                    sequence = ""
+                    if "INS" in event_type:
+                        if record.alts and '<INS>' not in str(record.alts[0]):
+                            sequence = str(record.alts[0])
+                        elif 'INSSEQ' in record.info:
+                            sequence = str(record.info['INSSEQ'])
+                        elif 'SEQ' in record.info:
+                            sequence = str(record.info['SEQ'])
+                    
+                    # Add variants based on genotypes
+                    if sample_names and record.samples:
+                        for sample_idx, sample in enumerate(sample_names):
+                            gt = record.samples[sample].get('GT', None)
+                            if gt and gt != (0, 0) and gt != (None, None):
+                                var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,
+                                           posB, ci_B_lower, ci_B_upper, sample, idx, sequence))
+                                idx += 1
+                    else:
+                        var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,
+                                   posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
+                        idx += 1
                 
-                # Get sequence for insertions
-                if "INS" in event_type and "INSSEQ" in INFO:
-                    sequence = INFO.get("INSSEQ", "")
-                
-                if "GT" not in FORMAT:
-                    var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper, 
-                               posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
-                    idx += 1
-                else:
-                    for genotype in FORMAT["GT"]:
-                        if genotype not in ["0/0", "./."]:
-                            var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,
-                                       posB, ci_B_lower, ci_B_upper, sample_name, idx, sequence))
-                            idx += 1
+                vcf_reader.close()
+            except Exception as e:
+                print(f"Error processing BCF file {input_file}: {e}")
+                continue
         
         elif input_file.endswith('.vcf') or input_file.endswith('.vcf.gz'):
             print(f'Processing VCF file: {input_file}')
@@ -216,13 +210,9 @@ def populate_db(args):
                                             posB, ci_B_lower, ci_B_upper, sample_names[sample_index], idx, sequence))
                                 idx += 1
                             sample_index += 1
-            
-            # Pre-filter VCF insertions by sequence similarity (after all variants collected)
-            if var:
-                _prefilter_vcf_insertions_by_sequence(var, max_hamming=0.2)
         
         else:
-            print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bam are supported.")
+            print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bcf are supported.")  # .bam removed
             continue
 
         if var:
@@ -240,5 +230,5 @@ def main(args):
     if not args.files and hasattr(args, 'folder') and args.folder:
         args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + \
                      glob.glob(os.path.join(args.folder, "*.vcf.gz")) + \
-                     glob.glob(os.path.join(args.folder, "*.bam"))
+                     glob.glob(os.path.join(args.folder, "*.bcf"))  # + glob.glob(os.path.join(args.folder, "*.bam"))
     populate_db(args)
