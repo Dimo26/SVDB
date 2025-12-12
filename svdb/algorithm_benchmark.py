@@ -2,7 +2,7 @@
 """
 Algorithm Benchmark for SVDB Clustering
 Compares: DBSCAN, OPTICS, INTERVAL_TREE, and overlap-based methods for report 
-With and without Hamming distance post-processing for insertions which helps long reads improvement 
+With and without Hamming distance post-processing for insertions which helps long reads insertions clustering. 
 """
 
 import time
@@ -266,8 +266,7 @@ def main():
     
     for db_file in results:
         print(f"\n{os.path.basename(db_file)}:")
-        print(f"{'─'*80}")
-        
+
         for algo in algorithms:
             without = results[db_file].get(algo, None)
             with_h = results[db_file].get(f"{algo}_HAMMING", None)
