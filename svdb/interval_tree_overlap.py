@@ -48,11 +48,20 @@ class IntervalNode:
             self.right = IntervalNode(right_intervals, depth + 1, max_depth)
     
     def query(self, start, end):
-        if self.center is None:  
-            return []
         results = []
-        # check center intervals
+        # leaf node: center is None => scan stored intervals_by_start with early stop
+        if self.center is None:
+            for interval in self.intervals_by_start:
+                if interval.start > end:
+                    break
+                if interval.end >= start:
+                    results.append(interval)
+            return results
+
+        # check center intervals (sorted by start) with early stopping
         for interval in self.intervals_by_start:
+            if interval.start > end:
+                break
             if self.intervals_overlap(start, end, interval.start, interval.end):
                 results.append(interval)
 
@@ -63,6 +72,7 @@ class IntervalNode:
             results.extend(self.right.query(start, end))
 
         return results
+
 
     def intervals_overlap(self, start1, end1, start2, end2):
         return start1 <= end2 and start2 <= end1
