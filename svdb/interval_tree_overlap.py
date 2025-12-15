@@ -177,34 +177,3 @@ def interval_tree_cluster(coordinates, max_distance=1000):
 
     return labels
 
-
-def test_interval_tree():
-    tree = IntervalTree()
-
-    tree.add(1000, 2000, index=0, data={'type': 'DEL'})
-    tree.add(1500, 2500, index=1, data={'type': 'DEL'})
-    tree.add(5000, 6000, index=2, data={'type': 'DUP'})
-    tree.add(5500, 6500, index=3, data={'type': 'DUP'})
-    tree.build()
-
-    print("\nQuery [1200, 1800]:")
-    results = tree.query(1200, 1800)
-    print(f"Found {len(results)} overlapping intervals:")
-    for interval in results:
-        print(f"  [{interval.start}, {interval.end}] - {interval.data}")
-    
-    print("\nQuery [5200, 5800]:")
-    results = tree.query(5200, 5800)
-    print(f"Found {len(results)} overlapping intervals:")
-    for interval in results:
-        print(f"  [{interval.start}, {interval.end}] - {interval.data}")
-
-    print("\nTesting clustering:")
-    coordinates = np.array([ [1000, 2000], [1100, 2100], [5000, 6000], [5100, 6100], [9000, 10000]])
-    
-    labels = interval_tree_cluster(coordinates, max_distance=500)
-    print(f"Cluster labels: {labels}")
-    print(f"Found {len(set(labels))} clusters")
-
-if __name__ == "__main__":
-    test_interval_tree()
