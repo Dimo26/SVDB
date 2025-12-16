@@ -363,8 +363,38 @@ def main():
         
         plt.tight_layout()
         plt.savefig('algorithm_benchmark_results.png', dpi=150, bbox_inches='tight')
-        print(f"\n✓ Benchmark plot saved to: algorithm_benchmark_results.png")
-        
+        print(f"\n Benchmark plot saved to: algorithm_benchmark_results.png")
+
+        #plot 5: cluster plots for each of the clustering algorithms with and without hamming
+        for db_file in results:
+            coordinates, variants = load_db_samples(db_file)
+            if coordinates is None or len(coordinates) == 0:
+                continue
+            for algo in algorithms:
+                for apply_hamming in [False, True]:
+                    elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
+                        coordinates, variants, algo, apply_hamming=apply_hamming, max_hamming=0.2
+                    )
+                    if labels is None:
+                        continue
+                    
+                    plt.figure(figsize=(8, 6))
+                    unique_labels = set(labels)
+                    colors = plt.cm.get_cmap('tab20', len(unique_labels))
+                    
+                    for k in unique_labels:
+                        class_member_mask = (labels == k)
+                        xy = coordinates[class_member_mask]
+                        plt.scatter(xy[:, 0], xy[:, 1], s=10, color=colors(k), label=f'Cluster {k}' if k != -1 else 'Noise')
+                    
+                    plt.title(f'{algo} Clustering {"with Hamming" if apply_hamming else "without Hamming"}\n{os.path.basename(db_file)}')
+                    plt.xlabel('Position A')
+                    plt.ylabel('Position B')
+                    plt.legend(markerscale=2)
+                    plot_filename = f"{os.path.basename(db_file).replace('.db','')}_{algo}_{'HAMMING' if apply_hamming else 'NO_HAMMING'}.png"
+                    plt.savefig(plot_filename, dpi=150, bbox_inches='tight')
+
+                    print(f" Cluster plot saved to: {plot_filename}")
     except ImportError as e:
         print(f"\nMatplotlib not available; skipping visualization ({e})")
     except Exception as e:
