@@ -390,7 +390,6 @@ def main():
                     plt.title(f'{algo} Clustering {"with Hamming" if apply_hamming else "without Hamming"}\n{os.path.basename(db_file)}')
                     plt.xlabel('Position A')
                     plt.ylabel('Position B')
-                    plt.legend(markerscale=2)
                     plot_filename = f"{os.path.basename(db_file).replace('.db','')}_{algo}_{'HAMMING' if apply_hamming else 'NO_HAMMING'}.png"
                     plt.savefig(plot_filename, dpi=150, bbox_inches='tight')
 
