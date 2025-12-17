@@ -158,6 +158,7 @@ def main():
                             help="the maximum distance to merge two insertions(default = 50)")
         parser.add_argument('--overlap', type=float, default=0.8,
                             help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.8")
+        parser.add_argument('--DBSCAN', help="use DBSCAN for clustering similar variants", required=False, action="store_true")
         parser.add_argument('--epsilon', type=float, default=500,
                             help="used together with --DBSCAN; sets the epsilon paramter(default = 500)", required=False)
         parser.add_argument('--algorithm', type=str, default="DBSCAN", choices=['DBSCAN', 'OPTICS', 'INTERVAL_TREE'], help='Clustering algorithm to use where default is DBSCAN')
