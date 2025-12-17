@@ -158,7 +158,6 @@ def main():
                             help="the maximum distance to merge two insertions(default = 50)")
         parser.add_argument('--overlap', type=float, default=0.8,
                             help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.8")
-        parser.add_argument('--DBSCAN', help="use dbscan to cluster the variants", required=False, action="store_true")
         parser.add_argument('--epsilon', type=float, default=500,
                             help="used together with --DBSCAN; sets the epsilon paramter(default = 500)", required=False)
         parser.add_argument('--algorithm', type=str, default="DBSCAN", choices=['DBSCAN', 'OPTICS', 'INTERVAL_TREE'], help='Clustering algorithm to use where default is DBSCAN')
@@ -168,7 +167,7 @@ def main():
                       help="Use Hamming distance for insertion sequence comparison (applied AFTER spatial clustering)")
         parser.add_argument('--max_hamming', type=float, default=0.2,
                      help="Maximum normalized Hamming distance for insertions (default=0.2)")
-        parser.add_argument('--distance_metric', type=str, default="euclidean", choices=['euclidean', 'weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
+        parser.add_argument('--distance_metric', type=str, default="euclidean", choices=['euclidean','weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
         parser.add_argument('--benchmark', action = 'store_true', help= 'Run algorithm benchmark before export')
         parser.add_argument('--prefix', type=str, default="SVDB",
                             help="the prefix of the output file, default = same as input")
