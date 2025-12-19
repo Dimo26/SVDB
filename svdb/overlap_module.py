@@ -98,9 +98,9 @@ def compare_insertion_sequences(seq_query, seq_db, max_hamming_distance=0.2):
     if seq_query is None or seq_db is None or len(seq_query) == 0 or len(seq_db) == 0:
         return (None, False)
     
-    norm_dist = hamming_distance(seq_query, seq_db)
+    total_dist, norm_dist = hamming_distance(seq_query, seq_db)  
     is_match = norm_dist <= max_hamming_distance
-    similarity = 1.0 - norm_dist
+    similarity = 1.0 - norm_dist  
     return (similarity, is_match)
 
 
