@@ -387,7 +387,7 @@ def main():
                         xy = coordinates[class_member_mask]
                         plt.scatter(xy[:, 0], xy[:, 1], s=10, color=colors(k), label=f'Cluster {k}' if k != -1 else 'Noise')
                     
-                    plt.title(f'{algo} Clustering {"with Hamming" if apply_hamming else "without Hamming"}\n{os.path.basename(db_file)}')
+                   #plt.title(f'{algo} Clustering {"with Hamming" if apply_hamming else "without Hamming"}\n{os.path.basename(db_file)}')
                     plt.xlabel('Position A')
                     plt.ylabel('Position B')
                     plot_filename = f"{os.path.basename(db_file).replace('.db','')}_{algo}_{'HAMMING' if apply_hamming else 'NO_HAMMING'}.png"
