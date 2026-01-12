@@ -21,8 +21,10 @@ def load_db_samples(db_file):
         coordinates = []
         variants = []
         
-        for row in db.query('SELECT * FROM SVDB'):
+        for row in db.query('SELECT * FROM SVDB WHERE chrA = "1" AND chrB = "1"'):
             var_type = row[0]
+            chrA = row[1]  
+            chrB = row[2]
             posA = int(row[3])
             posB = int(row[6])
             seq = row[11] if len(row) > 11 else ''
@@ -192,6 +194,9 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
 def main():
 
     print("SVDB Clustering Algorithm Benchmark")
+    print("=" * 60)
+    print("Benchmarking on CHROMOSOME 1 only")
+    print("=" * 60)
 
     
     # Find database files
@@ -207,19 +212,21 @@ def main():
     results = {}
     
     for db_file in db_files[:3]:  # Limit to first 3 files
+        print(f"\n{'='*60}")
         print(f"Benchmarking: {os.path.basename(db_file)}")
+        print(f"{'='*60}")
 
         coordinates, variants = load_db_samples(db_file)
         
         if coordinates is None or len(coordinates) == 0:
-            print(f"  Skipped (no valid variants)")
+            print(f"  Skipped (no valid variants on chromosome 1)")
             continue
         
         # Count insertions
         insertions = [v for v in variants if v['type'] == 'INS']
         ins_with_seq = [v for v in insertions if v['sequence']]
         
-        print(f"\nDataset Statistics:")
+        print(f"\nDataset Statistics (Chromosome 1):")
         print(f"  Total variants: {len(coordinates)}")
         print(f"  Insertions: {len(insertions)} ({len(ins_with_seq)} with sequences)")
         print(f"  Other SVs: {len(coordinates) - len(insertions)}")
@@ -227,7 +234,9 @@ def main():
         results[db_file] = {}
         
 
+        print("\n" + "-"*60)
         print("WITHOUT Hamming (spatial clustering only):")
+        print("-"*60)
 
         for algo in algorithms:
             elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
@@ -244,7 +253,9 @@ def main():
         
 
         if ins_with_seq:
+            print("\n" + "-"*60)
             print("WITH Hamming (post-clustering for insertions):")
+            print("-"*60)
       
             for algo in algorithms:
                 elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
@@ -261,7 +272,9 @@ def main():
                     print(f"  {algo:15s}: {elapsed:7.4f}s | {n_clusters:4d} clusters | mem: {memory/1024/1024:6.2f} MB")
     
 
+    print("\n" + "="*60)
     print("BENCHMARK SUMMARY")
+    print("="*60)
 
     
     for db_file in results:
@@ -286,7 +299,7 @@ def main():
         import matplotlib.pyplot as plt
         
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-        fig.suptitle('SVDB Clustering Algorithm Benchmark', fontsize=16, fontweight='bold')
+        fig.suptitle('SVDB Clustering Algorithm Benchmark (Chromosome 1)', fontsize=16, fontweight='bold')
         
         for db_idx, db_file in enumerate(list(results.keys())[:1]):  # First file only for clarity
             db_results = results[db_file]
@@ -363,9 +376,10 @@ def main():
         
         plt.tight_layout()
         plt.savefig('algorithm_benchmark_results.png', dpi=150, bbox_inches='tight')
-        print(f"\n Benchmark plot saved to: algorithm_benchmark_results.png")
+        print(f"\n✓ Benchmark plot saved to: algorithm_benchmark_results.png")
 
         #plot 5: cluster plots for each of the clustering algorithms with and without hamming
+        print(f"\nGenerating cluster visualization plots...")
         for db_file in results:
             coordinates, variants = load_db_samples(db_file)
             if coordinates is None or len(coordinates) == 0:
@@ -390,10 +404,11 @@ def main():
                    #plt.title(f'{algo} Clustering {"with Hamming" if apply_hamming else "without Hamming"}\n{os.path.basename(db_file)}')
                     plt.xlabel('Position A')
                     plt.ylabel('Position B')
-                    plot_filename = f"{os.path.basename(db_file).replace('.db','')}_{algo}_{'HAMMING' if apply_hamming else 'NO_HAMMING'}.png"
+                    plot_filename = f"{os.path.basename(db_file).replace('.db','')}_chr1_{algo}_{'HAMMING' if apply_hamming else 'NO_HAMMING'}.png"
                     plt.savefig(plot_filename, dpi=150, bbox_inches='tight')
+                    plt.close()
 
-                    print(f" Cluster plot saved to: {plot_filename}")
+                    print(f"  ✓ Cluster plot saved to: {plot_filename}")
     except ImportError as e:
         print(f"\nMatplotlib not available; skipping visualization ({e})")
     except Exception as e:
