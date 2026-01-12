@@ -132,7 +132,7 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     if coordinates is None or len(coordinates) == 0:
         return None, None, 0, None
     
-    distance_threshold = 500
+    distance_threshold = 100000
     proc = psutil.Process()
     
     # Measure spatial clustering
