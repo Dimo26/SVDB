@@ -132,7 +132,7 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     if coordinates is None or len(coordinates) == 0:
         return None, None, 0, None
     
-    distance_threshold = 10000
+    distance_threshold = 500
     proc = psutil.Process()
     
     # Measure spatial clustering
@@ -141,9 +141,9 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     
     try:
         if algorithm_name == 'DBSCAN':
-            labels = DBSCAN.cluster(coordinates, distance_threshold, 3)
+            labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
         elif algorithm_name == 'OPTICS':
-            optics = OPTICS(min_samples=3, max_eps=distance_threshold)
+            optics = OPTICS(min_samples=2, max_eps=distance_threshold)
             labels = optics.fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
             labels = interval_tree_cluster(coordinates, distance_threshold)
