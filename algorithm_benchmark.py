@@ -132,7 +132,7 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     if coordinates is None or len(coordinates) == 0:
         return None, None, 0, None
     
-    distance_threshold = 100000
+    distance_threshold = 10000
     proc = psutil.Process()
     
     # Measure spatial clustering
@@ -141,9 +141,9 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     
     try:
         if algorithm_name == 'DBSCAN':
-            labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
+            labels = DBSCAN.cluster(coordinates, distance_threshold, 3)
         elif algorithm_name == 'OPTICS':
-            optics = OPTICS(min_samples=2, max_eps=distance_threshold)
+            optics = OPTICS(min_samples=3, max_eps=distance_threshold)
             labels = optics.fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
             labels = interval_tree_cluster(coordinates, distance_threshold)
@@ -194,9 +194,8 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
 def main():
 
     print("SVDB Clustering Algorithm Benchmark")
-    print("=" * 60)
     print("Benchmarking on CHROMOSOME 1 only")
-    print("=" * 60)
+
 
     
     # Find database files
@@ -234,9 +233,9 @@ def main():
         results[db_file] = {}
         
 
-        print("\n" + "-"*60)
+
         print("WITHOUT Hamming (spatial clustering only):")
-        print("-"*60)
+
 
         for algo in algorithms:
             elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
@@ -253,9 +252,8 @@ def main():
         
 
         if ins_with_seq:
-            print("\n" + "-"*60)
             print("WITH Hamming (post-clustering for insertions):")
-            print("-"*60)
+
       
             for algo in algorithms:
                 elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
