@@ -200,10 +200,9 @@ def main():
     print("SVDB Clustering Algorithm Benchmark")
     print("Benchmarking on CHROMOSOME 1 only")
 
-    # Zoom settings for cluster plots (adjust these to zoom in/out)
-    # Set to None to use full range, or specify [min, max] to zoom
-    zoom_x = None  # Example: [1000000, 2000000] to zoom to 1-2 Mbp range
-    zoom_y = None  # Example: [1000000, 2000000]
+  
+    zoom_x = [80000000, 100000000]  
+    zoom_y = [80000000, 100000000] 
     
     # Find database files
     db_files = glob.glob('*.db') + glob.glob('../*.db')
