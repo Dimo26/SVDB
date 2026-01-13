@@ -1,0 +1,169 @@
+Looking in links: /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages
+Requirement already satisfied: numpy in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (1.20.3)
+Requirement already satisfied: psutil in /castor/project/home/dimam/.local/lib/python3.9/site-packages (7.1.3)
+Requirement already satisfied: matplotlib in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (3.4.2)
+Requirement already satisfied: pillow>=6.2.0 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (8.2.0)
+Requirement already satisfied: pyparsing>=2.2.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.4.7)
+Requirement already satisfied: kiwisolver>=1.0.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (1.3.1)
+Requirement already satisfied: cycler>=0.10 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (0.10.0)
+Requirement already satisfied: python-dateutil>=2.7 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.8.1)
+Requirement already satisfied: six in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from cycler>=0.10->matplotlib) (1.16.0)
+SVDB Clustering Algorithm Benchmark
+Benchmarking on CHROMOSOME 1 only
+
+Found 3 database file(s)
+
+============================================================
+Benchmarking: plat_G2_cousins.db
+============================================================
+
+Dataset Statistics (Chromosome 1):
+  Total variants: 3586
+  Insertions: 2370 (2370 with sequences)
+  Other SVs: 1216
+WITHOUT Hamming (spatial clustering only):
+  DBSCAN         :  0.0425s |  480 clusters | 1280 clustered | 2306 unclustered | mem:   0.26 MB
+  OPTICS         :  0.6584s |  135 clusters |  358 clustered | 3228 unclustered | mem:   0.25 MB
+  INTERVAL_TREE  :  0.3228s | 1392 clusters | 3586 clustered |    0 unclustered | mem:   2.30 MB
+  OVERLAP        :  4.6810s | 1402 clusters | 3586 clustered |    0 unclustered | mem:   0.21 MB
+WITH Hamming (post-clustering for insertions):
+  DBSCAN         :  0.1145s | 1074 clusters | 1280 clustered | 2306 unclustered | mem:   0.00 MB
+  OPTICS         :  0.5176s |  306 clusters |  358 clustered | 3228 unclustered | mem:   0.04 MB
+  INTERVAL_TREE  :  0.5077s | 1690 clusters | 3586 clustered |    0 unclustered | mem:   1.88 MB
+  OVERLAP        :  4.9164s | 1692 clusters | 3586 clustered |    0 unclustered | mem:   0.00 MB
+
+============================================================
+Benchmarking: plat_G2_G3_parents_kids.db
+============================================================
+
+Dataset Statistics (Chromosome 1):
+  Total variants: 12551
+  Insertions: 8295 (8295 with sequences)
+  Other SVs: 4256
+WITHOUT Hamming (spatial clustering only):
+  DBSCAN         :  0.1489s | 1680 clusters | 4480 clustered | 8071 unclustered | mem:   0.00 MB
+  OPTICS         :  5.3167s |  650 clusters | 1768 clustered | 10783 unclustered | mem:   0.31 MB
+  INTERVAL_TREE  :  1.2404s | 1392 clusters | 12551 clustered |    0 unclustered | mem:  10.47 MB
+  OVERLAP        : 17.1487s | 1402 clusters | 12551 clustered |    0 unclustered | mem:   0.04 MB
+WITH Hamming (post-clustering for insertions):
+  DBSCAN         :  0.4570s | 3759 clusters | 4480 clustered | 8071 unclustered | mem:   0.32 MB
+  OPTICS         :  5.3613s | 1511 clusters | 1768 clustered | 10783 unclustered | mem:   0.54 MB
+  INTERVAL_TREE  :  2.1751s | 1690 clusters | 12551 clustered |    0 unclustered | mem:  14.76 MB
+  OVERLAP        : 18.2322s | 1692 clusters | 12551 clustered |    0 unclustered | mem:   0.02 MB
+
+============================================================
+Benchmarking: plat_G3_siblings.db
+============================================================
+
+Dataset Statistics (Chromosome 1):
+  Total variants: 8965
+  Insertions: 5925 (5925 with sequences)
+  Other SVs: 3040
+WITHOUT Hamming (spatial clustering only):
+  DBSCAN         :  0.0943s | 1200 clusters | 3200 clustered | 5765 unclustered | mem:   0.00 MB
+  OPTICS         :  2.8188s |  444 clusters | 1204 clustered | 7761 unclustered | mem:   0.00 MB
+  INTERVAL_TREE  :  0.8331s | 1392 clusters | 8965 clustered |    0 unclustered | mem:   0.00 MB
+  OVERLAP        : 12.2816s | 1402 clusters | 8965 clustered |    0 unclustered | mem:   0.14 MB
+WITH Hamming (post-clustering for insertions):
+  DBSCAN         :  0.3143s | 2685 clusters | 3200 clustered | 5765 unclustered | mem:   0.00 MB
+  OPTICS         :  2.8393s | 1029 clusters | 1204 clustered | 7761 unclustered | mem:   0.00 MB
+  INTERVAL_TREE  :  1.4104s | 1690 clusters | 8965 clustered |    0 unclustered | mem:   3.98 MB
+  OVERLAP        : 13.0474s | 1692 clusters | 8965 clustered |    0 unclustered | mem:   0.00 MB
+
+============================================================
+BENCHMARK SUMMARY
+============================================================
+
+plat_G2_cousins.db:
+
+DBSCAN:
+  Without Hamming: 0.0425s | 480 clusters | 0.26 MB
+  With Hamming:    0.1145s | 1074 clusters | 0.00 MB
+  Hamming Overhead: +169.3% time | +594 clusters
+
+OPTICS:
+  Without Hamming: 0.6584s | 135 clusters | 0.25 MB
+  With Hamming:    0.5176s | 306 clusters | 0.04 MB
+  Hamming Overhead: +-21.4% time | +171 clusters
+
+INTERVAL_TREE:
+  Without Hamming: 0.3228s | 1392 clusters | 2.30 MB
+  With Hamming:    0.5077s | 1690 clusters | 1.88 MB
+  Hamming Overhead: +57.3% time | +298 clusters
+
+OVERLAP:
+  Without Hamming: 4.6810s | 1402 clusters | 0.21 MB
+  With Hamming:    4.9164s | 1692 clusters | 0.00 MB
+  Hamming Overhead: +5.0% time | +290 clusters
+
+plat_G2_G3_parents_kids.db:
+
+DBSCAN:
+  Without Hamming: 0.1489s | 1680 clusters | 0.00 MB
+  With Hamming:    0.4570s | 3759 clusters | 0.32 MB
+  Hamming Overhead: +207.0% time | +2079 clusters
+
+OPTICS:
+  Without Hamming: 5.3167s | 650 clusters | 0.31 MB
+  With Hamming:    5.3613s | 1511 clusters | 0.54 MB
+  Hamming Overhead: +0.8% time | +861 clusters
+
+INTERVAL_TREE:
+  Without Hamming: 1.2404s | 1392 clusters | 10.47 MB
+  With Hamming:    2.1751s | 1690 clusters | 14.76 MB
+  Hamming Overhead: +75.3% time | +298 clusters
+
+OVERLAP:
+  Without Hamming: 17.1487s | 1402 clusters | 0.04 MB
+  With Hamming:    18.2322s | 1692 clusters | 0.02 MB
+  Hamming Overhead: +6.3% time | +290 clusters
+
+plat_G3_siblings.db:
+
+DBSCAN:
+  Without Hamming: 0.0943s | 1200 clusters | 0.00 MB
+  With Hamming:    0.3143s | 2685 clusters | 0.00 MB
+  Hamming Overhead: +233.3% time | +1485 clusters
+
+OPTICS:
+  Without Hamming: 2.8188s | 444 clusters | 0.00 MB
+  With Hamming:    2.8393s | 1029 clusters | 0.00 MB
+  Hamming Overhead: +0.7% time | +585 clusters
+
+INTERVAL_TREE:
+  Without Hamming: 0.8331s | 1392 clusters | 0.00 MB
+  With Hamming:    1.4104s | 1690 clusters | 3.98 MB
+  Hamming Overhead: +69.3% time | +298 clusters
+
+OVERLAP:
+  Without Hamming: 12.2816s | 1402 clusters | 0.14 MB
+  With Hamming:    13.0474s | 1692 clusters | 0.00 MB
+  Hamming Overhead: +6.2% time | +290 clusters
+
+✓ Benchmark plot saved to: algorithm_benchmark_results.png
+
+Generating cluster visualization plots...
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_DBSCAN_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_DBSCAN_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_OPTICS_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_OPTICS_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_INTERVAL_TREE_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_OVERLAP_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_cousins_chr1_OVERLAP_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_DBSCAN_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_DBSCAN_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_OPTICS_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_OPTICS_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_INTERVAL_TREE_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_OVERLAP_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G2_G3_parents_kids_chr1_OVERLAP_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_DBSCAN_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_DBSCAN_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_OPTICS_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_OPTICS_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_INTERVAL_TREE_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_OVERLAP_NO_HAMMING.png
+  ✓ Cluster plot saved to: plat_G3_siblings_chr1_OVERLAP_HAMMING.png
