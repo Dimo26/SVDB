@@ -141,9 +141,9 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     
     try:
         if algorithm_name == 'DBSCAN':
-            labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
+            labels = DBSCAN.cluster(coordinates, distance_threshold, 1)
         elif algorithm_name == 'OPTICS':
-            optics = OPTICS(min_samples=2, max_eps=distance_threshold)
+            optics = OPTICS(min_samples=1, max_eps=distance_threshold)
             labels = optics.fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
             labels = interval_tree_cluster(coordinates, distance_threshold)
@@ -188,7 +188,11 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     total_memory = spatial_memory + hamming_memory
     n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
     
-    return total_time, total_memory, n_clusters, labels
+    # Calculate clustering statistics
+    n_unclustered = np.sum(labels == -1)  # Noise/unique variants
+    n_clustered = len(labels) - n_unclustered  # Variants in clusters
+    
+    return total_time, total_memory, n_clusters, labels, n_clustered, n_unclustered
 
 
 def main():
@@ -196,7 +200,10 @@ def main():
     print("SVDB Clustering Algorithm Benchmark")
     print("Benchmarking on CHROMOSOME 1 only")
 
-
+    # Zoom settings for cluster plots (adjust these to zoom in/out)
+    # Set to None to use full range, or specify [min, max] to zoom
+    zoom_x = None  # Example: [1000000, 2000000] to zoom to 1-2 Mbp range
+    zoom_y = None  # Example: [1000000, 2000000]
     
     # Find database files
     db_files = glob.glob('*.db') + glob.glob('../*.db')
@@ -238,7 +245,7 @@ def main():
 
 
         for algo in algorithms:
-            elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
+            elapsed, memory, n_clusters, labels, n_clustered, n_unclustered = benchmark_clustering_algorithm(
                 coordinates, variants, algo, apply_hamming=False
             )
             
@@ -246,9 +253,11 @@ def main():
                 results[db_file][algo] = {
                     'time': elapsed,
                     'memory': memory,
-                    'clusters': n_clusters
+                    'clusters': n_clusters,
+                    'clustered': n_clustered,
+                    'unclustered': n_unclustered
                 }
-                print(f"  {algo:15s}: {elapsed:7.4f}s | {n_clusters:4d} clusters | mem: {memory/1024/1024:6.2f} MB")
+                print(f"  {algo:15s}: {elapsed:7.4f}s | {n_clusters:4d} clusters | {n_clustered:4d} clustered | {n_unclustered:4d} unclustered | mem: {memory/1024/1024:6.2f} MB")
         
 
         if ins_with_seq:
@@ -256,7 +265,7 @@ def main():
 
       
             for algo in algorithms:
-                elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
+                elapsed, memory, n_clusters, labels, n_clustered, n_unclustered = benchmark_clustering_algorithm(
                     coordinates, variants, algo, apply_hamming=True, max_hamming=0.2
                 )
                 
@@ -265,9 +274,11 @@ def main():
                     results[db_file][algo_key] = {
                         'time': elapsed,
                         'memory': memory,
-                        'clusters': n_clusters
+                        'clusters': n_clusters,
+                        'clustered': n_clustered,
+                        'unclustered': n_unclustered
                     }
-                    print(f"  {algo:15s}: {elapsed:7.4f}s | {n_clusters:4d} clusters | mem: {memory/1024/1024:6.2f} MB")
+                    print(f"  {algo:15s}: {elapsed:7.4f}s | {n_clusters:4d} clusters | {n_clustered:4d} clustered | {n_unclustered:4d} unclustered | mem: {memory/1024/1024:6.2f} MB")
     
 
     print("\n" + "="*60)
@@ -384,13 +395,13 @@ def main():
                 continue
             for algo in algorithms:
                 for apply_hamming in [False, True]:
-                    elapsed, memory, n_clusters, labels = benchmark_clustering_algorithm(
+                    elapsed, memory, n_clusters, labels, n_clustered, n_unclustered = benchmark_clustering_algorithm(
                         coordinates, variants, algo, apply_hamming=apply_hamming, max_hamming=0.2
                     )
                     if labels is None:
                         continue
                     
-                    plt.figure(figsize=(8, 6))
+                    plt.figure(figsize=(10, 8))
                     unique_labels = set(labels)
                     colors = plt.cm.get_cmap('tab20', len(unique_labels))
                     
@@ -399,11 +410,17 @@ def main():
                         xy = coordinates[class_member_mask]
                         plt.scatter(xy[:, 0], xy[:, 1], s=10, color=colors(k), label=f'Cluster {k}' if k != -1 else 'Noise')
                     
-                   #plt.title(f'{algo} Clustering {"with Hamming" if apply_hamming else "without Hamming"}\n{os.path.basename(db_file)}')
-                    plt.xlabel('Position A')
-                    plt.ylabel('Position B')
+
+                    if zoom_x is not None:
+                        plt.xlim(zoom_x)
+                    if zoom_y is not None:
+                        plt.ylim(zoom_y)
+                    
+                    #plt.title(f'{algo} {"with" if apply_hamming else "without"} Hamming: {n_clusters} clusters ({n_clustered} clustered, {n_unclustered} unique)')
+                    plt.xlabel('Position A (bp)')
+                    plt.ylabel('Position B (bp)')
                     plot_filename = f"{os.path.basename(db_file).replace('.db','')}_chr1_{algo}_{'HAMMING' if apply_hamming else 'NO_HAMMING'}.png"
-                    plt.savefig(plot_filename, dpi=150, bbox_inches='tight')
+                    plt.savefig(plot_filename, dpi=300, bbox_inches='tight')  # Higher DPI for better zoom quality
                     plt.close()
 
                     print(f"  ✓ Cluster plot saved to: {plot_filename}")
