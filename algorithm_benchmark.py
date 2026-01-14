@@ -202,8 +202,19 @@ def main():
     print("Benchmarking on CHROMOSOME 1 only")
 
   
-    zoom_x = [0, 60000000]  
-    zoom_y = [0, 60000000]  
+    zoom_x = [None]  
+    zoom_y = [None]  
+
+    #zoom_x = [0, 60000000] done
+    #zoom_y = [0, 60000000] done 
+
+    #zoom_x = [80000000, 110000000]
+    #zoom_y = [80000000, 110000000]
+
+    #zoom_x = [90000000, 100000000]
+    #zoom_y = [90000000, 100000000]
+
+
     
     # Find database files
     db_files = glob.glob('*.db') + glob.glob('../*.db')
