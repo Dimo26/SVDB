@@ -202,9 +202,8 @@ def main():
     print("Benchmarking on CHROMOSOME 1 only")
 
   
-    zoom_x = [None]  
-    zoom_y = [None]  
-
+    zoom_x = None 
+    zoom_y = None
     #zoom_x = [0, 60000000] done
     #zoom_y = [0, 60000000] done 
 
