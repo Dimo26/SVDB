@@ -405,19 +405,21 @@ def main():
                     unique_labels = sorted(set(labels))
                     n_clusters = len(unique_labels)
                     
-                    if n_clusters > 1:
-                        cmap = plt.cm.get_cmap('hsv', n_clusters)
-                        color_map = {label: cmap(i / n_clusters) if label != -1 else (1.0, 0.0, 0.0) 
-                                     for i, label in enumerate(unique_labels)}
-                    else:
-                        color_map = {-1: (1.0, 0.0, 0.0)}
+                    # Generate colors for all clusters
+                    cmap = plt.cm.get_cmap('hsv', max(n_clusters, 2))
+                    color_map = {}
+                    
+                    for i, label in enumerate(unique_labels):
+                        if label == -1:
+                            color_map[label] = (1.0, 0.0, 0.0)  # Bright red for noise
+                        else:
+                            color_map[label] = cmap(i / max(n_clusters, 1))
                     
                     colors = lambda k: color_map.get(k, (0, 0, 0))
                     for k in unique_labels:
                         class_member_mask = (labels == k)
                         xy = coordinates[class_member_mask]
                         plt.scatter(xy[:, 0], xy[:, 1], s=10, color=colors(k), label=f'Cluster {k}' if k != -1 else 'Noise')
-                    
 
                     if zoom_x is not None:
                         plt.xlim(zoom_x)
