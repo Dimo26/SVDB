@@ -142,9 +142,9 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     
     try:
         if algorithm_name == 'DBSCAN':
-            labels = DBSCAN.cluster(coordinates, distance_threshold, 1)
+            labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
         elif algorithm_name == 'OPTICS':
-            optics = OPTICS(min_samples=1, max_eps=distance_threshold)
+            optics = OPTICS(min_samples=2, max_eps=distance_threshold)
             labels = optics.fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
             labels = interval_tree_cluster(coordinates, distance_threshold)
@@ -202,8 +202,8 @@ def main():
     print("Benchmarking on CHROMOSOME 1 only")
 
   
-    zoom_x = [50000000, 100000000]  
-    zoom_y = [50000000, 100000000]  
+    zoom_x = [0, 60000000]  
+    zoom_y = [0, 60000000]  
     
     # Find database files
     db_files = glob.glob('*.db') + glob.glob('../*.db')
