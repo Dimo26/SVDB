@@ -11,6 +11,7 @@ import os
 import glob
 import numpy as np
 import psutil
+from sklearn.discriminant_analysis import unique_labels
 
 def load_db_samples(db_file):
     """Load variants from SVDB database."""
@@ -141,9 +142,9 @@ def benchmark_clustering_algorithm(coordinates, variants, algorithm_name, apply_
     
     try:
         if algorithm_name == 'DBSCAN':
-            labels = DBSCAN.cluster(coordinates, distance_threshold, 2)
+            labels = DBSCAN.cluster(coordinates, distance_threshold, 1)
         elif algorithm_name == 'OPTICS':
-            optics = OPTICS(min_samples=2, max_eps=distance_threshold)
+            optics = OPTICS(min_samples=1, max_eps=distance_threshold)
             labels = optics.fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
             labels = interval_tree_cluster(coordinates, distance_threshold)
@@ -401,9 +402,17 @@ def main():
                         continue
                     
                     plt.figure(figsize=(10, 8))
-                    unique_labels = set(labels)
-                    colors = plt.cm.get_cmap('tab20', len(unique_labels))
+                    unique_labels = sorted(set(labels))
+                    n_clusters = len(unique_labels)
                     
+                    if n_clusters > 1:
+                        cmap = plt.cm.get_cmap('hsv', n_clusters)
+                        color_map = {label: cmap(i / n_clusters) if label != -1 else (1.0, 0.0, 0.0) 
+                                     for i, label in enumerate(unique_labels)}
+                    else:
+                        color_map = {-1: (1.0, 0.0, 0.0)}
+                    
+                    colors = lambda k: color_map.get(k, (0, 0, 0))
                     for k in unique_labels:
                         class_member_mask = (labels == k)
                         xy = coordinates[class_member_mask]
