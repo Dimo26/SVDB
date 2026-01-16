@@ -4,7 +4,6 @@ from collections import namedtuple
 # Named tuple for storing interval with metadata
 Interval = namedtuple('Interval', ['start', 'end', 'index', 'data'])
 
-
 class IntervalNode:
 
     def __init__(self, intervals, depth=0, max_depth=20):
