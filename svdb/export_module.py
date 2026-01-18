@@ -95,6 +95,10 @@ def _hamming_distance(seq1, seq2):
 
 
 def apply_hamming_to_insertions(labels, variant_dict, max_hamming=0.2):
+    """
+    Apply Hamming distance re-clustering for insertions WITHIN spatial clusters.
+    Only processes insertions that were already spatially clustered.
+    """
     if labels is None or variant_dict is None:
         return labels
     
@@ -102,11 +106,12 @@ def apply_hamming_to_insertions(labels, variant_dict, max_hamming=0.2):
     new_labels = np.full_like(labels, -1)
     next_cluster_id = 0
     
-    # Get unique spatial cluster IDs
+    # Get unique spatial cluster IDs (excluding noise)
     unique_labels = sorted(set(labels.tolist()))
     
+    # Process only spatially clustered points
     for spatial_label in unique_labels:
-        if spatial_label == -1:  # Noise
+        if spatial_label == -1:  # Skip noise entirely
             continue
         
         # Get all variants in this spatial cluster
@@ -130,7 +135,7 @@ def apply_hamming_to_insertions(labels, variant_dict, max_hamming=0.2):
             new_labels[other_indices] = next_cluster_id
             next_cluster_id += 1
         
-        # Re-cluster insertions by sequence similarity
+        # Re-cluster insertions by sequence similarity WITHIN this spatial cluster
         if ins_with_seq:
             assigned = set()
             for i in range(len(ins_with_seq)):
@@ -158,6 +163,11 @@ def apply_hamming_to_insertions(labels, variant_dict, max_hamming=0.2):
                 for g in group:
                     new_labels[ins_with_seq[g]] = next_cluster_id
                 next_cluster_id += 1
+    
+    # All noise points stay as noise (-1)
+    noise_indices = np.where(labels == -1)[0]
+    for idx in noise_indices:
+        new_labels[idx] = -1
     
     return new_labels
 
