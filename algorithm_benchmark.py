@@ -176,8 +176,6 @@ def _hamming_distance(seq1, seq2):
 def apply_hamming_post_processing(labels, variants, max_hamming=0.2):
     """
     Apply Hamming distance re-clustering for insertions WITHIN spatial clusters.
-    
-    IMPORTANT:
     - Only affects insertions WITH sequences
     - Insertions WITHOUT sequences keep their spatial cluster
     - Noise points remain noise regardless of sequence
