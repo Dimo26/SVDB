@@ -313,7 +313,7 @@ def benchmark_algorithm(coordinates, variants, algorithm_name, apply_hamming=Fal
     try:
         distance = 500
         if algorithm_name == 'DBSCAN':
-            labels = DBSCAN.cluster(coordinates, distance, 2)
+            labels = DBSCAN.cluster(coordinates, distance, 1)
         elif algorithm_name == 'OPTICS':
             labels = OPTICS(min_samples=2, max_eps=distance).fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
