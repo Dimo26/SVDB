@@ -78,7 +78,6 @@ def analyze_clustering(coordinates, variants, labels, algorithm_name):
     print(f"  Unclustered/Noise: {n_noise:>5} ({n_noise/len(variants)*100:>5.1f}%) ← Why so many?")
     print(f"  Number of clusters: {n_clusters}")
     
-    # Breakdown by SV type
     print(f"\n  Noise breakdown by SV type:")
     sv_stats = {}
     for v, label in zip(variants, labels):
@@ -94,7 +93,6 @@ def analyze_clustering(coordinates, variants, labels, algorithm_name):
         pct = data['noise']/data['total']*100 if data['total'] > 0 else 0
         print(f"    {sv_type:<6} {data['noise']:>5}/{data['total']:<5} ({pct:>5.1f}%) are noise")
     
-    # Distance analysis - WHY are they noise?
     noise_indices = np.where(labels == -1)[0]
     if len(noise_indices) > 0:
         print(f"  NOISE DIAGNOSIS - Why aren't these variants clustered?")
@@ -254,6 +252,50 @@ def apply_hamming_reclustering(labels, variants, max_hamming=0.2):
     
     return new_labels
 
+def overlap_cluster(coordinates, variants, distance=500, overlap=0.6):
+    """Overlap-based clustering using connected components."""
+    from svdb.overlap_module import isSameVariation, precise_overlap
+    
+    n = len(coordinates)
+    adjacency = {i: set() for i in range(n)}
+    
+    for i in range(n):
+        chrA_i, posA_i = "1", int(coordinates[i][0])
+        posB_i = int(coordinates[i][1])
+        
+        for j in range(i+1, n):
+            chrA_j, posA_j = "1", int(coordinates[j][0])
+            posB_j = int(coordinates[j][1])
+            
+            if abs(posA_i - posA_j) > distance or abs(posB_i - posB_j) > distance:
+                continue
+            
+            if variants[i]['type'] == 'INS':
+                sim, match = precise_overlap(posA_i, posB_i, posA_j, posB_j, distance)
+            else:
+                sim, match = isSameVariation(posA_i, posB_i, posA_j, posB_j, overlap, distance)
+            
+            if match:
+                adjacency[i].add(j)
+                adjacency[j].add(i)
+    
+    labels = np.full(n, -1)
+    current_cluster = 0
+    visited = set()
+    
+    def dfs(node, cluster_id):
+        visited.add(node)
+        labels[node] = cluster_id
+        for neighbor in adjacency[node]:
+            if neighbor not in visited:
+                dfs(neighbor, cluster_id)
+    
+    for i in range(n):
+        if i not in visited:
+            dfs(i, current_cluster)
+            current_cluster += 1
+    
+    return labels
 
 def benchmark_algorithm(coordinates, variants, algorithm_name, apply_hamming=False):
     """Run clustering algorithm and measure performance."""
@@ -276,6 +318,8 @@ def benchmark_algorithm(coordinates, variants, algorithm_name, apply_hamming=Fal
             labels = OPTICS(min_samples=2, max_eps=distance).fit_predict(coordinates)
         elif algorithm_name == 'INTERVAL_TREE':
             labels = interval_tree_cluster(coordinates, distance)
+        elif algorithm_name == 'OVERLAP':
+            labels = overlap_cluster(coordinates, variants, distance)
         else:
             return None
         
@@ -308,7 +352,6 @@ def create_single_plot(coordinates, variants, labels, algorithm_name, hamming_st
     
     fig, ax = plt.subplots(figsize=(16, 12))
     
-    # Plot all points
     for coord, variant, label in zip(coordinates, variants, labels):
         if label == -1:
             color, alpha, size, marker = colors['NOISE'], 0.4, 25, 'x'
@@ -320,7 +363,6 @@ def create_single_plot(coordinates, variants, labels, algorithm_name, hamming_st
                   edgecolors='black' if label != -1 else 'none',
                   linewidths=0.7, marker=marker, zorder=2)
     
-    # Legend at bottom
     legend_elements = []
     for sv_type in sorted(set(v['type'] for v in variants)):
         count = sum(1 for v in variants if v['type'] == sv_type)
@@ -341,14 +383,6 @@ def create_single_plot(coordinates, variants, labels, algorithm_name, hamming_st
     
     ax.set_xlabel('Position A (bp)', fontsize=14, fontweight='bold')
     ax.set_ylabel('Position B (bp)', fontsize=14, fontweight='bold')
-
-    
-    n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-    n_clustered = sum(1 for l in labels if l != -1)
-    
-    ax.set_title(f'{algorithm_name} | {hamming_state}\n'
-                 f'{n_clusters} clusters | {n_clustered} clustered | {noise_count} noise | {runtime:.3f}s',
-                 fontsize=14, fontweight='bold', pad=15)
     
     plt.tight_layout()
     filename = f"{db_basename}_chr1_{algorithm_name}_{hamming_state}.png"
@@ -357,6 +391,49 @@ def create_single_plot(coordinates, variants, labels, algorithm_name, hamming_st
     
     return filename
 
+
+def create_size_histogram(variants, db_basename):
+    """Create histogram of SV size distribution."""
+    import matplotlib.pyplot as plt
+    
+    sv_types = {}
+    for v in variants:
+        sv_type = v['type']
+        if sv_type not in sv_types:
+            sv_types[sv_type] = []
+        sv_types[sv_type].append(v['size'])
+    
+    colors = {'INS': '#FFD700', 'DEL': '#32CD32', 'DUP': '#4169E1',
+              'INV': '#FF4500', 'BND': '#8B008B'}
+    
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    axes = axes.flatten()
+    
+    for idx, (sv_type, sizes) in enumerate(sorted(sv_types.items())):
+        if idx >= 6:
+            break
+        
+        ax = axes[idx]
+        color = colors.get(sv_type, '#808080')
+        
+        ax.hist(sizes, bins=50, color=color, edgecolor='black', alpha=0.7)
+        ax.set_xlabel('Size (bp)', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Count', fontsize=12, fontweight='bold')
+        ax.text(0.95, 0.95, f'{sv_type}\nn={len(sizes)}',
+                transform=ax.transAxes, ha='right', va='top',
+                fontsize=11, fontweight='bold',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        ax.grid(True, alpha=0.3)
+    
+    for idx in range(len(sv_types), 6):
+        axes[idx].axis('off')
+    
+    plt.tight_layout()
+    hist_file = f"{db_basename}_size_distribution.png"
+    plt.savefig(hist_file, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    return hist_file
 
 def create_bar_plots(results, algorithms, db_basename):
     """Create bar plots for time and memory comparison."""
@@ -370,21 +447,13 @@ def create_bar_plots(results, algorithms, db_basename):
     x = np.arange(len(algorithms))
     width = 0.35
     
-    # Time plot
     fig, ax = plt.subplots(figsize=(12, 7))
     bars1 = ax.bar(x - width/2, times_no, width, label='WITHOUT Hamming',
                    color='#FF6B6B', edgecolor='black', linewidth=1.5)
     bars2 = ax.bar(x + width/2, times_yes, width, label='WITH Hamming',
                    color='#4ECDC4', edgecolor='black', linewidth=1.5)
     
-    for bars in [bars1, bars2]:
-        for bar in bars:
-            h = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., h, f'{h:.3f}s',
-                   ha='center', va='bottom', fontsize=10, fontweight='bold')
-    
     ax.set_ylabel('Time (seconds)', fontsize=13, fontweight='bold')
-    ax.set_title(f'Runtime Comparison - {db_basename}', fontsize=14, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(algorithms, fontsize=12)
     ax.legend(loc='upper left', fontsize=11)
@@ -395,21 +464,15 @@ def create_bar_plots(results, algorithms, db_basename):
     plt.close()
 
     fig, ax = plt.subplots(figsize=(12, 7))
-    bars1 = ax.bar(x - width/2, mem_no, width, color='#AA96DA',
-                   edgecolor='black', linewidth=1.5)
-    bars2 = ax.bar(x + width/2, mem_yes, width, color='#FCBAD3',
-                   edgecolor='black', linewidth=1.5)
-    
-    for bars in [bars1, bars2]:
-        for bar in bars:
-            h = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., h, f'{h:.1f}MB',
-                   ha='center', va='bottom', fontsize=10, fontweight='bold')
+    bars1 = ax.bar(x - width/2, mem_no, width, label='WITHOUT Hamming',
+                   color='#AA96DA', edgecolor='black', linewidth=1.5)
+    bars2 = ax.bar(x + width/2, mem_yes, width, label='WITH Hamming',
+                   color='#FCBAD3', edgecolor='black', linewidth=1.5)
     
     ax.set_ylabel('Memory (MB)', fontsize=13, fontweight='bold')
-    ax.set_title(f'Memory Comparison - {db_basename}', fontsize=14, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(algorithms, fontsize=12)
+    ax.legend(loc='upper left', fontsize=11)
     
     plt.tight_layout()
     mem_file = f"{db_basename}_memory_comparison.png"
@@ -424,7 +487,6 @@ def main():
         print("Usage: python algorithm_benchmark_final.py <database.db> [...]")
         sys.exit(1)
     
-    # Get database files
     db_files = []
     for arg in sys.argv[1:]:
         if '*' in arg:
@@ -442,7 +504,7 @@ def main():
         print(f"  • {os.path.basename(f)}")
 
     
-    algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE']
+    algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE', 'OVERLAP']
     
     for db_file in db_files:
         print(f"{'PROCESSING: ' + os.path.basename(db_file):^90}")
@@ -454,13 +516,8 @@ def main():
         db_results = {}
         db_basename = os.path.basename(db_file).replace('.db', '')
         
-        # Run benchmarks
         for algo in algorithms:
-            print(f"\n{'─'*90}")
             print(f"{algo} CLUSTERING")
-            print(f"{'─'*90}")
-            
-            # Without Hamming
             print(f"\n▶ {algo} WITHOUT Hamming...")
             result = benchmark_algorithm(coordinates, variants, algo, False)
             if result:
@@ -469,7 +526,6 @@ def main():
                       f"Clustered: {result['clustered']} | Noise: {result['noise']}")
                 analyze_clustering(coordinates, variants, result['labels'], f"{algo} WITHOUT Hamming")
             
-            # With Hamming
             print(f"\n▶ {algo} WITH Hamming...")
             result = benchmark_algorithm(coordinates, variants, algo, True)
             if result:
@@ -478,11 +534,9 @@ def main():
                       f"Clustered: {result['clustered']} | Noise: {result['noise']}")
                 analyze_clustering(coordinates, variants, result['labels'], f"{algo} WITH Hamming")
         
-        # Create plots
         print("GENERATING VISUALIZATIONS")
 
         try:
-            # Main plots
             for algo in algorithms:
                 for suffix, state in [('', 'NO_HAMMING'), ('_HAMMING', 'WITH_HAMMING')]:
                     key = f"{algo}{suffix}"
@@ -493,8 +547,11 @@ def main():
                         )
                         print(f"  ✓ {filename}")
 
+            hist_file = create_size_histogram(variants, db_basename)
+            print(f"\n  ✓ {hist_file}")
+            
             time_file, mem_file = create_bar_plots(db_results, algorithms, db_basename)
-            print(f"\n  ✓ {time_file}")
+            print(f"  ✓ {time_file}")
             print(f"  ✓ {mem_file}")
             
         except Exception as e:
