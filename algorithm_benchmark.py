@@ -500,7 +500,7 @@ def plot_scalability_curves(results, algorithms, output_prefix, use_hamming=Fals
                    color=colors.get(algo, '#333333'),
                    label=algo)
     
-    ax.set_xlabel('Number of Variants in chromosome 1', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Number of Variants in chromosome', fontsize=14, fontweight='bold')
     ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
     ax.set_title(f'Algorithm Performance vs Variant Count{hamming_label}',
                  fontsize=16, fontweight='bold', pad=20)
