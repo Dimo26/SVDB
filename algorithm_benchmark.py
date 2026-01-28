@@ -6,11 +6,34 @@ import sys
 import os
 import glob
 import numpy as np
+#matplotlib.use('Agg')  # Use non-interactive backend for cluster
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
+#from matplotlib.patches import Patch
 import psutil
 from collections import defaultdict
 
+# Import SVDB modules (PYTHONPATH should be set)
+try:
+    from database import DB
+    from export_module import DBSCAN
+    from optics_clustering import optics_cluster
+    from interval_tree_overlap import interval_tree_cluster
+    from overlap_module import isSameVariation
+except ImportError:
+    try:
+        from svdb.database import DB
+        from svdb.export_module import DBSCAN
+        from svdb.optics_clustering import optics_cluster
+        from svdb.interval_tree_overlap import interval_tree_cluster
+        from svdb.overlap_module import isSameVariation
+    except ImportError as e:
+        print(f"ERROR: Cannot import SVDB modules: {e}")
+        print("Make sure PYTHONPATH is set correctly!")
+        sys.exit(1)
+
+# ============================================================================
+# DATABASE LOADING AND STATISTICS
+# ============================================================================
 
 def load_database(db_file, chromosome=None):
     """
@@ -24,9 +47,6 @@ def load_database(db_file, chromosome=None):
         coordinates, variants, stats
     """
     try:
-        sys.path.insert(0, '')
-        from database import DB
-        
         db = DB(db_file)
         coordinates, variants = [], []
         
@@ -143,36 +163,23 @@ def print_sv_statistics(stats, variants):
             print(f"  Without sequence:     {ins['without_seq']:>8,} ({pct_without:>5.1f}%)")
 
 
-# ============================================================================
-# CLUSTERING ALGORITHMS
-# ============================================================================
-
 def dbscan_cluster(coordinates, epsilon=500, min_pts=2):
     """DBSCAN clustering implementation."""
-    sys.path.insert(0, '/mnt/project')
-    from export_module import DBSCAN
     return DBSCAN.cluster(coordinates, epsilon, min_pts)
 
 
-def optics_cluster(coordinates, min_samples=2, max_eps=2000):
-    """OPTICS clustering implementation."""
-    sys.path.insert(0, '/mnt/project')
-    from optics_clustering import optics_cluster
+def optics_cluster_wrapper(coordinates, min_samples=2, max_eps=2000):
+    """OPTICS clustering wrapper."""
     return optics_cluster(coordinates, min_samples=min_samples, max_eps=max_eps)
 
 
-def interval_tree_cluster(coordinates, max_distance=1000):
-    """Interval tree clustering implementation."""
-    sys.path.insert(0, '/mnt/project')
-    from interval_tree_overlap import interval_tree_cluster
+def interval_tree_cluster_wrapper(coordinates, max_distance=1000):
+    """Interval tree clustering wrapper."""
     return interval_tree_cluster(coordinates, max_distance=max_distance)
 
 
 def overlap_cluster(coordinates, variants, distance=500, overlap=0.6):
     """Overlap-based clustering (simpler baseline)."""
-    sys.path.insert(0, '/mnt/project')
-    from overlap_module import isSameVariation
-    
     n = len(coordinates)
     labels = np.full(n, -1)
     cluster_id = 0
@@ -278,11 +285,6 @@ def apply_hamming_reclustering(labels, variants, max_hamming=0.2):
     
     return new_labels
 
-
-# ============================================================================
-# BENCHMARKING
-# ============================================================================
-
 def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False, params=None):
     """
     Benchmark a single clustering algorithm.
@@ -302,9 +304,9 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False, par
         if algorithm == 'DBSCAN':
             labels = dbscan_cluster(coordinates, **params)
         elif algorithm == 'OPTICS':
-            labels = optics_cluster(coordinates, **params)
+            labels = optics_cluster_wrapper(coordinates, **params)
         elif algorithm == 'INTERVAL_TREE':
-            labels = interval_tree_cluster(coordinates, **params)
+            labels = interval_tree_cluster_wrapper(coordinates, **params)
         elif algorithm == 'OVERLAP':
             labels = overlap_cluster(coordinates, variants, **params)
         else:
@@ -343,22 +345,12 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False, par
         return None
 
 
-# ============================================================================
+
 # SCALABILITY ANALYSIS
-# ============================================================================
 
 def analyze_scalability(db_files, algorithms, use_hamming=False, chromosome='1'):
     """
     Analyze algorithm performance across different database sizes.
-    
-    Args:
-        db_files: List of database files with different sample counts
-        algorithms: List of algorithm names to test
-        use_hamming: Whether to use Hamming re-clustering
-        chromosome: Which chromosome to analyze (for consistency)
-    
-    Returns:
-        results dict with db_size -> algorithm -> metrics
     """
     print(f"\n{'='*90}")
     print(f"SCALABILITY ANALYSIS - {'WITH' if use_hamming else 'WITHOUT'} Hamming")
@@ -419,11 +411,6 @@ def analyze_scalability(db_files, algorithms, use_hamming=False, chromosome='1')
 def plot_scalability_curves(results, algorithms, output_prefix, use_hamming=False):
     """
     Create time complexity curves showing algorithm performance vs database size.
-    
-    Creates plots:
-    1. Time vs Number of Samples
-    2. Time vs Number of Variants
-    3. Memory vs Number of Samples
     """
     if not results:
         print("No results to plot")
@@ -500,12 +487,11 @@ def plot_scalability_curves(results, algorithms, output_prefix, use_hamming=Fals
                    color=colors.get(algo, '#333333'),
                    label=algo)
     
-    ax.set_xlabel('Number of Variants in chromosome', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Number of Variants (Chr 1)', fontsize=14, fontweight='bold')
     ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
     ax.set_title(f'Algorithm Performance vs Variant Count{hamming_label}',
                  fontsize=16, fontweight='bold', pad=20)
     ax.legend(fontsize=12, frameon=True, shadow=True)
-    ax.grid(True, alpha=0.3, linestyle='--')
     ax.set_xscale('log')
     ax.set_yscale('log')
     
@@ -543,21 +529,16 @@ def plot_scalability_curves(results, algorithms, output_prefix, use_hamming=Fals
     return output_files
 
 
-# ============================================================================
-# SV SIZE DISTRIBUTION PLOTS
-# ============================================================================
-
 def create_sv_distribution_plot(variants, output_prefix):
     """
-    Create comprehensive SV size distribution plot (like the example image).
-    Separate subplot for each SV type showing distribution.
+    Create comprehensive SV size distribution plot.
     """
     # Group variants by type
     sv_by_type = defaultdict(list)
     for v in variants:
         sv_by_type[v['type']].append(v['size'])
     
-    # Create subplots (2x2 or 2x3 depending on number of types)
+    # Create subplots
     n_types = len(sv_by_type)
     if n_types <= 4:
         nrows, ncols = 2, 2
@@ -611,6 +592,7 @@ def create_sv_distribution_plot(variants, output_prefix):
                horizontalalignment='right',
                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black'))
         
+        #ax.grid(True, alpha=0.3, linestyle='--')
         
         # Use log scale for y-axis if range is large
         if max(counts) > 100:
@@ -630,94 +612,55 @@ def create_sv_distribution_plot(variants, output_prefix):
     
     return filename
 
-
-# ============================================================================
-# MAIN FUNCTION
-# ============================================================================
-
 def main():
     """Main benchmark orchestration."""
+
+    print(f"SVDB COMPREHENSIVE BENCHMARK")
+    print(f"Working directory: {os.getcwd()}")
+    print(f"Python path: {sys.path[:3]}")
     
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  Single database:   python svdb_comprehensive_benchmark.py <database.db>")
-        print("  Multiple databases: python svdb_comprehensive_benchmark.py <db1.db> <db2.db> ...")
-        print("  Scalability test:  python svdb_comprehensive_benchmark.py --scalability <db_dir>")
+    # Find database files in current directory
+    db_files = glob.glob("*.db")
+    
+    if not db_files:
+        print("ERROR: No database files (*.db) found in current directory")
         sys.exit(1)
     
-    # Check if scalability analysis mode
-    if '--scalability' in sys.argv:
-        scalability_mode = True
-        # Find all database files in specified directory
-        db_dir = sys.argv[sys.argv.index('--scalability') + 1]
-        
-        if not os.path.isdir(db_dir):
-            print(f"ERROR: {db_dir} is not a directory")
-            sys.exit(1)
-        
-        db_files = glob.glob(os.path.join(db_dir, '*samples*.db'))
-        db_files = sorted(db_files)
-        
-        if not db_files:
-            print(f"ERROR: No *samples*.db files found in {db_dir}")
-            sys.exit(1)
-        
-        print(f"{'='*90}")
-        print(f"SVDB SCALABILITY ANALYSIS")
-        print(f"{'='*90}")
-        print(f"Database directory: {db_dir}")
-        print(f"Found {len(db_files)} databases:")
-        for f in db_files:
-            print(f"  • {os.path.basename(f)}")
-        
-    else:
-        scalability_mode = False
-        # Single/multiple database mode
-        db_files = []
-        for arg in sys.argv[1:]:
-            if '*' in arg:
-                db_files.extend(glob.glob(arg))
-            elif os.path.exists(arg):
-                db_files.append(arg)
-        
-        if not db_files:
-            print("ERROR: No valid database files found")
-            sys.exit(1)
-        
-        print(f"{'='*90}")
-        print(f"SVDB COMPREHENSIVE BENCHMARK")
-        print(f"{'='*90}")
-        print(f"Databases: {len(db_files)}")
-        for f in db_files:
-            print(f"  • {os.path.basename(f)}")
+    db_files = sorted(db_files)
+    
+    print(f"\nFound {len(db_files)} database file(s):")
+    for f in db_files:
+        print(f"  • {f}")
     
     # Define algorithms to test
     algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE', 'OVERLAP']
     
-    if scalability_mode:
+    # Check if this is a scalability test (multiple databases with sample counts)
+    has_sample_pattern = any('samples' in f or 'sample' in f for f in db_files)
+    
+    if has_sample_pattern and len(db_files) > 1:
         # Scalability analysis mode
-        output_prefix = os.path.join(os.getcwd(), 'scalability_analysis')
+        print(f"SCALABILITY ANALYSIS MODE DETECTED")
+        output_prefix = 'scalability_analysis'
         
         # Run analysis WITHOUT Hamming
-        print(f"\n{'#'*90}")
+
         print(f"PHASE 1: Scalability WITHOUT Hamming")
-        print(f"{'#'*90}")
+
         results_no_hamming = analyze_scalability(
             db_files, algorithms, use_hamming=False, chromosome='1'
         )
         
-        # Run analysis WITH Hamming
-        print(f"\n{'#'*90}")
+        # Run analysis WITH Hammin
         print(f"PHASE 2: Scalability WITH Hamming")
-        print(f"{'#'*90}")
+
         results_with_hamming = analyze_scalability(
             db_files, algorithms, use_hamming=True, chromosome='1'
         )
         
         # Generate plots
-        print(f"\n{'='*90}")
         print(f"GENERATING SCALABILITY PLOTS")
-        print(f"{'='*90}")
+
         
         plot_files = []
         plot_files.extend(plot_scalability_curves(
@@ -726,20 +669,16 @@ def main():
         plot_files.extend(plot_scalability_curves(
             results_with_hamming, algorithms, output_prefix, use_hamming=True
         ))
-        
-        print(f"\n{'='*90}")
+
         print(f"✓ SCALABILITY ANALYSIS COMPLETE")
-        print(f"{'='*90}")
         print(f"Generated {len(plot_files)} plots")
         
     else:
         # Single/multiple database mode - detailed analysis
         for db_file in db_files:
             db_basename = os.path.basename(db_file).replace('.db', '')
-            
-            print(f"\n{'#'*90}")
             print(f"PROCESSING: {db_basename}")
-            print(f"{'#'*90}")
+
             
             # Load database (ALL chromosomes for accurate stats)
             coordinates, variants, stats = load_database(db_file, chromosome=None)
@@ -748,16 +687,11 @@ def main():
                 continue
             
             # Create SV distribution plot
-            print(f"\n{'─'*90}")
             print(f"GENERATING SV DISTRIBUTION PLOT")
-            print(f"{'─'*90}")
             dist_plot = create_sv_distribution_plot(variants, db_basename)
             print(f"  ✓ {dist_plot}")
             
             # For algorithm benchmarking, use only Chr1 for speed
-            print(f"\n{'─'*90}")
-            print(f"ALGORITHM BENCHMARKING (Chromosome 1 only)")
-            print(f"{'─'*90}")
             coords_chr1, vars_chr1, _ = load_database(db_file, chromosome='1')
             
             if coords_chr1 is None or len(coords_chr1) == 0:
@@ -783,13 +717,10 @@ def main():
                     print(f"    WITH Hamming: {result['time']:.4f}s | "
                           f"{result['clusters']:>4} clusters | {result['noise']:>5} noise")
             
-            print(f"\n{'='*90}")
-            print(f"✓ PROCESSING COMPLETE: {db_basename}")
-            print(f"{'='*90}")
-    
-    print(f"\n{'█'*90}")
-    print(f"{'✓ BENCHMARK COMPLETE':^90}")
-    print(f"{'█'*90}")
+
+            print(f"PROCESSING COMPLETE: {db_basename}")
+    print(f"{'BENCHMARK COMPLETE':^90}")
+
 
 
 if __name__ == "__main__":
