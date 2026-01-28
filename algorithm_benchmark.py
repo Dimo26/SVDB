@@ -1,276 +1,354 @@
 
 #!/usr/bin/env python3
-"""
-Algorithm Benchmark for SVDB
-Compares DBSCAN, OPTICS, and Interval Tree clustering algorithms
-"""
 
 import sys
 import os
 import time
+import glob
 import psutil
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import defaultdict
 
-# Ensure current directory is in path
+# Add current directory to Python path
 sys.path.insert(0, os.getcwd())
 
 # Import SVDB modules
-try:
-    from svdb.database import DB
-    from svdb.export_module import DBSCAN
-    from svdb.optics_clustering import optics_cluster
-    from svdb.interval_tree_overlap import interval_tree_cluster
-except ImportError as e:
-    print(f"Error importing SVDB modules: {e}")
-    print("Make sure you're running from the SVDB directory")
-    sys.exit(1)
+from svdb.database import DB
+from svdb.export_module import DBSCAN
+from svdb.optics_clustering import optics_cluster
+from svdb.interval_tree_overlap import interval_tree_cluster
 
 
-class BenchmarkRunner:
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.db = DB(db_path, memory=False)
-        self.results = defaultdict(dict)
-        
-    def get_variant_data(self, variant_type, chrA, chrB):
-        """Fetch variant coordinates from database"""
-        query = f"""
-            SELECT posA, posB FROM SVDB 
-            WHERE var = '{variant_type}' 
-            AND chrA = '{chrA}' 
-            AND chrB = '{chrB}'
-        """
-        hits = self.db.query(query)
-        if not hits:
-            return None
-        
-        coordinates = np.array([[int(h[0]), int(h[1])] for h in hits])
-        return coordinates
+def load_database(db_file, chromosome='1'):
+    """Load Chr 1 variants from database."""
+    db = DB(db_file)
+    coordinates, variants = [], []
     
-    def benchmark_algorithm(self, algorithm_name, coordinates, **params):
-        """Benchmark a single algorithm"""
-        print(f"  Testing {algorithm_name}...", end='', flush=True)
+    query = f'SELECT * FROM SVDB WHERE chrA = "{chromosome}" AND chrB = "{chromosome}"'
+    
+    for row in db.query(query):
+        var_type, chrA, chrB = row[0], row[1], row[2]
+        posA, posB = int(row[3]), int(row[6])
+        seq = row[11] if len(row) > 11 else ''
         
-        # Memory before
-        process = psutil.Process()
-        mem_before = process.memory_info().rss / 1024 / 1024  # MB
+        coordinates.append([posA, posB])
+        variants.append({
+            'type': var_type,
+            'sequence': seq,
+            'posA': posA,
+            'posB': posB
+        })
+    
+    return np.array(coordinates), variants
+
+
+def hamming_distance(seq1, seq2):
+    """Normalized Hamming distance between sequences."""
+    if not seq1 or not seq2:
+        return 1.0
+    seq1, seq2 = str(seq1).upper(), str(seq2).upper()
+    max_len = max(len(seq1), len(seq2))
+    min_len = min(len(seq1), len(seq2))
+    mismatches = sum(1 for i in range(min_len) if seq1[i] != seq2[i])
+    return (mismatches + (max_len - min_len)) / max_len if max_len > 0 else 0.0
+
+
+def apply_hamming_reclustering(labels, variants, max_hamming=0.2):
+    """Re-cluster insertions by sequence similarity using Hamming distance."""
+    if labels is None:
+        return labels
+    
+    labels = np.array(labels)
+    new_labels = np.full_like(labels, -1)
+    next_cluster_id = 0
+    
+    for spatial_label in sorted(set(labels.tolist())):
+        if spatial_label == -1:
+            continue
         
-        # Time execution
-        start_time = time.time()
+        indices = np.where(labels == spatial_label)[0]
+        ins_with_seq, other_indices = [], []
         
-        try:
-            if algorithm_name == 'DBSCAN':
-                labels = DBSCAN.cluster(
-                    coordinates,
-                    epsilon=params.get('epsilon', 500),
-                    m=params.get('min_pts', 2)
-                )
-            elif algorithm_name == 'OPTICS':
-                labels = optics_cluster(
-                    coordinates,
-                    min_samples=params.get('min_samples', 2),
-                    max_eps=params.get('max_eps', 2000)
-                )
-            elif algorithm_name == 'INTERVAL_TREE':
-                labels = interval_tree_cluster(
-                    coordinates,
-                    max_distance=params.get('max_distance', 1000)
-                )
+        for idx in indices:
+            var = variants[idx]
+            if var['type'] == 'INS' and var['sequence']:
+                ins_with_seq.append(idx)
             else:
-                raise ValueError(f"Unknown algorithm: {algorithm_name}")
+                other_indices.append(idx)
+        
+        # Non-insertion variants keep cluster
+        if other_indices:
+            new_labels[other_indices] = next_cluster_id
+            next_cluster_id += 1
+        
+        # Re-cluster insertions by sequence
+        if ins_with_seq:
+            assigned = set()
+            for i in range(len(ins_with_seq)):
+                if i in assigned:
+                    continue
                 
-        except Exception as e:
-            print(f" FAILED ({e})")
-            return None
-        
-        end_time = time.time()
-        
-        # Memory after
-        mem_after = process.memory_info().rss / 1024 / 1024  # MB
-        
-        # Calculate metrics
-        runtime = end_time - start_time
-        memory_used = mem_after - mem_before
-        
-        n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-        n_noise = list(labels).count(-1)
-        
-        print(f" {runtime:.3f}s, {n_clusters} clusters, {n_noise} noise")
-        
-        return {
-            'runtime': runtime,
-            'memory': memory_used,
-            'n_clusters': n_clusters,
-            'n_noise': n_noise,
-            'labels': labels
-        }
+                group = [i]
+                assigned.add(i)
+                idx_i = ins_with_seq[i]
+                seq_i = variants[idx_i]['sequence']
+                
+                for j in range(i + 1, len(ins_with_seq)):
+                    if j in assigned:
+                        continue
+                    
+                    idx_j = ins_with_seq[j]
+                    seq_j = variants[idx_j]['sequence']
+                    
+                    if hamming_distance(seq_i, seq_j) <= max_hamming:
+                        group.append(j)
+                        assigned.add(j)
+                
+                for g in group:
+                    new_labels[ins_with_seq[g]] = next_cluster_id
+                next_cluster_id += 1
     
-    def run_benchmarks(self):
-        """Run benchmarks on all variant types"""
-        print("\nFetching variant types...")
+    return new_labels
+
+
+def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
+    """Run clustering algorithm and measure time + memory."""
+    process = psutil.Process()
+    mem_before = process.memory_info().rss
+    
+    start_time = time.time()
+    
+    # Run clustering
+    if algorithm == 'DBSCAN':
+        labels = DBSCAN.cluster(coordinates, epsilon=500, m=2)
+    elif algorithm == 'OPTICS':
+        labels = optics_cluster(coordinates, min_samples=2, max_eps=2000)
+    elif algorithm == 'INTERVAL_TREE':
+        labels = interval_tree_cluster(coordinates, max_distance=1000)
+    
+    # Apply Hamming if requested
+    if use_hamming and labels is not None:
+        labels = apply_hamming_reclustering(labels, variants, max_hamming=0.2)
+    
+    elapsed_time = time.time() - start_time
+    mem_after = process.memory_info().rss
+    memory_mb = (mem_after - mem_before) / 1024 / 1024
+    
+    n_clusters = len(set(labels)) - (1 if -1 in labels else 0) if labels is not None else 0
+    
+    return {
+        'time': elapsed_time,
+        'memory': memory_mb,
+        'clusters': n_clusters
+    }
+
+def get_sample_count(db_file):
+    """Extract sample count from filename."""
+    basename = os.path.basename(db_file)
+    if 'all' in basename.lower():
+        return 99999
+    
+    parts = basename.replace('.db', '').split('_')
+    for part in parts:
+        clean = part.replace('samples', '').replace('sample', '')
+        if clean.isdigit():
+            return int(clean)
+    return 0
+
+
+def run_benchmark(db_files, algorithms, use_hamming=False):
+    """Benchmark all algorithms across all database sizes."""
+    mode = "WITH Hamming" if use_hamming else "WITHOUT Hamming"
+    print(f"BENCHMARKING: {mode}")
+
+    
+    # Sort databases by size
+    db_files_sorted = sorted(db_files, key=get_sample_count)
+    results = {algo: {'sizes': [], 'times': [], 'memory': [], 'variants': []} 
+               for algo in algorithms}
+    
+    for db_file in db_files_sorted:
+        sample_count = get_sample_count(db_file)
+        db_name = os.path.basename(db_file)
         
-        # Get unique variant types and chromosomes
-        var_query = "SELECT DISTINCT var, chrA, chrB FROM SVDB"
-        variants = self.db.query(var_query)
+        print(f"\n{db_name} ({sample_count if sample_count < 99999 else 'ALL'} samples):")
         
-        if not variants:
-            print("No variants found in database")
-            return
+        coordinates, variants = load_database(db_file, chromosome='1')
         
-        print(f"Found {len(variants)} variant type/chromosome combinations\n")
+        if coordinates is None or len(coordinates) == 0:
+            print("  ⚠ No data - skipping")
+            continue
         
-        # Test each variant type
-        for var_type, chrA, chrB in variants:
-            print(f"\n{var_type} on {chrA}-{chrB}:")
+        n_variants = len(variants)
+        print(f"  Chr 1: {n_variants:,} variants")
+        
+        for algo in algorithms:
+            print(f"    {algo}...", end=' ', flush=True)
             
-            coordinates = self.get_variant_data(var_type, chrA, chrB)
-            if coordinates is None or len(coordinates) < 2:
-                print(f"  Skipped (insufficient data: {len(coordinates) if coordinates is not None else 0} variants)")
+            result = benchmark_algorithm(coordinates, variants, algo, use_hamming)
+            
+            # Store datapoint for this algorithm
+            results[algo]['sizes'].append(sample_count)
+            results[algo]['times'].append(result['time'])
+            results[algo]['memory'].append(result['memory'])
+            results[algo]['variants'].append(n_variants)
+            
+            print(f"{result['time']:.3f}s | {result['memory']:.1f}MB | {result['clusters']} clusters")
+    
+    return results
+
+
+def calculate_big_o(x, y):
+    """Calculate Big O complexity from log-log slope."""
+    if len(x) < 2:
+        return None, None, "N/A"
+    
+    log_x, log_y = np.log10(x), np.log10(y)
+    coeffs = np.polyfit(log_x, log_y, 1)
+    slope = coeffs[0]
+    
+    y_pred = np.polyval(coeffs, log_x)
+    ss_res = np.sum((log_y - y_pred) ** 2)
+    ss_tot = np.sum((log_y - np.mean(log_y)) ** 2)
+    r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+    
+    if slope < 1.15:
+        complexity = "O(n)"
+    elif slope < 1.5:
+        complexity = "O(n log n)"
+    elif slope < 2.5:
+        complexity = "O(n²)"
+    else:
+        complexity = "O(n³+)"
+    
+    return slope, r2, complexity
+
+
+def plot_results(results_no_hamming, results_with_hamming, algorithms):
+    
+    # Algorithm colors
+    colors = {'DBSCAN': '#E74C3C','OPTICS': '#3498DB','INTERVAL_TREE': '#2ECC71'}
+    
+    markers = {'DBSCAN': 'o', 'OPTICS': 's','INTERVAL_TREE': '^'
+    }
+    
+    output_files = []
+    
+    # Create 4 plots: Time (no/with Hamming) + Memory (no/with Hamming)
+    plot_configs = [
+        ('times', 'Time (seconds)', results_no_hamming, 'WITHOUT Hamming'),
+        ('times', 'Time (seconds)', results_with_hamming, 'WITH Hamming'),
+        ('memory', 'Memory (MB)', results_no_hamming, 'WITHOUT Hamming'),
+        ('memory', 'Memory (MB)', results_with_hamming, 'WITH Hamming'),
+    ]
+    
+    for metric, ylabel, results, mode in plot_configs:
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        # Plot each algorithm as a curve
+        for algo in algorithms:
+            x_data = np.array(results[algo]['sizes'])
+            y_data = np.array(results[algo][metric])
+            
+            if len(x_data) == 0:
                 continue
             
-            print(f"  Dataset size: {len(coordinates)} variants")
+            # Calculate Big O
+            slope, r2, complexity = calculate_big_o(x_data, y_data)
+            label = f"{algo} ({complexity}, slope={slope:.2f}, R²={r2:.3f})" if slope else algo
             
-            # Test all algorithms
-            algorithms = {
-                'DBSCAN': {'epsilon': 500, 'min_pts': 2},
-                'OPTICS': {'min_samples': 2, 'max_eps': 2000},
-                'INTERVAL_TREE': {'max_distance': 1000}
-            }
-            
-            for alg_name, params in algorithms.items():
-                result = self.benchmark_algorithm(alg_name, coordinates, **params)
-                
-                if result:
-                    key = f"{var_type}_{chrA}_{chrB}"
-                    self.results[key][alg_name] = result
-    
-    def plot_results(self):
-        """Generate comparison plots"""
-        if not self.results:
-            print("\nNo results to plot")
-            return
+            # Plot the curve: one line connecting all database sizes
+            ax.plot(x_data, y_data,
+                   color=colors[algo],
+                   marker=markers[algo],
+                   markersize=12,
+                   linewidth=3.5,
+                   label=label,
+                   alpha=0.9,
+                   zorder=3)
         
-        print("\nGenerating plots...")
+        # Configure plot
+        ax.set_xlabel('Database Size (Number of Samples)', fontsize=15, fontweight='bold')
+        ax.set_ylabel(ylabel, fontsize=15, fontweight='bold')
+        ax.set_title(f'Algorithm Scalability: {ylabel}\n{mode}',
+                     fontsize=17, fontweight='bold', pad=20)
         
-        # Prepare data for plotting
-        algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE']
-        variant_keys = list(self.results.keys())
+        # Log scale on Y for Big O analysis
+        ax.set_yscale('log')
         
-        runtimes = {alg: [] for alg in algorithms}
-        memories = {alg: [] for alg in algorithms}
-        clusters = {alg: [] for alg in algorithms}
+        # Configure X-axis
+        all_sizes = sorted(set([s for algo in algorithms for s in results[algo]['sizes']]))
+        ax.set_xticks(all_sizes)
+        ax.set_xticklabels([str(s) if s < 99999 else 'ALL' for s in all_sizes], fontsize=12)
         
-        for key in variant_keys:
-            for alg in algorithms:
-                if alg in self.results[key]:
-                    runtimes[alg].append(self.results[key][alg]['runtime'])
-                    memories[alg].append(self.results[key][alg]['memory'])
-                    clusters[alg].append(self.results[key][alg]['n_clusters'])
-                else:
-                    runtimes[alg].append(np.nan)
-                    memories[alg].append(np.nan)
-                    clusters[alg].append(np.nan)
+        ax.grid(True, alpha=0.3, which='both', linestyle='--')
+        ax.legend(fontsize=12, frameon=True, shadow=True, loc='best')
         
-        # Create figure with subplots
-        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        fig.suptitle('SVDB Clustering Algorithm Comparison', fontsize=14, fontweight='bold')
-        
-        x_pos = np.arange(len(variant_keys))
-        width = 0.25
-        
-        colors = {'DBSCAN': '#1f77b4', 'OPTICS': '#ff7f0e', 'INTERVAL_TREE': '#2ca02c'}
-        
-        # Runtime plot
-        for i, alg in enumerate(algorithms):
-            axes[0].bar(x_pos + i*width, runtimes[alg], width, 
-                       label=alg, color=colors[alg], alpha=0.8)
-        axes[0].set_xlabel('Variant Type')
-        axes[0].set_ylabel('Runtime (seconds)')
-        axes[0].set_title('Execution Time')
-        axes[0].set_xticks(x_pos + width)
-        axes[0].set_xticklabels([k.replace('_', '\n') for k in variant_keys], rotation=45, ha='right')
-        axes[0].legend()
-        axes[0].grid(axis='y', alpha=0.3)
-        
-        # Memory plot
-        for i, alg in enumerate(algorithms):
-            axes[1].bar(x_pos + i*width, memories[alg], width,
-                       label=alg, color=colors[alg], alpha=0.8)
-        axes[1].set_xlabel('Variant Type')
-        axes[1].set_ylabel('Memory Usage (MB)')
-        axes[1].set_title('Memory Consumption')
-        axes[1].set_xticks(x_pos + width)
-        axes[1].set_xticklabels([k.replace('_', '\n') for k in variant_keys], rotation=45, ha='right')
-        axes[1].legend()
-        axes[1].grid(axis='y', alpha=0.3)
-        
-        # Clusters plot
-        for i, alg in enumerate(algorithms):
-            axes[2].bar(x_pos + i*width, clusters[alg], width,
-                       label=alg, color=colors[alg], alpha=0.8)
-        axes[2].set_xlabel('Variant Type')
-        axes[2].set_ylabel('Number of Clusters')
-        axes[2].set_title('Clustering Results')
-        axes[2].set_xticks(x_pos + width)
-        axes[2].set_xticklabels([k.replace('_', '\n') for k in variant_keys], rotation=45, ha='right')
-        axes[2].legend()
-        axes[2].grid(axis='y', alpha=0.3)
+        # Add explanation box
+        explanation = (
+            f'X-axis: Database size progression\n'
+            f'Y-axis: {ylabel} (log scale)\n'
+            f'Each colored curve = one algorithm\n'
+            f'Curve shape shows scalability'
+        )
+        ax.text(0.02, 0.98, explanation,
+               transform=ax.transAxes,
+               fontsize=10,
+               verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.6))
         
         plt.tight_layout()
         
-        # Save plot
-        output_file = 'algorithm_comparison.png'
-        plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"✓ Saved plot: {output_file}")
+        # Save
+        metric_name = metric.replace('times', 'time')
+        mode_str = 'with_hamming' if 'WITH' in mode else 'no_hamming'
+        filename = f"scalability_{metric_name}_{mode_str}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
         plt.close()
         
-        # Print summary statistics
-        self.print_summary()
+        output_files.append(filename)
+        print(f"  ✓ {filename}")
     
-    def print_summary(self):
-        """Print summary statistics"""
-        print("\n" + "="*60)
-        print("BENCHMARK SUMMARY")
-        print("="*60)
-        
-        algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE']
-        
-        for alg in algorithms:
-            runtimes = []
-            memories = []
-            
-            for key in self.results:
-                if alg in self.results[key]:
-                    runtimes.append(self.results[key][alg]['runtime'])
-                    memories.append(self.results[key][alg]['memory'])
-            
-            if runtimes:
-                print(f"\n{alg}:")
-                print(f"  Avg Runtime: {np.mean(runtimes):.3f}s (±{np.std(runtimes):.3f}s)")
-                print(f"  Avg Memory:  {np.mean(memories):.2f}MB (±{np.std(memories):.2f}MB)")
-                print(f"  Tests run:   {len(runtimes)}")
+    return output_files
 
 
 def main():
-    # Find database file
-    db_files = [f for f in os.listdir('.') if f.endswith('.db')]
+    # Find databases
+    db_files = glob.glob("*.db")
+    sample_dbs = [f for f in db_files if 'sample' in f.lower()]
     
-    if not db_files:
-        print("Error: No database files found")
+    if not sample_dbs:
+        print("ERROR: No sample databases found")
         sys.exit(1)
     
-    db_path = db_files[0]
-    print(f"Using database: {db_path}")
+    print(f"\nFound databases:")
+    for f in sorted(sample_dbs, key=get_sample_count):
+        count = get_sample_count(f)
+        print(f"  • {f} ({count if count < 99999 else 'ALL'} samples)")
     
-    # Run benchmark
-    runner = BenchmarkRunner(db_path)
-    runner.run_benchmarks()
-    runner.plot_results()
+    algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE']
     
-    print("\n✓ Benchmark complete")
+    # Run benchmarks
+    results_no_hamming = run_benchmark(sample_dbs, algorithms, use_hamming=False)
+    results_with_hamming = run_benchmark(sample_dbs, algorithms, use_hamming=True)
+    
+    # Show what we'll plot
+    sample_sizes = sorted(set([s for algo in algorithms 
+                               for s in results_no_hamming[algo]['sizes']]))
+    
 
+    print("PLOT CONFIGURATION")
 
-if __name__ == '__main__':
+    print(f"\n X-axis (database sizes): {[s if s < 99999 else 'ALL' for s in sample_sizes]}")
+    print(f" Y-axis: Time (seconds) or Memory (MB)")
+    print(f"\n Each plot will show 3 curves (one per algorithm)")
+    print(f"   connecting all {len(sample_sizes)} database size points")
+    
+    # Generate plots
+    plot_files = plot_results(results_no_hamming, results_with_hamming, algorithms)
+
+    print(f"COMPLETE - Generated {len(plot_files)} scalability plots")
+
+    
+if __name__ == "__main__":
     main()
