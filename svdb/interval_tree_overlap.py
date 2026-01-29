@@ -4,6 +4,7 @@ from collections import namedtuple
 # Named tuple for storing interval with metadata
 Interval = namedtuple('Interval', ['start', 'end', 'index', 'data'])
 
+
 class IntervalNode:
 
     def __init__(self, intervals, depth=0, max_depth=20):
@@ -162,17 +163,22 @@ def interval_tree_cluster(coordinates, max_distance=1000):
     current_cluster = 0
     visited = set()
 
-    def dfs(node, cluster_id):
-        visited.add(node)
-        labels[node] = cluster_id
-        for neighbor in adjacency[node]:
-            if neighbor not in visited:
-                dfs(neighbor, cluster_id)
-
+    # Iterative DFS using stack to avoid recursion depth issues
     for i in range(n):
         if i not in visited:
-            dfs(i, current_cluster)
+            # Use stack instead of recursion
+            stack = [i]
+            visited.add(i)
+            labels[i] = current_cluster
+            
+            while stack:
+                node = stack.pop()
+                for neighbor in adjacency[node]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        labels[neighbor] = current_cluster
+                        stack.append(neighbor)
+            
             current_cluster += 1
 
     return labels
-
