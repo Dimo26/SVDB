@@ -145,7 +145,7 @@ class OPTICS:
         self.fit(data)
         return self.labels_
         
-def optics_cluster(coordinates, min_samples=2, max_eps=2000):
+def optics_cluster(coordinates, min_samples=2, max_eps=1000):
 
     clusterer = OPTICS(min_samples=min_samples, max_eps=max_eps)
     labels = clusterer.fit_predict(coordinates)
