@@ -41,7 +41,6 @@ def load_and_stats(db_file):
     total = len(rows)
     print(f"{'STRUCTURAL VARIANT STATISTICS - Chromosome 1':^90}")
     print(f"{'SV TYPE':<10} {'COUNT':>8} {'%':>7} {'AVG_SIZE':>12} {'MIN':>10} {'MAX':>12} {'WITH_SEQ':>10} {'NO_SEQ':>8}")
-    print("-" * 90)
 
     for sv_type in sorted(stats.keys()):
         d = stats[sv_type]
@@ -79,10 +78,8 @@ def main():
         if not os.path.exists(db_file):
             print(f"ERROR: {db_file} not found")
             continue
-
-        print(f"\n{'=' * 90}")
         print(f"  DATABASE: {os.path.basename(db_file)}")
-        print(f"{'=' * 90}")
+
         load_and_stats(db_file)
 
 
