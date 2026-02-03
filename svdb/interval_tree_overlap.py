@@ -154,8 +154,18 @@ def interval_tree_cluster(coordinates, max_distance=1000):
             j = interval.index
             if i == j:
                 continue
-            if (abs(coordinates[i][0] - coordinates[j][0]) <= max_distance and
-                    abs(coordinates[i][1] - coordinates[j][1]) <= max_distance):
+            
+            # Check if intervals actually overlap
+            overlap_start = max(coordinates[i][0], coordinates[j][0])
+            overlap_end = min(coordinates[i][1], coordinates[j][1])
+            intervals_overlap = overlap_end >= overlap_start
+            
+            # Check if they're within max_distance (for non-overlapping nearby SVs)
+            within_distance = (abs(coordinates[i][0] - coordinates[j][0]) <= max_distance and
+                              abs(coordinates[i][1] - coordinates[j][1]) <= max_distance)
+            
+            # Connect if they overlap OR are within distance
+            if intervals_overlap or within_distance:
                 adjacency[i].add(j)
                 adjacency[j].add(i)
 
