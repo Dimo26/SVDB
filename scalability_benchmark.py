@@ -125,6 +125,8 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
         labels = optics_cluster(coordinates, min_samples=2, max_eps=2000)
     elif algorithm == 'INTERVAL_TREE':
         labels = interval_tree_cluster(coordinates, max_distance=1000)
+    else:
+        labels = None
     
     if use_hamming and labels is not None:
         labels = apply_hamming_reclustering(labels, variants, max_hamming=0.2)
@@ -133,7 +135,10 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
     mem_after = process.memory_info().rss
     memory_mb = (mem_after - mem_before) / 1024 / 1024
     
-    n_clusters = len(set(labels)) - (1 if -1 in labels else 0) if labels is not None else 0
+    n_clusters = 0
+    if labels is not None:
+        unique = set(labels.tolist())
+        n_clusters = len(unique) - (1 if -1 in unique else 0)
     
     return {
         'time': elapsed_time,
@@ -157,7 +162,7 @@ def run_benchmark(db_files, algorithms, use_hamming=False):
     """Benchmark all algorithms across database sizes."""
     db_files_sorted = sorted(db_files, key=get_sample_count)
     
-    results = {algo: {'sizes': [], 'times': [], 'memory': [], 'variants': []} 
+    results = {algo: {'sizes': [], 'times': [], 'memory': [], 'variants': [], 'clusters': []} 
                for algo in algorithms}
     
     for db_file in db_files_sorted:
@@ -177,34 +182,10 @@ def run_benchmark(db_files, algorithms, use_hamming=False):
             results[algo]['times'].append(result['time'])
             results[algo]['memory'].append(result['memory'])
             results[algo]['variants'].append(n_variants)
+            results[algo]['clusters'].append(result['clusters'])
     
     return results
 
-"""
-def calculate_big_o(x, y):
-    if len(x) < 2:
-        return None, None, "N/A"
-    
-    log_x, log_y = np.log10(x), np.log10(y)
-    coeffs = np.polyfit(log_x, log_y, 1)
-    slope = coeffs[0]
-    
-    y_pred = np.polyval(coeffs, log_x)
-    ss_res = np.sum((log_y - y_pred) ** 2)
-    ss_tot = np.sum((log_y - np.mean(log_y)) ** 2)
-    r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
-    
-    if slope < 1.15:
-        complexity = "O(n)"
-    elif slope < 1.5:
-        complexity = "O(n log n)"
-    elif slope < 2.5:
-        complexity = "O(n^2)"
-    else:
-        complexity = "O(n^3+)"
-    
-    return slope, r2, complexity
-"""
 
 def plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms):
     """Generate scalability curve plots."""
@@ -218,6 +199,12 @@ def plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms
         'DBSCAN': 'o',
         'OPTICS': 's',
         'INTERVAL_TREE': '^'
+    }
+    
+    descriptions = {
+        'DBSCAN': 'Density-based clustering (DBSCAN)',
+        'OPTICS': 'Ordering-based density clustering (OPTICS)',
+        'INTERVAL_TREE': 'Overlap-based clustering (Interval Tree)'
     }
     
     output_files = []
@@ -241,29 +228,24 @@ def plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms
             if len(x_data) == 0:
                 continue
             
-            #slope, r2, complexity = calculate_big_o(x_data, y_data)
-            #label = f"{algo} ({complexity}, slope={slope:.2f})" if slope else algo
+            label = f"{algo}: {descriptions.get(algo, '')} ({hamming_label})"
             
             ax.plot(x_data, y_data,
                    color=colors[algo],
                    marker=markers[algo],
                    markersize=10,
                    linewidth=3,
-                   #label=label,
-                   alpha=0.9)
+                   label=label,
+                   alpha=0.95)
         
         ax.set_xlabel('Database Size (Number of Samples)', fontsize=13, fontweight='bold')
         ax.set_ylabel(ylabel, fontsize=13, fontweight='bold')
-        ax.set_title(f'Algorithm Scalability: {ylabel} - {hamming_label}',
-                     fontsize=14, fontweight='bold', pad=15)
-        
         ax.set_yscale('log')
         
         all_sizes = sorted(set([s for algo in algorithms for s in results[algo]['sizes']]))
-        ax.set_xticks(all_sizes)
-        ax.set_xticklabels([str(s) for s in all_sizes], fontsize=11)
-        
-        ax.grid(True, alpha=0.3, which='both', linestyle='--')
+        if all_sizes:
+            ax.set_xticks(all_sizes)
+            ax.set_xticklabels([str(s) for s in all_sizes], fontsize=11)
         ax.legend(fontsize=11, frameon=True, loc='best')
         
         plt.tight_layout()
@@ -331,23 +313,10 @@ def plot_1000_sample_comparison(results_no_hamming, results_with_hamming, algori
     
     ax.set_xlabel('Algorithm', fontsize=14, fontweight='bold')
     ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
-    ax.set_title('Time Comparison: WITH vs WITHOUT Hamming\n1000 Sample Database',
-                 fontsize=15, fontweight='bold', pad=20)
     ax.set_xticks(x)
     ax.set_xticklabels(algorithms, fontsize=12)
     ax.legend(fontsize=12, frameon=True)
 
-    
-    for i, algo in enumerate(algorithms):
-        height1 = time_data['no_hamming'][i]
-        height2 = time_data['with_hamming'][i]
-        if height1 > 0:
-            ax.text(i - width/2, height1, f'{height1:.1f}s',
-                   ha='center', va='bottom', fontsize=9, fontweight='bold')
-        if height2 > 0:
-            ax.text(i + width/2, height2, f'{height2:.1f}s',
-                   ha='center', va='bottom', fontsize=9, fontweight='bold')
-    
     plt.tight_layout()
     filename = 'scalability_time_comparison_1000samples.png'
     plt.savefig(filename, dpi=300, bbox_inches='tight')
@@ -368,21 +337,10 @@ def plot_1000_sample_comparison(results_no_hamming, results_with_hamming, algori
     
     ax.set_xlabel('Algorithm', fontsize=14, fontweight='bold')
     ax.set_ylabel('Memory (MB)', fontsize=14, fontweight='bold')
-    ax.set_title('Memory Comparison: WITH vs WITHOUT Hamming\n1000 Sample Database',
-                 fontsize=15, fontweight='bold', pad=20)
+
     ax.set_xticks(x)
     ax.set_xticklabels(algorithms, fontsize=12)
     ax.legend(fontsize=12, frameon=True)
-    
-    for i, algo in enumerate(algorithms):
-        height1 = memory_data['no_hamming'][i]
-        height2 = memory_data['with_hamming'][i]
-        if height1 > 0:
-            ax.text(i - width/2, height1, f'{height1:.0f}MB',
-                   ha='center', va='bottom', fontsize=9, fontweight='bold')
-        if height2 > 0:
-            ax.text(i + width/2, height2, f'{height2:.0f}MB',
-                   ha='center', va='bottom', fontsize=9, fontweight='bold')
     
     plt.tight_layout()
     filename = 'scalability_memory_comparison_1000samples.png'
@@ -391,6 +349,24 @@ def plot_1000_sample_comparison(results_no_hamming, results_with_hamming, algori
     output_files.append(filename)
     
     return output_files
+
+
+def print_summary(results_no_hamming, results_with_hamming, algorithms):
+    """Print cluster & variant counts per algorithm and per DB (no plotting)."""
+    print("\nBenchmark summary:")
+    for mode_label, results in [('WITHOUT Hamming', results_no_hamming), ('WITH Hamming', results_with_hamming)]:
+        print(f"\n{mode_label}:")
+        for algo in algorithms:
+            sizes = results[algo]['sizes']
+            variants = results[algo]['variants']
+            clusters = results[algo]['clusters']
+            print(f"  {algo}:")
+            if not sizes:
+                print("    (no data)")
+                continue
+            for s, v, c in zip(sizes, variants, clusters):
+                print(f"    Size {s}: Variants={v}, Clusters={c}")
+            print(f"    Total variants (sum across DBs)={sum(variants)}, Total clusters={sum(clusters)}")
 
 
 def main():
@@ -407,6 +383,9 @@ def main():
     results_no_hamming = run_benchmark(sample_dbs, algorithms, use_hamming=False)
     results_with_hamming = run_benchmark(sample_dbs, algorithms, use_hamming=True)
     
+    # print cluster/variant counts (simple textual stats)
+    print_summary(results_no_hamming, results_with_hamming, algorithms)
+    
     plot_files = plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms)
     
     comparison_files = plot_1000_sample_comparison(results_no_hamming, results_with_hamming, algorithms)
@@ -416,3 +395,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
