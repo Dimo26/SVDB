@@ -205,7 +205,7 @@ def populate_db(args):
                     else:
                         sample_index = 0
                         for genotype in FORMAT["GT"]:
-                            if genotype not in ["0/0", "./."]:
+                            if genotype not in ["0/0", "./.", "0|0"]:
                                 var.append((event_type, chrA, chrB, posA, ci_A_lower, ci_A_upper,
                                             posB, ci_B_lower, ci_B_upper, sample_names[sample_index], idx, sequence))
                                 idx += 1
