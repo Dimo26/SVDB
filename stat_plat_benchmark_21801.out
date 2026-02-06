@@ -1,0 +1,2366 @@
+Installing required Python packages...
+Looking in links: /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages
+Requirement already satisfied: numpy in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (1.20.3)
+Requirement already satisfied: psutil in /castor/project/home/dimam/.local/lib/python3.9/site-packages (7.1.3)
+Requirement already satisfied: matplotlib in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (3.4.2)
+Requirement already satisfied: python-dateutil>=2.7 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.8.1)
+Requirement already satisfied: pyparsing>=2.2.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.4.7)
+Requirement already satisfied: cycler>=0.10 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (0.10.0)
+Requirement already satisfied: pillow>=6.2.0 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (8.2.0)
+Requirement already satisfied: kiwisolver>=1.0.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (1.3.1)
+Requirement already satisfied: six in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from cycler>=0.10->matplotlib) (1.16.0)
+
+Verifying SVDB installation...
+✓ All SVDB modules loaded
+
+Searching for databases...
+Found 10 database file(s):
+  ./NA12877.db
+  ./NA12878.db
+  ./NA12879.db
+  ./NA12881.db
+  ./NA12882.db
+  ./NA12885.db
+  ./NA12886.db
+  ./plat_G2_G3_parents_kids.db
+  ./plat_G2_parents.db
+  ./plat_G3_siblings.db
+
+========================================
+RUNNING SVDB BENCHMARK - FINAL VERSION
+========================================
+Features:
+  • All SVs plotted together (one plot per algorithm+state)
+  • Before/After Hamming comparison for insertions
+  • Stacked bar charts for time/memory
+  • Legend at bottom of plots
+  • Detailed statistics in console
+  • Noise analysis
+
+Output per database:
+  • 1 performance comparison plot
+  • 6 algorithm plots (3 algos × 2 states)
+  • 3 insertion comparison plots
+  Total: 10 plots per database
+========================================
+
+                        SVDB CLUSTERING BENCHMARK - FINAL VERSION                         
+Databases: 10
+  • NA12877.db
+  • NA12878.db
+  • NA12879.db
+  • NA12881.db
+  • NA12882.db
+  • NA12885.db
+  • NA12886.db
+  • plat_G2_G3_parents_kids.db
+  • plat_G2_parents.db
+  • plat_G3_siblings.db
+                                  PROCESSING: NA12877.db                                  
+
+Loading: NA12877.db
+✓ Loaded 1257 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             424   33.7%       1046.0          0        49191          0        0
+INS             831   66.1%        883.7         51        18965        831        0
+INV               2    0.2%          0.0          0            0          0        0
+TOTAL          1257  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 831
+  With sequence:      831 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      883.7 bp
+    Median:    284.0 bp
+    Std:      1743.3 bp
+    Range:  51-18965 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0118s | Clusters: 132 | Clustered: 300 | Noise: 957
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:           300 ( 23.9%)
+  Unclustered/Noise:   957 ( 76.1%) ← Why so many?
+  Number of clusters: 132
+
+  Noise breakdown by SV type:
+    DEL      374/424   ( 88.2%) are noise
+    INS      583/831   ( 70.2%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      115,145.8 bp
+    Median:     72,591.1 bp
+    Min:           508.4 bp
+    Max:       492,754.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      4/100   (  4.0%)
+    ≤5000 bp:      7/100   (  7.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 248 insertions WITH sequences → 223 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0333s | Clusters: 259 | Clustered: 300 | Noise: 957
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:           300 ( 23.9%)
+  Unclustered/Noise:   957 ( 76.1%) ← Why so many?
+  Number of clusters: 259
+
+  Noise breakdown by SV type:
+    DEL      374/424   ( 88.2%) are noise
+    INS      583/831   ( 70.2%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      141,231.1 bp
+    Median:     75,924.3 bp
+    Min:           696.7 bp
+    Max:     1,270,595.2 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      6/100   (  6.0%)
+    ≤5000 bp:     13/100   ( 13.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0961s | Clusters: 4 | Clustered: 10 | Noise: 1247
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:            10 (  0.8%)
+  Unclustered/Noise:  1247 ( 99.2%) ← Why so many?
+  Number of clusters: 4
+
+  Noise breakdown by SV type:
+    DEL      420/424   ( 99.1%) are noise
+    INS      825/831   ( 99.3%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      115,699.8 bp
+    Median:     56,147.8 bp
+    Min:            33.9 bp
+    Max:       618,945.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       9/100   (  9.0%)
+    ≤1000 bp:     17/100   ( 17.0%)
+    ≤5000 bp:     27/100   ( 27.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 6 insertions WITH sequences → 6 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0968s | Clusters: 7 | Clustered: 10 | Noise: 1247
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:            10 (  0.8%)
+  Unclustered/Noise:  1247 ( 99.2%) ← Why so many?
+  Number of clusters: 7
+
+  Noise breakdown by SV type:
+    DEL      420/424   ( 99.1%) are noise
+    INS      825/831   ( 99.3%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      124,339.9 bp
+    Median:     60,945.3 bp
+    Min:             4.0 bp
+    Max:       740,282.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       7/100   (  7.0%)
+    ≤1000 bp:     16/100   ( 16.0%)
+    ≤5000 bp:     22/100   ( 22.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1969s | Clusters: 1080 | Clustered: 1257 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:          1257 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1080
+
+  Noise breakdown by SV type:
+    DEL        0/424   (  0.0%) are noise
+    INS        0/831   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 831 insertions WITH sequences → 806 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.2014s | Clusters: 1211 | Clustered: 1257 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:          1257 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1211
+
+  Noise breakdown by SV type:
+    DEL        0/424   (  0.0%) are noise
+    INS        0/831   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6382s | Clusters: 1105 | Clustered: 1257 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:          1257 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1105
+
+  Noise breakdown by SV type:
+    DEL        0/424   (  0.0%) are noise
+    INS        0/831   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 831 insertions WITH sequences → 806 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.6607s | Clusters: 1221 | Clustered: 1257 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1257
+  Clustered:          1257 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1221
+
+  Noise breakdown by SV type:
+    DEL        0/424   (  0.0%) are noise
+    INS        0/831   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12877_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12877_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12877_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12877_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12877_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12877_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12877_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12877_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12877_size_distribution.png
+  ✓ NA12877_time_comparison.png
+  ✓ NA12877_memory_comparison.png
+                                  PROCESSING: NA12878.db                                  
+
+Loading: NA12878.db
+✓ Loaded 1253 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             450   35.9%       1335.3          0        78849          0        0
+INS             799   63.8%       1096.4         51       166151        799        0
+INV               4    0.3%          0.0          0            0          0        0
+TOTAL          1253  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 799
+  With sequence:      799 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:     1096.4 bp
+    Median:    306.0 bp
+    Std:      6089.8 bp
+    Range:  51-166151 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0075s | Clusters: 137 | Clustered: 307 | Noise: 946
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:           307 ( 24.5%)
+  Unclustered/Noise:   946 ( 75.5%) ← Why so many?
+  Number of clusters: 137
+
+  Noise breakdown by SV type:
+    DEL      389/450   ( 86.4%) are noise
+    INS      556/799   ( 69.6%) are noise
+    INV        1/4     ( 25.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      145,699.2 bp
+    Median:     94,482.9 bp
+    Min:           770.6 bp
+    Max:       831,848.9 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      2/100   (  2.0%)
+    ≤5000 bp:     15/100   ( 15.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 243 insertions WITH sequences → 221 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0234s | Clusters: 263 | Clustered: 307 | Noise: 946
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:           307 ( 24.5%)
+  Unclustered/Noise:   946 ( 75.5%) ← Why so many?
+  Number of clusters: 263
+
+  Noise breakdown by SV type:
+    DEL      389/450   ( 86.4%) are noise
+    INS      556/799   ( 69.6%) are noise
+    INV        1/4     ( 25.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      152,036.7 bp
+    Median:    105,242.3 bp
+    Min:           837.2 bp
+    Max:       773,620.1 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      1/100   (  1.0%)
+    ≤5000 bp:      7/100   (  7.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0753s | Clusters: 6 | Clustered: 15 | Noise: 1238
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:            15 (  1.2%)
+  Unclustered/Noise:  1238 ( 98.8%) ← Why so many?
+  Number of clusters: 6
+
+  Noise breakdown by SV type:
+    DEL      444/450   ( 98.7%) are noise
+    INS      791/799   ( 99.0%) are noise
+    INV        3/4     ( 75.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      144,978.9 bp
+    Median:     67,841.1 bp
+    Min:            10.0 bp
+    Max:       803,539.2 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      12/100   ( 12.0%)
+    ≤1000 bp:     16/100   ( 16.0%)
+    ≤5000 bp:     20/100   ( 20.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 8 insertions WITH sequences → 7 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0758s | Clusters: 10 | Clustered: 15 | Noise: 1238
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:            15 (  1.2%)
+  Unclustered/Noise:  1238 ( 98.8%) ← Why so many?
+  Number of clusters: 10
+
+  Noise breakdown by SV type:
+    DEL      444/450   ( 98.7%) are noise
+    INS      791/799   ( 99.0%) are noise
+    INV        3/4     ( 75.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      107,203.6 bp
+    Median:     39,815.1 bp
+    Min:             8.0 bp
+    Max:       691,253.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      10/100   ( 10.0%)
+    ≤1000 bp:     18/100   ( 18.0%)
+    ≤5000 bp:     24/100   ( 24.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1494s | Clusters: 1077 | Clustered: 1253 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:          1253 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1077
+
+  Noise breakdown by SV type:
+    DEL        0/450   (  0.0%) are noise
+    INS        0/799   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 799 insertions WITH sequences → 777 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.2645s | Clusters: 1205 | Clustered: 1253 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:          1253 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1205
+
+  Noise breakdown by SV type:
+    DEL        0/450   (  0.0%) are noise
+    INS        0/799   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6325s | Clusters: 1100 | Clustered: 1253 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:          1253 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1100
+
+  Noise breakdown by SV type:
+    DEL        0/450   (  0.0%) are noise
+    INS        0/799   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 799 insertions WITH sequences → 777 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.6558s | Clusters: 1217 | Clustered: 1253 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1253
+  Clustered:          1253 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1217
+
+  Noise breakdown by SV type:
+    DEL        0/450   (  0.0%) are noise
+    INS        0/799   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12878_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12878_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12878_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12878_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12878_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12878_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12878_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12878_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12878_size_distribution.png
+  ✓ NA12878_time_comparison.png
+  ✓ NA12878_memory_comparison.png
+                                  PROCESSING: NA12879.db                                  
+
+Loading: NA12879.db
+✓ Loaded 1288 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             451   35.0%       1395.9          0        78849          0        0
+INS             833   64.7%        940.4         51        18965        833        0
+INV               4    0.3%          0.0          0            0          0        0
+TOTAL          1288  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 833
+  With sequence:      833 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      940.4 bp
+    Median:    308.0 bp
+    Std:      1772.1 bp
+    Range:  51-18965 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0081s | Clusters: 145 | Clustered: 321 | Noise: 967
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:           321 ( 24.9%)
+  Unclustered/Noise:   967 ( 75.1%) ← Why so many?
+  Number of clusters: 145
+
+  Noise breakdown by SV type:
+    DEL      394/451   ( 87.4%) are noise
+    INS      572/833   ( 68.7%) are noise
+    INV        1/4     ( 25.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      135,965.8 bp
+    Median:     58,397.8 bp
+    Min:           710.7 bp
+    Max:       887,960.7 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      4/100   (  4.0%)
+    ≤5000 bp:      9/100   (  9.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 261 insertions WITH sequences → 233 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0279s | Clusters: 273 | Clustered: 321 | Noise: 967
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:           321 ( 24.9%)
+  Unclustered/Noise:   967 ( 75.1%) ← Why so many?
+  Number of clusters: 273
+
+  Noise breakdown by SV type:
+    DEL      394/451   ( 87.4%) are noise
+    INS      572/833   ( 68.7%) are noise
+    INV        1/4     ( 25.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      160,383.3 bp
+    Median:     80,883.3 bp
+    Min:           506.3 bp
+    Max:     1,484,150.0 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      4/100   (  4.0%)
+    ≤5000 bp:      9/100   (  9.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0775s | Clusters: 6 | Clustered: 15 | Noise: 1273
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:            15 (  1.2%)
+  Unclustered/Noise:  1273 ( 98.8%) ← Why so many?
+  Number of clusters: 6
+
+  Noise breakdown by SV type:
+    DEL      446/451   ( 98.9%) are noise
+    INS      824/833   ( 98.9%) are noise
+    INV        3/4     ( 75.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      100,984.2 bp
+    Median:     33,678.1 bp
+    Min:             8.0 bp
+    Max:       739,119.6 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      15/100   ( 15.0%)
+    ≤1000 bp:     19/100   ( 19.0%)
+    ≤5000 bp:     29/100   ( 29.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 9 insertions WITH sequences → 8 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0780s | Clusters: 10 | Clustered: 15 | Noise: 1273
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:            15 (  1.2%)
+  Unclustered/Noise:  1273 ( 98.8%) ← Why so many?
+  Number of clusters: 10
+
+  Noise breakdown by SV type:
+    DEL      446/451   ( 98.9%) are noise
+    INS      824/833   ( 98.9%) are noise
+    INV        3/4     ( 75.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      112,563.3 bp
+    Median:     54,701.1 bp
+    Min:             5.7 bp
+    Max:       866,324.6 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      13/100   ( 13.0%)
+    ≤1000 bp:     20/100   ( 20.0%)
+    ≤5000 bp:     24/100   ( 24.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1530s | Clusters: 1101 | Clustered: 1288 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:          1288 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1101
+
+  Noise breakdown by SV type:
+    DEL        0/451   (  0.0%) are noise
+    INS        0/833   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 833 insertions WITH sequences → 805 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.1781s | Clusters: 1234 | Clustered: 1288 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:          1288 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1234
+
+  Noise breakdown by SV type:
+    DEL        0/451   (  0.0%) are noise
+    INS        0/833   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6786s | Clusters: 1127 | Clustered: 1288 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:          1288 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1127
+
+  Noise breakdown by SV type:
+    DEL        0/451   (  0.0%) are noise
+    INS        0/833   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 833 insertions WITH sequences → 805 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.6943s | Clusters: 1246 | Clustered: 1288 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1288
+  Clustered:          1288 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1246
+
+  Noise breakdown by SV type:
+    DEL        0/451   (  0.0%) are noise
+    INS        0/833   (  0.0%) are noise
+    INV        0/4     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12879_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12879_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12879_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12879_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12879_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12879_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12879_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12879_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12879_size_distribution.png
+  ✓ NA12879_time_comparison.png
+  ✓ NA12879_memory_comparison.png
+                                  PROCESSING: NA12881.db                                  
+
+Loading: NA12881.db
+✓ Loaded 1260 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             431   34.2%       1295.6          0        49191          0        0
+INS             827   65.6%       1156.0         51       166151        827        0
+INV               2    0.2%          0.0          0            0          0        0
+TOTAL          1260  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 827
+  With sequence:      827 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:     1156.0 bp
+    Median:    302.0 bp
+    Std:      6053.3 bp
+    Range:  51-166151 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0077s | Clusters: 137 | Clustered: 309 | Noise: 951
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:           309 ( 24.5%)
+  Unclustered/Noise:   951 ( 75.5%) ← Why so many?
+  Number of clusters: 137
+
+  Noise breakdown by SV type:
+    DEL      380/431   ( 88.2%) are noise
+    INS      571/827   ( 69.0%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      131,215.2 bp
+    Median:     72,799.7 bp
+    Min:           516.8 bp
+    Max:     1,105,701.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      5/100   (  5.0%)
+    ≤5000 bp:     12/100   ( 12.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 256 insertions WITH sequences → 233 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0279s | Clusters: 270 | Clustered: 309 | Noise: 951
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:           309 ( 24.5%)
+  Unclustered/Noise:   951 ( 75.5%) ← Why so many?
+  Number of clusters: 270
+
+  Noise breakdown by SV type:
+    DEL      380/431   ( 88.2%) are noise
+    INS      571/827   ( 69.0%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      147,010.3 bp
+    Median:     83,727.8 bp
+    Min:           696.7 bp
+    Max:       889,968.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      8/100   (  8.0%)
+    ≤5000 bp:     13/100   ( 13.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0761s | Clusters: 7 | Clustered: 17 | Noise: 1243
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:            17 (  1.3%)
+  Unclustered/Noise:  1243 ( 98.7%) ← Why so many?
+  Number of clusters: 7
+
+  Noise breakdown by SV type:
+    DEL      425/431   ( 98.6%) are noise
+    INS      816/827   ( 98.7%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      137,384.4 bp
+    Median:     55,754.4 bp
+    Min:             1.4 bp
+    Max:     1,105,701.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       7/100   (  7.0%)
+    ≤1000 bp:      9/100   (  9.0%)
+    ≤5000 bp:     23/100   ( 23.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 11 insertions WITH sequences → 10 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0761s | Clusters: 13 | Clustered: 17 | Noise: 1243
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:            17 (  1.3%)
+  Unclustered/Noise:  1243 ( 98.7%) ← Why so many?
+  Number of clusters: 13
+
+  Noise breakdown by SV type:
+    DEL      425/431   ( 98.6%) are noise
+    INS      816/827   ( 98.7%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      115,102.9 bp
+    Median:     62,932.5 bp
+    Min:            42.4 bp
+    Max:       630,505.9 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       9/100   (  9.0%)
+    ≤1000 bp:     18/100   ( 18.0%)
+    ≤5000 bp:     24/100   ( 24.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1497s | Clusters: 1079 | Clustered: 1260 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:          1260 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1079
+
+  Noise breakdown by SV type:
+    DEL        0/431   (  0.0%) are noise
+    INS        0/827   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 827 insertions WITH sequences → 804 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.1743s | Clusters: 1215 | Clustered: 1260 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:          1260 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1215
+
+  Noise breakdown by SV type:
+    DEL        0/431   (  0.0%) are noise
+    INS        0/827   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6440s | Clusters: 1103 | Clustered: 1260 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:          1260 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1103
+
+  Noise breakdown by SV type:
+    DEL        0/431   (  0.0%) are noise
+    INS        0/827   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 827 insertions WITH sequences → 804 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.6683s | Clusters: 1227 | Clustered: 1260 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1260
+  Clustered:          1260 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1227
+
+  Noise breakdown by SV type:
+    DEL        0/431   (  0.0%) are noise
+    INS        0/827   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12881_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12881_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12881_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12881_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12881_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12881_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12881_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12881_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12881_size_distribution.png
+  ✓ NA12881_time_comparison.png
+  ✓ NA12881_memory_comparison.png
+                                  PROCESSING: NA12882.db                                  
+
+Loading: NA12882.db
+✓ Loaded 1298 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             456   35.1%       1141.0          0        49191          0        0
+INS             840   64.7%       1091.7         51       166151        840        0
+INV               2    0.2%          0.0          0            0          0        0
+TOTAL          1298  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 840
+  With sequence:      840 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:     1091.7 bp
+    Median:    305.5 bp
+    Std:      5975.0 bp
+    Range:  51-166151 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0081s | Clusters: 152 | Clustered: 339 | Noise: 959
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:           339 ( 26.1%)
+  Unclustered/Noise:   959 ( 73.9%) ← Why so many?
+  Number of clusters: 152
+
+  Noise breakdown by SV type:
+    DEL      389/456   ( 85.3%) are noise
+    INS      570/840   ( 67.9%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      112,257.1 bp
+    Median:     52,456.1 bp
+    Min:           506.3 bp
+    Max:       889,968.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      1/100   (  1.0%)
+    ≤5000 bp:     10/100   ( 10.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 270 insertions WITH sequences → 243 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0268s | Clusters: 287 | Clustered: 339 | Noise: 959
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:           339 ( 26.1%)
+  Unclustered/Noise:   959 ( 73.9%) ← Why so many?
+  Number of clusters: 287
+
+  Noise breakdown by SV type:
+    DEL      389/456   ( 85.3%) are noise
+    INS      570/840   ( 67.9%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      101,616.2 bp
+    Median:     52,970.0 bp
+    Min:           758.0 bp
+    Max:       554,758.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      6/100   (  6.0%)
+    ≤5000 bp:     14/100   ( 14.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0784s | Clusters: 5 | Clustered: 13 | Noise: 1285
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:            13 (  1.0%)
+  Unclustered/Noise:  1285 ( 99.0%) ← Why so many?
+  Number of clusters: 5
+
+  Noise breakdown by SV type:
+    DEL      451/456   ( 98.9%) are noise
+    INS      832/840   ( 99.0%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      112,171.7 bp
+    Median:     51,323.9 bp
+    Min:            27.5 bp
+    Max:       613,958.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      14/100   ( 14.0%)
+    ≤1000 bp:     18/100   ( 18.0%)
+    ≤5000 bp:     26/100   ( 26.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 8 insertions WITH sequences → 8 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0806s | Clusters: 10 | Clustered: 13 | Noise: 1285
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:            13 (  1.0%)
+  Unclustered/Noise:  1285 ( 99.0%) ← Why so many?
+  Number of clusters: 10
+
+  Noise breakdown by SV type:
+    DEL      451/456   ( 98.9%) are noise
+    INS      832/840   ( 99.0%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      110,764.4 bp
+    Median:     41,115.0 bp
+    Min:             4.2 bp
+    Max:     1,484,150.0 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      13/100   ( 13.0%)
+    ≤1000 bp:     16/100   ( 16.0%)
+    ≤5000 bp:     22/100   ( 22.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1520s | Clusters: 1103 | Clustered: 1298 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:          1298 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1103
+
+  Noise breakdown by SV type:
+    DEL        0/456   (  0.0%) are noise
+    INS        0/840   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 840 insertions WITH sequences → 813 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.1760s | Clusters: 1241 | Clustered: 1298 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:          1298 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1241
+
+  Noise breakdown by SV type:
+    DEL        0/456   (  0.0%) are noise
+    INS        0/840   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6770s | Clusters: 1135 | Clustered: 1298 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:          1298 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1135
+
+  Noise breakdown by SV type:
+    DEL        0/456   (  0.0%) are noise
+    INS        0/840   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 840 insertions WITH sequences → 813 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.7032s | Clusters: 1259 | Clustered: 1298 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1298
+  Clustered:          1298 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1259
+
+  Noise breakdown by SV type:
+    DEL        0/456   (  0.0%) are noise
+    INS        0/840   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12882_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12882_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12882_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12882_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12882_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12882_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12882_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12882_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12882_size_distribution.png
+  ✓ NA12882_time_comparison.png
+  ✓ NA12882_memory_comparison.png
+                                  PROCESSING: NA12885.db                                  
+
+Loading: NA12885.db
+✓ Loaded 1256 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             444   35.4%       1130.6          0        49191          0        0
+INS             810   64.5%        923.3         51        18965        810        0
+INV               2    0.2%          0.0          0            0          0        0
+TOTAL          1256  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 810
+  With sequence:      810 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      923.3 bp
+    Median:    305.0 bp
+    Std:      1800.7 bp
+    Range:  51-18965 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0076s | Clusters: 139 | Clustered: 309 | Noise: 947
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:           309 ( 24.6%)
+  Unclustered/Noise:   947 ( 75.4%) ← Why so many?
+  Number of clusters: 139
+
+  Noise breakdown by SV type:
+    DEL      386/444   ( 86.9%) are noise
+    INS      561/810   ( 69.3%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      166,381.8 bp
+    Median:     94,447.0 bp
+    Min:           696.7 bp
+    Max:       956,767.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      4/100   (  4.0%)
+    ≤5000 bp:     12/100   ( 12.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 249 insertions WITH sequences → 226 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0260s | Clusters: 266 | Clustered: 309 | Noise: 947
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:           309 ( 24.6%)
+  Unclustered/Noise:   947 ( 75.4%) ← Why so many?
+  Number of clusters: 266
+
+  Noise breakdown by SV type:
+    DEL      386/444   ( 86.9%) are noise
+    INS      561/810   ( 69.3%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      127,026.3 bp
+    Median:     71,883.8 bp
+    Min:           811.8 bp
+    Max:       654,787.3 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      4/100   (  4.0%)
+    ≤5000 bp:      9/100   (  9.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0754s | Clusters: 4 | Clustered: 11 | Noise: 1245
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:            11 (  0.9%)
+  Unclustered/Noise:  1245 ( 99.1%) ← Why so many?
+  Number of clusters: 4
+
+  Noise breakdown by SV type:
+    DEL      439/444   ( 98.9%) are noise
+    INS      804/810   ( 99.3%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      121,600.3 bp
+    Median:     47,542.5 bp
+    Min:             5.7 bp
+    Max:       851,318.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       8/100   (  8.0%)
+    ≤1000 bp:     14/100   ( 14.0%)
+    ≤5000 bp:     24/100   ( 24.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 6 insertions WITH sequences → 6 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0754s | Clusters: 8 | Clustered: 11 | Noise: 1245
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:            11 (  0.9%)
+  Unclustered/Noise:  1245 ( 99.1%) ← Why so many?
+  Number of clusters: 8
+
+  Noise breakdown by SV type:
+    DEL      439/444   ( 98.9%) are noise
+    INS      804/810   ( 99.3%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      129,834.3 bp
+    Median:     81,880.8 bp
+    Min:             6.0 bp
+    Max:       709,048.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       7/100   (  7.0%)
+    ≤1000 bp:     17/100   ( 17.0%)
+    ≤5000 bp:     20/100   ( 20.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1500s | Clusters: 1079 | Clustered: 1256 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:          1256 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1079
+
+  Noise breakdown by SV type:
+    DEL        0/444   (  0.0%) are noise
+    INS        0/810   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 810 insertions WITH sequences → 787 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.1743s | Clusters: 1208 | Clustered: 1256 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:          1256 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1208
+
+  Noise breakdown by SV type:
+    DEL        0/444   (  0.0%) are noise
+    INS        0/810   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6379s | Clusters: 1101 | Clustered: 1256 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:          1256 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1101
+
+  Noise breakdown by SV type:
+    DEL        0/444   (  0.0%) are noise
+    INS        0/810   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 810 insertions WITH sequences → 787 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.6599s | Clusters: 1219 | Clustered: 1256 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1256
+  Clustered:          1256 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1219
+
+  Noise breakdown by SV type:
+    DEL        0/444   (  0.0%) are noise
+    INS        0/810   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12885_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12885_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12885_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12885_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12885_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12885_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12885_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12885_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12885_size_distribution.png
+  ✓ NA12885_time_comparison.png
+  ✓ NA12885_memory_comparison.png
+                                  PROCESSING: NA12886.db                                  
+
+Loading: NA12886.db
+✓ Loaded 1272 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             441   34.7%       1061.3          0        49191          0        0
+INS             829   65.2%        884.4         51        18965        829        0
+INV               2    0.2%          0.0          0            0          0        0
+TOTAL          1272  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 829
+  With sequence:      829 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      884.4 bp
+    Median:    297.0 bp
+    Std:      1780.4 bp
+    Range:  51-18965 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0081s | Clusters: 151 | Clustered: 335 | Noise: 937
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:           335 ( 26.3%)
+  Unclustered/Noise:   937 ( 73.7%) ← Why so many?
+  Number of clusters: 151
+
+  Noise breakdown by SV type:
+    DEL      379/441   ( 85.9%) are noise
+    INS      558/829   ( 67.3%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      112,997.7 bp
+    Median:     60,689.6 bp
+    Min:           696.7 bp
+    Max:       675,585.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      5/100   (  5.0%)
+    ≤5000 bp:      7/100   (  7.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 271 insertions WITH sequences → 248 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0266s | Clusters: 292 | Clustered: 335 | Noise: 937
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:           335 ( 26.3%)
+  Unclustered/Noise:   937 ( 73.7%) ← Why so many?
+  Number of clusters: 292
+
+  Noise breakdown by SV type:
+    DEL      379/441   ( 85.9%) are noise
+    INS      558/829   ( 67.3%) are noise
+    INV        0/2     (  0.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      133,540.1 bp
+    Median:     89,044.7 bp
+    Min:           758.0 bp
+    Max:       630,505.9 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       0/100   (  0.0%)
+    ≤1000 bp:      3/100   (  3.0%)
+    ≤5000 bp:      9/100   (  9.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.0755s | Clusters: 5 | Clustered: 13 | Noise: 1259
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:            13 (  1.0%)
+  Unclustered/Noise:  1259 ( 99.0%) ← Why so many?
+  Number of clusters: 5
+
+  Noise breakdown by SV type:
+    DEL      435/441   ( 98.6%) are noise
+    INS      822/829   ( 99.2%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      109,921.5 bp
+    Median:     40,543.9 bp
+    Min:             1.4 bp
+    Max:       956,767.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       8/100   (  8.0%)
+    ≤1000 bp:     18/100   ( 18.0%)
+    ≤5000 bp:     24/100   ( 24.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 7 insertions WITH sequences → 7 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0782s | Clusters: 10 | Clustered: 13 | Noise: 1259
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:            13 (  1.0%)
+  Unclustered/Noise:  1259 ( 99.0%) ← Why so many?
+  Number of clusters: 10
+
+  Noise breakdown by SV type:
+    DEL      435/441   ( 98.6%) are noise
+    INS      822/829   ( 99.2%) are noise
+    INV        2/2     (100.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      115,068.6 bp
+    Median:     38,325.8 bp
+    Min:             1.4 bp
+    Max:       719,691.9 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      17/100   ( 17.0%)
+    ≤1000 bp:     25/100   ( 25.0%)
+    ≤5000 bp:     31/100   ( 31.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.1480s | Clusters: 1080 | Clustered: 1272 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:          1272 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1080
+
+  Noise breakdown by SV type:
+    DEL        0/441   (  0.0%) are noise
+    INS        0/829   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 829 insertions WITH sequences → 806 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.1722s | Clusters: 1224 | Clustered: 1272 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:          1272 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1224
+
+  Noise breakdown by SV type:
+    DEL        0/441   (  0.0%) are noise
+    INS        0/829   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 0.6603s | Clusters: 1109 | Clustered: 1272 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:          1272 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1109
+
+  Noise breakdown by SV type:
+    DEL        0/441   (  0.0%) are noise
+    INS        0/829   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 829 insertions WITH sequences → 806 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.6814s | Clusters: 1238 | Clustered: 1272 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    1272
+  Clustered:          1272 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1238
+
+  Noise breakdown by SV type:
+    DEL        0/441   (  0.0%) are noise
+    INS        0/829   (  0.0%) are noise
+    INV        0/2     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ NA12886_chr1_DBSCAN_NO_HAMMING.png
+  ✓ NA12886_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ NA12886_chr1_OPTICS_NO_HAMMING.png
+  ✓ NA12886_chr1_OPTICS_WITH_HAMMING.png
+  ✓ NA12886_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ NA12886_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ NA12886_chr1_OVERLAP_NO_HAMMING.png
+  ✓ NA12886_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ NA12886_size_distribution.png
+  ✓ NA12886_time_comparison.png
+  ✓ NA12886_memory_comparison.png
+                          PROCESSING: plat_G2_G3_parents_kids.db                          
+
+Loading: plat_G2_G3_parents_kids.db
+✓ Loaded 8884 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL            3097   34.9%       1202.0          0        78849          0        0
+INS            5769   64.9%        996.3         51       166151       5769        0
+INV              18    0.2%          0.0          0            0          0        0
+TOTAL          8884  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 5769
+  With sequence:     5769 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      996.3 bp
+    Median:    302.0 bp
+    Std:      4171.4 bp
+    Range:  51-166151 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0748s | Clusters: 993 | Clustered: 2220 | Noise: 6664
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:          2220 ( 25.0%)
+  Unclustered/Noise:  6664 ( 75.0%) ← Why so many?
+  Number of clusters: 993
+
+  Noise breakdown by SV type:
+    DEL     2691/3097  ( 86.9%) are noise
+    INS     3971/5769  ( 68.8%) are noise
+    INV        2/18    ( 11.1%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      116,155.2 bp
+    Median:     72,742.2 bp
+    Min:            14.1 bp
+    Max:       550,437.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       4/100   (  4.0%)
+    ≤1000 bp:     10/100   ( 10.0%)
+    ≤5000 bp:     13/100   ( 13.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 1798 insertions WITH sequences → 1627 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.2073s | Clusters: 1910 | Clustered: 2220 | Noise: 6664
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:          2220 ( 25.0%)
+  Unclustered/Noise:  6664 ( 75.0%) ← Why so many?
+  Number of clusters: 1910
+
+  Noise breakdown by SV type:
+    DEL     2691/3097  ( 86.9%) are noise
+    INS     3971/5769  ( 68.8%) are noise
+    INV        2/18    ( 11.1%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      109,416.0 bp
+    Median:     50,490.1 bp
+    Min:            17.0 bp
+    Max:       740,282.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       4/100   (  4.0%)
+    ≤1000 bp:     13/100   ( 13.0%)
+    ≤5000 bp:     20/100   ( 20.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 2.6176s | Clusters: 330 | Clustered: 782 | Noise: 8102
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:           782 (  8.8%)
+  Unclustered/Noise:  8102 ( 91.2%) ← Why so many?
+  Number of clusters: 330
+
+  Noise breakdown by SV type:
+    DEL     2862/3097  ( 92.4%) are noise
+    INS     5231/5769  ( 90.7%) are noise
+    INV        9/18    ( 50.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:       99,367.0 bp
+    Median:     60,595.5 bp
+    Min:            10.0 bp
+    Max:       722,113.0 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      11/100   ( 11.0%)
+    ≤1000 bp:     20/100   ( 20.0%)
+    ≤5000 bp:     25/100   ( 25.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 538 insertions WITH sequences → 532 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 2.6531s | Clusters: 676 | Clustered: 782 | Noise: 8102
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:           782 (  8.8%)
+  Unclustered/Noise:  8102 ( 91.2%) ← Why so many?
+  Number of clusters: 676
+
+  Noise breakdown by SV type:
+    DEL     2862/3097  ( 92.4%) are noise
+    INS     5231/5769  ( 90.7%) are noise
+    INV        9/18    ( 50.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:       96,798.5 bp
+    Median:     30,520.8 bp
+    Min:            21.2 bp
+    Max:       956,767.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       4/100   (  4.0%)
+    ≤1000 bp:     18/100   ( 18.0%)
+    ≤5000 bp:     28/100   ( 28.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.9699s | Clusters: 1380 | Clustered: 8884 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:          8884 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1380
+
+  Noise breakdown by SV type:
+    DEL        0/3097  (  0.0%) are noise
+    INS        0/5769  (  0.0%) are noise
+    INV        0/18    (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 5769 insertions WITH sequences → 1130 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 1.4451s | Clusters: 1684 | Clustered: 8884 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:          8884 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1684
+
+  Noise breakdown by SV type:
+    DEL        0/3097  (  0.0%) are noise
+    INS        0/5769  (  0.0%) are noise
+    INV        0/18    (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 31.6254s | Clusters: 1406 | Clustered: 8884 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:          8884 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1406
+
+  Noise breakdown by SV type:
+    DEL        0/3097  (  0.0%) are noise
+    INS        0/5769  (  0.0%) are noise
+    INV        0/18    (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 5769 insertions WITH sequences → 1130 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 32.3054s | Clusters: 1702 | Clustered: 8884 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    8884
+  Clustered:          8884 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1702
+
+  Noise breakdown by SV type:
+    DEL        0/3097  (  0.0%) are noise
+    INS        0/5769  (  0.0%) are noise
+    INV        0/18    (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ plat_G2_G3_parents_kids_chr1_DBSCAN_NO_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_OPTICS_NO_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_OPTICS_WITH_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_OVERLAP_NO_HAMMING.png
+  ✓ plat_G2_G3_parents_kids_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ plat_G2_G3_parents_kids_size_distribution.png
+  ✓ plat_G2_G3_parents_kids_time_comparison.png
+  ✓ plat_G2_G3_parents_kids_memory_comparison.png
+                              PROCESSING: plat_G2_parents.db                              
+
+Loading: plat_G2_parents.db
+✓ Loaded 2510 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL             874   34.8%       1195.0          0        78849          0        0
+INS            1630   64.9%        987.9         51       166151       1630        0
+INV               6    0.2%          0.0          0            0          0        0
+TOTAL          2510  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 1630
+  With sequence:     1630 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      987.9 bp
+    Median:    297.5 bp
+    Std:      4442.9 bp
+    Range:  51-166151 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0163s | Clusters: 269 | Clustered: 607 | Noise: 1903
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:           607 ( 24.2%)
+  Unclustered/Noise:  1903 ( 75.8%) ← Why so many?
+  Number of clusters: 269
+
+  Noise breakdown by SV type:
+    DEL      763/874   ( 87.3%) are noise
+    INS     1139/1630  ( 69.9%) are noise
+    INV        1/6     ( 16.7%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      112,284.1 bp
+    Median:     66,862.6 bp
+    Min:            15.0 bp
+    Max:       956,767.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       3/100   (  3.0%)
+    ≤1000 bp:      8/100   (  8.0%)
+    ≤5000 bp:     20/100   ( 20.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 491 insertions WITH sequences → 444 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.0502s | Clusters: 522 | Clustered: 607 | Noise: 1903
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:           607 ( 24.2%)
+  Unclustered/Noise:  1903 ( 75.8%) ← Why so many?
+  Number of clusters: 522
+
+  Noise breakdown by SV type:
+    DEL      763/874   ( 87.3%) are noise
+    INS     1139/1630  ( 69.9%) are noise
+    INV        1/6     ( 16.7%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      117,572.3 bp
+    Median:     66,430.6 bp
+    Min:            31.1 bp
+    Max:       583,544.2 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       2/100   (  2.0%)
+    ≤1000 bp:      8/100   (  8.0%)
+    ≤5000 bp:     16/100   ( 16.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 0.2573s | Clusters: 45 | Clustered: 105 | Noise: 2405
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:           105 (  4.2%)
+  Unclustered/Noise:  2405 ( 95.8%) ← Why so many?
+  Number of clusters: 45
+
+  Noise breakdown by SV type:
+    DEL      845/874   ( 96.7%) are noise
+    INS     1557/1630  ( 95.5%) are noise
+    INV        3/6     ( 50.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      117,362.7 bp
+    Median:     88,207.9 bp
+    Min:            11.3 bp
+    Max:       722,113.0 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      13/100   ( 13.0%)
+    ≤1000 bp:     18/100   ( 18.0%)
+    ≤5000 bp:     22/100   ( 22.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 73 insertions WITH sequences → 71 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.2595s | Clusters: 88 | Clustered: 105 | Noise: 2405
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:           105 (  4.2%)
+  Unclustered/Noise:  2405 ( 95.8%) ← Why so many?
+  Number of clusters: 88
+
+  Noise breakdown by SV type:
+    DEL      845/874   ( 96.7%) are noise
+    INS     1557/1630  ( 95.5%) are noise
+    INV        3/6     ( 50.0%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:       85,121.2 bp
+    Median:     34,423.8 bp
+    Min:             3.0 bp
+    Max:       740,282.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:      23/100   ( 23.0%)
+    ≤1000 bp:     27/100   ( 27.0%)
+    ≤5000 bp:     35/100   ( 35.0%)
+  DIAGNOSIS:
+    • Moderate isolation - mix of close and distant points
+    → Some genuinely isolated, some could cluster with larger threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.2575s | Clusters: 1380 | Clustered: 2510 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:          2510 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1380
+
+  Noise breakdown by SV type:
+    DEL        0/874   (  0.0%) are noise
+    INS        0/1630  (  0.0%) are noise
+    INV        0/6     (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 1630 insertions WITH sequences → 1130 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.3413s | Clusters: 1684 | Clustered: 2510 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:          2510 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1684
+
+  Noise breakdown by SV type:
+    DEL        0/874   (  0.0%) are noise
+    INS        0/1630  (  0.0%) are noise
+    INV        0/6     (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 2.5541s | Clusters: 1426 | Clustered: 2510 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:          2510 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1426
+
+  Noise breakdown by SV type:
+    DEL        0/874   (  0.0%) are noise
+    INS        0/1630  (  0.0%) are noise
+    INV        0/6     (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 1630 insertions WITH sequences → 1130 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 2.6214s | Clusters: 1706 | Clustered: 2510 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    2510
+  Clustered:          2510 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1706
+
+  Noise breakdown by SV type:
+    DEL        0/874   (  0.0%) are noise
+    INS        0/1630  (  0.0%) are noise
+    INV        0/6     (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ plat_G2_parents_chr1_DBSCAN_NO_HAMMING.png
+  ✓ plat_G2_parents_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ plat_G2_parents_chr1_OPTICS_NO_HAMMING.png
+  ✓ plat_G2_parents_chr1_OPTICS_WITH_HAMMING.png
+  ✓ plat_G2_parents_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ plat_G2_parents_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ plat_G2_parents_chr1_OVERLAP_NO_HAMMING.png
+  ✓ plat_G2_parents_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ plat_G2_parents_size_distribution.png
+  ✓ plat_G2_parents_time_comparison.png
+  ✓ plat_G2_parents_memory_comparison.png
+                             PROCESSING: plat_G3_siblings.db                              
+
+Loading: plat_G3_siblings.db
+✓ Loaded 6374 variants
+                       STRUCTURAL VARIANT STATISTICS - Chromosome 1                       
+SV TYPE       COUNT       %     AVG_SIZE        MIN          MAX   WITH_SEQ   NO_SEQ
+DEL            2223   34.9%       1204.8          0        78849          0        0
+INS            4139   64.9%        999.6         51       166151       4139        0
+INV              12    0.2%          0.0          0            0          0        0
+TOTAL          6374  100.0%
+                                    INSERTION DETAILS                                     
+  Total insertions: 4139
+  With sequence:     4139 (100.0%)  ← Can be Hamming-clustered
+  Without sequence:     0 (  0.0%)  ← Spatial only
+
+  Sequence lengths:
+    Mean:      999.6 bp
+    Median:    305.0 bp
+    Std:      4059.5 bp
+    Range:  51-166151 bp
+DBSCAN CLUSTERING
+
+▶ DBSCAN WITHOUT Hamming...
+  Time: 0.0498s | Clusters: 724 | Clustered: 1613 | Noise: 4761
+DBSCAN WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:          1613 ( 25.3%)
+  Unclustered/Noise:  4761 ( 74.7%) ← Why so many?
+  Number of clusters: 724
+
+  Noise breakdown by SV type:
+    DEL     1928/2223  ( 86.7%) are noise
+    INS     2832/4139  ( 68.4%) are noise
+    INV        1/12    (  8.3%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      121,012.8 bp
+    Median:     62,859.5 bp
+    Min:            10.0 bp
+    Max:       889,968.5 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       2/100   (  2.0%)
+    ≤1000 bp:      8/100   (  8.0%)
+    ≤5000 bp:     17/100   ( 17.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ DBSCAN WITH Hamming...
+  Hamming re-clustering:
+    • 1307 insertions WITH sequences → 1183 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.1484s | Clusters: 1388 | Clustered: 1613 | Noise: 4761
+DBSCAN WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:          1613 ( 25.3%)
+  Unclustered/Noise:  4761 ( 74.7%) ← Why so many?
+  Number of clusters: 1388
+
+  Noise breakdown by SV type:
+    DEL     1928/2223  ( 86.7%) are noise
+    INS     2832/4139  ( 68.4%) are noise
+    INV        1/12    (  8.3%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      105,918.2 bp
+    Median:     64,389.5 bp
+    Min:             1.4 bp
+    Max:       956,767.8 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       7/100   (  7.0%)
+    ≤1000 bp:     11/100   ( 11.0%)
+    ≤5000 bp:     18/100   ( 18.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+OPTICS CLUSTERING
+
+▶ OPTICS WITHOUT Hamming...
+  Time: 1.4223s | Clusters: 223 | Clustered: 526 | Noise: 5848
+OPTICS WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:           526 (  8.3%)
+  Unclustered/Noise:  5848 ( 91.7%) ← Why so many?
+  Number of clusters: 223
+
+  Noise breakdown by SV type:
+    DEL     2064/2223  ( 92.8%) are noise
+    INS     3777/4139  ( 91.3%) are noise
+    INV        7/12    ( 58.3%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:      117,149.6 bp
+    Median:     48,405.1 bp
+    Min:            15.0 bp
+    Max:       691,253.4 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       7/100   (  7.0%)
+    ≤1000 bp:     14/100   ( 14.0%)
+    ≤5000 bp:     21/100   ( 21.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+
+▶ OPTICS WITH Hamming...
+  Hamming re-clustering:
+    • 362 insertions WITH sequences → 362 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 1.4425s | Clusters: 460 | Clustered: 526 | Noise: 5848
+OPTICS WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:           526 (  8.3%)
+  Unclustered/Noise:  5848 ( 91.7%) ← Why so many?
+  Number of clusters: 460
+
+  Noise breakdown by SV type:
+    DEL     2064/2223  ( 92.8%) are noise
+    INS     3777/4139  ( 91.3%) are noise
+    INV        7/12    ( 58.3%) are noise
+  NOISE DIAGNOSIS - Why aren't these variants clustered?
+
+  Distance to nearest neighbor (sampled 100 noise points):
+    Mean:       99,167.8 bp
+    Median:     63,059.6 bp
+    Min:             4.2 bp
+    Max:       693,011.9 bp
+
+  Clustering threshold: 500 bp (current setting)
+
+  How many noise points have neighbors within:
+    ≤500 bp:       7/100   (  7.0%)
+    ≤1000 bp:     14/100   ( 14.0%)
+    ≤5000 bp:     24/100   ( 24.0%)
+  DIAGNOSIS:
+    ✓ Most noise points are >500bp from neighbors
+    → This is EXPECTED - they are genuinely isolated
+    → To reduce noise: increase distance threshold
+       Example: Try 1000bp or 5000bp threshold
+INTERVAL_TREE CLUSTERING
+
+▶ INTERVAL_TREE WITHOUT Hamming...
+  Time: 0.6251s | Clusters: 1311 | Clustered: 6374 | Noise: 0
+INTERVAL_TREE WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:          6374 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1311
+
+  Noise breakdown by SV type:
+    DEL        0/2223  (  0.0%) are noise
+    INS        0/4139  (  0.0%) are noise
+    INV        0/12    (  0.0%) are noise
+
+▶ INTERVAL_TREE WITH Hamming...
+  Hamming re-clustering:
+    • 4139 insertions WITH sequences → 1043 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 0.9729s | Clusters: 1566 | Clustered: 6374 | Noise: 0
+INTERVAL_TREE WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:          6374 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1566
+
+  Noise breakdown by SV type:
+    DEL        0/2223  (  0.0%) are noise
+    INS        0/4139  (  0.0%) are noise
+    INV        0/12    (  0.0%) are noise
+OVERLAP CLUSTERING
+
+▶ OVERLAP WITHOUT Hamming...
+  Time: 16.2992s | Clusters: 1333 | Clustered: 6374 | Noise: 0
+OVERLAP WITHOUT Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:          6374 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1333
+
+  Noise breakdown by SV type:
+    DEL        0/2223  (  0.0%) are noise
+    INS        0/4139  (  0.0%) are noise
+    INV        0/12    (  0.0%) are noise
+
+▶ OVERLAP WITH Hamming...
+  Hamming re-clustering:
+    • 4139 insertions WITH sequences → 1043 clusters
+    • 0 insertions WITHOUT sequences → kept spatial clusters
+  Time: 16.6872s | Clusters: 1583 | Clustered: 6374 | Noise: 0
+OVERLAP WITH Hamming - CLUSTERING ANALYSIS
+  Total variants:    6374
+  Clustered:          6374 (100.0%)
+  Unclustered/Noise:     0 (  0.0%) ← Why so many?
+  Number of clusters: 1583
+
+  Noise breakdown by SV type:
+    DEL        0/2223  (  0.0%) are noise
+    INS        0/4139  (  0.0%) are noise
+    INV        0/12    (  0.0%) are noise
+GENERATING VISUALIZATIONS
+  ✓ plat_G3_siblings_chr1_DBSCAN_NO_HAMMING.png
+  ✓ plat_G3_siblings_chr1_DBSCAN_WITH_HAMMING.png
+  ✓ plat_G3_siblings_chr1_OPTICS_NO_HAMMING.png
+  ✓ plat_G3_siblings_chr1_OPTICS_WITH_HAMMING.png
+  ✓ plat_G3_siblings_chr1_INTERVAL_TREE_NO_HAMMING.png
+  ✓ plat_G3_siblings_chr1_INTERVAL_TREE_WITH_HAMMING.png
+  ✓ plat_G3_siblings_chr1_OVERLAP_NO_HAMMING.png
+  ✓ plat_G3_siblings_chr1_OVERLAP_WITH_HAMMING.png
+
+  ✓ plat_G3_siblings_size_distribution.png
+  ✓ plat_G3_siblings_time_comparison.png
+  ✓ plat_G3_siblings_memory_comparison.png
+                                   ✓ BENCHMARK COMPLETE                                   
+
+========================================
+✓ BENCHMARK COMPLETED SUCCESSFULLY
+========================================
+
+Generated plots:
+  Total: 80 plot files
+
+Breakdown by database:
+  NA12877: 11 plots
+  NA12878: 11 plots
+  NA12879: 11 plots
+  NA12881: 11 plots
+  NA12882: 11 plots
+  NA12885: 11 plots
+  NA12886: 11 plots
+  plat_G2_G3_parents_kids: 11 plots
+  plat_G2_parents: 11 plots
+  plat_G3_siblings: 11 plots
+
+
+========================================
+JOB SUMMARY
+========================================
+Job ID: 21801
+Databases processed: 10
+Output files:
+  - Plots: *.png
+  - Stdout: benchmark_21801.out
+  - Stderr: benchmark_21801.err
+
+Check benchmark_21801.out for:
+  • Detailed SV statistics
+  • Clustering results per algorithm
+  • Noise analysis
+  • Performance metrics
+========================================
