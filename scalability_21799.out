@@ -1,0 +1,61 @@
+Found 5 databases
+svdb_1000samples.db
+svdb_100samples.db
+svdb_10samples.db
+svdb_500samples.db
+svdb_50samples.db
+
+Benchmark summary:
+
+WITHOUT Hamming:
+  DBSCAN:
+    Size 10: Variants=7041, Clusters=0
+    Size 50: Variants=34376, Clusters=0
+    Size 100: Variants=67364, Clusters=0
+    Size 500: Variants=337653, Clusters=0
+    Size 1000: Variants=673964, Clusters=0
+    Total variants (sum across DBs)=1120398, Total clusters=0
+  OPTICS:
+    Size 10: Variants=7041, Clusters=607
+    Size 50: Variants=34376, Clusters=3668
+    Size 100: Variants=67364, Clusters=7202
+    Size 500: Variants=337653, Clusters=25943
+    Size 1000: Variants=673964, Clusters=46403
+    Total variants (sum across DBs)=1120398, Total clusters=83823
+  INTERVAL_TREE:
+    Size 10: Variants=7041, Clusters=1433
+    Size 50: Variants=34376, Clusters=1582
+    Size 100: Variants=67364, Clusters=1587
+    Size 500: Variants=337653, Clusters=1736
+    Size 1000: Variants=673964, Clusters=1825
+    Total variants (sum across DBs)=1120398, Total clusters=8163
+
+WITH Hamming:
+  DBSCAN:
+    Size 10: Variants=7041, Clusters=0
+    Size 50: Variants=34376, Clusters=0
+    Size 100: Variants=67364, Clusters=0
+    Size 500: Variants=337653, Clusters=0
+    Size 1000: Variants=673964, Clusters=0
+    Total variants (sum across DBs)=1120398, Total clusters=0
+  OPTICS:
+    Size 10: Variants=7041, Clusters=607
+    Size 50: Variants=34376, Clusters=3668
+    Size 100: Variants=67364, Clusters=7202
+    Size 500: Variants=337653, Clusters=25943
+    Size 1000: Variants=673964, Clusters=46403
+    Total variants (sum across DBs)=1120398, Total clusters=83823
+  INTERVAL_TREE:
+    Size 10: Variants=7041, Clusters=1433
+    Size 50: Variants=34376, Clusters=1582
+    Size 100: Variants=67364, Clusters=1587
+    Size 500: Variants=337653, Clusters=1736
+    Size 1000: Variants=673964, Clusters=1825
+    Total variants (sum across DBs)=1120398, Total clusters=8163
+Complete
+scalability_memory_comparison_1000samples.png
+scalability_memory_no_hamming.png
+scalability_memory_with_hamming.png
+scalability_time_comparison_1000samples.png
+scalability_time_no_hamming.png
+scalability_time_with_hamming.png
