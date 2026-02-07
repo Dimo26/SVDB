@@ -120,7 +120,7 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
     start_time = time.time()
     
     if algorithm == 'DBSCAN':
-        labels = DBSCAN.cluster(coordinates, epsilon=200, m=2)
+        labels = DBSCAN.cluster(coordinates, epsilon=500, m=2)
     elif algorithm == 'OPTICS':
         labels = optics_cluster(coordinates, min_samples=2, max_eps=2000)
     elif algorithm == 'INTERVAL_TREE':
@@ -202,9 +202,9 @@ def plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms
     }
     
     descriptions = {
-        'DBSCAN': 'Density-based clustering (DBSCAN)',
-        'OPTICS': 'Ordering-based density clustering (OPTICS)',
-        'INTERVAL_TREE': 'Overlap-based clustering (Interval Tree)'
+        'DBSCAN',
+        'OPTICS',
+        'INTERVAL_TREE'
     }
     
     output_files = []
