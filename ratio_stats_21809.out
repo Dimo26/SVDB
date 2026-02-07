@@ -1,0 +1,1528 @@
+Installing required Python packages...
+Looking in links: /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages
+Requirement already satisfied: numpy in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (1.20.3)
+Requirement already satisfied: psutil in /castor/project/home/dimam/.local/lib/python3.9/site-packages (7.1.3)
+
+Verifying SVDB installation...
+✓ All SVDB modules loaded
+
+Searching for pairwise databases...
+Found 21 pairwise database file(s):
+  ./Platinum_experiments/NA12877_NA12878.db
+  ./Platinum_experiments/NA12877_NA12879.db
+  ./Platinum_experiments/NA12877_NA12881.db
+  ./Platinum_experiments/NA12877_NA12882.db
+  ./Platinum_experiments/NA12877_NA12885.db
+  ./Platinum_experiments/NA12877_NA12886.db
+  ./Platinum_experiments/NA12878_NA12879.db
+  ./Platinum_experiments/NA12878_NA12881.db
+  ./Platinum_experiments/NA12878_NA12882.db
+  ./Platinum_experiments/NA12878_NA12885.db
+  ./Platinum_experiments/NA12878_NA12886.db
+  ./Platinum_experiments/NA12879_NA12881.db
+  ./Platinum_experiments/NA12879_NA12882.db
+  ./Platinum_experiments/NA12879_NA12885.db
+  ./Platinum_experiments/NA12879_NA12886.db
+  ./Platinum_experiments/NA12881_NA12882.db
+  ./Platinum_experiments/NA12881_NA12885.db
+  ./Platinum_experiments/NA12881_NA12886.db
+  ./Platinum_experiments/NA12882_NA12885.db
+  ./Platinum_experiments/NA12882_NA12886.db
+  ./Platinum_experiments/NA12885_NA12886.db
+
+                      SVDB CLUSTERING RATIO ANALYSIS - FIXED VERSION                      
+Databases to analyze: 21
+  • NA12877_NA12878.db
+  • NA12877_NA12879.db
+  • NA12877_NA12881.db
+  • NA12877_NA12882.db
+  • NA12877_NA12885.db
+  • NA12877_NA12886.db
+  • NA12878_NA12879.db
+  • NA12878_NA12881.db
+  • NA12878_NA12882.db
+  • NA12878_NA12885.db
+  • NA12878_NA12886.db
+  • NA12879_NA12881.db
+  • NA12879_NA12882.db
+  • NA12879_NA12885.db
+  • NA12879_NA12886.db
+  • NA12881_NA12882.db
+  • NA12881_NA12885.db
+  • NA12881_NA12886.db
+  • NA12882_NA12885.db
+  • NA12882_NA12886.db
+  • NA12885_NA12886.db
+
+Output CSV: clustering_ratios_20260207_161605.csv
+
+Fixes applied:
+  ✓ Hamming re-clustering now preserves noise labels
+  ✓ OPTICS uses class-based implementation
+  ✓ OVERLAP uses proper overlap_cluster function
+  ✓ Diagnostic output shows sequence-based clusters
+
+==========================================================================================
+PROCESSING: NA12877_NA12878.db
+==========================================================================================
+Loading: NA12877_NA12878.db
+  Loaded 2510 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   607 | Unclustered:  1903 | Clusters:  269 | Ratio: 0.2418
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 491 insertions WITH sequences → 444 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   607 | Unclustered:  1903 | Clusters:  522 | Ratio: 0.2418
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +253 (from 269 to 522)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   105 | Unclustered:  2405 | Clusters:   45 | Ratio: 0.0418
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 73 insertions WITH sequences → 71 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   105 | Unclustered:  2405 | Clusters:   88 | Ratio: 0.0418
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +43 (from 45 to 88)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2510 | Unclustered:     0 | Clusters: 1380 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1630 insertions WITH sequences → 1130 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2510 | Unclustered:     0 | Clusters: 1684 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +304 (from 1380 to 1684)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2510 | Unclustered:     0 | Clusters: 1426 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1630 insertions WITH sequences → 1130 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2510 | Unclustered:     0 | Clusters: 1706 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +280 (from 1426 to 1706)
+
+==========================================================================================
+PROCESSING: NA12877_NA12879.db
+==========================================================================================
+Loading: NA12877_NA12879.db
+  Loaded 2545 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   621 | Unclustered:  1924 | Clusters:  277 | Ratio: 0.2440
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 509 insertions WITH sequences → 456 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   621 | Unclustered:  1924 | Clusters:  532 | Ratio: 0.2440
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +255 (from 277 to 532)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:    91 | Unclustered:  2454 | Clusters:   39 | Ratio: 0.0358
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 68 insertions WITH sequences → 67 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:    91 | Unclustered:  2454 | Clusters:   78 | Ratio: 0.0358
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +39 (from 39 to 78)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2545 | Unclustered:     0 | Clusters: 1270 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1664 insertions WITH sequences → 992 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2545 | Unclustered:     0 | Clusters: 1490 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +220 (from 1270 to 1490)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2545 | Unclustered:     0 | Clusters: 1299 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1664 insertions WITH sequences → 992 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2545 | Unclustered:     0 | Clusters: 1505 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +206 (from 1299 to 1505)
+
+==========================================================================================
+PROCESSING: NA12877_NA12881.db
+==========================================================================================
+Loading: NA12877_NA12881.db
+  Loaded 2517 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   609 | Unclustered:  1908 | Clusters:  269 | Ratio: 0.2420
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 504 insertions WITH sequences → 456 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   609 | Unclustered:  1908 | Clusters:  529 | Ratio: 0.2420
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +260 (from 269 to 529)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   102 | Unclustered:  2415 | Clusters:   44 | Ratio: 0.0405
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 79 insertions WITH sequences → 77 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   102 | Unclustered:  2415 | Clusters:   89 | Ratio: 0.0405
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +45 (from 44 to 89)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2517 | Unclustered:     0 | Clusters: 1267 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1658 insertions WITH sequences → 999 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2517 | Unclustered:     0 | Clusters: 1496 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +229 (from 1267 to 1496)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2517 | Unclustered:     0 | Clusters: 1293 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1658 insertions WITH sequences → 999 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2517 | Unclustered:     0 | Clusters: 1510 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +217 (from 1293 to 1510)
+
+==========================================================================================
+PROCESSING: NA12877_NA12882.db
+==========================================================================================
+Loading: NA12877_NA12882.db
+  Loaded 2555 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   639 | Unclustered:  1916 | Clusters:  284 | Ratio: 0.2501
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 518 insertions WITH sequences → 466 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   639 | Unclustered:  1916 | Clusters:  546 | Ratio: 0.2501
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +262 (from 284 to 546)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:    98 | Unclustered:  2457 | Clusters:   41 | Ratio: 0.0384
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 74 insertions WITH sequences → 73 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:    98 | Unclustered:  2457 | Clusters:   85 | Ratio: 0.0384
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +44 (from 41 to 85)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2555 | Unclustered:     0 | Clusters: 1257 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1671 insertions WITH sequences → 982 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2555 | Unclustered:     0 | Clusters: 1477 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +220 (from 1257 to 1477)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2555 | Unclustered:     0 | Clusters: 1288 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1671 insertions WITH sequences → 982 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2555 | Unclustered:     0 | Clusters: 1496 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +208 (from 1288 to 1496)
+
+==========================================================================================
+PROCESSING: NA12877_NA12885.db
+==========================================================================================
+Loading: NA12877_NA12885.db
+  Loaded 2513 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   609 | Unclustered:  1904 | Clusters:  271 | Ratio: 0.2423
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 497 insertions WITH sequences → 449 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   609 | Unclustered:  1904 | Clusters:  525 | Ratio: 0.2423
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +254 (from 271 to 525)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:    94 | Unclustered:  2419 | Clusters:   40 | Ratio: 0.0374
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 69 insertions WITH sequences → 68 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:    94 | Unclustered:  2419 | Clusters:   81 | Ratio: 0.0374
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +41 (from 40 to 81)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1256 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1641 insertions WITH sequences → 981 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1474 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +218 (from 1256 to 1474)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1282 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1641 insertions WITH sequences → 981 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1490 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +208 (from 1282 to 1490)
+
+==========================================================================================
+PROCESSING: NA12877_NA12886.db
+==========================================================================================
+Loading: NA12877_NA12886.db
+  Loaded 2529 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   635 | Unclustered:  1894 | Clusters:  283 | Ratio: 0.2511
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 519 insertions WITH sequences → 471 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   635 | Unclustered:  1894 | Clusters:  551 | Ratio: 0.2511
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +268 (from 283 to 551)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   105 | Unclustered:  2424 | Clusters:   46 | Ratio: 0.0415
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 79 insertions WITH sequences → 78 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   105 | Unclustered:  2424 | Clusters:   93 | Ratio: 0.0415
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +47 (from 46 to 93)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2529 | Unclustered:     0 | Clusters: 1256 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1660 insertions WITH sequences → 990 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2529 | Unclustered:     0 | Clusters: 1488 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +232 (from 1256 to 1488)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2529 | Unclustered:     0 | Clusters: 1286 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1660 insertions WITH sequences → 990 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2529 | Unclustered:     0 | Clusters: 1505 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +219 (from 1286 to 1505)
+
+==========================================================================================
+PROCESSING: NA12878_NA12879.db
+==========================================================================================
+Loading: NA12878_NA12879.db
+  Loaded 2541 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   628 | Unclustered:  1913 | Clusters:  282 | Ratio: 0.2471
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 504 insertions WITH sequences → 454 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   628 | Unclustered:  1913 | Clusters:  536 | Ratio: 0.2471
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +254 (from 282 to 536)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   105 | Unclustered:  2436 | Clusters:   45 | Ratio: 0.0413
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 71 insertions WITH sequences → 69 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   105 | Unclustered:  2436 | Clusters:   87 | Ratio: 0.0413
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +42 (from 45 to 87)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2541 | Unclustered:     0 | Clusters: 1252 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1632 insertions WITH sequences → 970 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2541 | Unclustered:     0 | Clusters: 1476 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +224 (from 1252 to 1476)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2541 | Unclustered:     0 | Clusters: 1281 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1632 insertions WITH sequences → 970 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2541 | Unclustered:     0 | Clusters: 1496 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +215 (from 1281 to 1496)
+
+==========================================================================================
+PROCESSING: NA12878_NA12881.db
+==========================================================================================
+Loading: NA12878_NA12881.db
+  Loaded 2513 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   616 | Unclustered:  1897 | Clusters:  274 | Ratio: 0.2451
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 499 insertions WITH sequences → 454 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   616 | Unclustered:  1897 | Clusters:  533 | Ratio: 0.2451
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +259 (from 274 to 533)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   110 | Unclustered:  2403 | Clusters:   46 | Ratio: 0.0438
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 81 insertions WITH sequences → 79 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   110 | Unclustered:  2403 | Clusters:   95 | Ratio: 0.0438
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +49 (from 46 to 95)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1248 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1626 insertions WITH sequences → 968 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1463 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +215 (from 1248 to 1463)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1276 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1626 insertions WITH sequences → 968 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2513 | Unclustered:     0 | Clusters: 1481 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +205 (from 1276 to 1481)
+
+==========================================================================================
+PROCESSING: NA12878_NA12882.db
+==========================================================================================
+Loading: NA12878_NA12882.db
+  Loaded 2551 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   646 | Unclustered:  1905 | Clusters:  289 | Ratio: 0.2532
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 513 insertions WITH sequences → 464 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   646 | Unclustered:  1905 | Clusters:  550 | Ratio: 0.2532
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +261 (from 289 to 550)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   118 | Unclustered:  2433 | Clusters:   51 | Ratio: 0.0463
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 75 insertions WITH sequences → 74 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   118 | Unclustered:  2433 | Clusters:   98 | Ratio: 0.0463
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +47 (from 51 to 98)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2551 | Unclustered:     0 | Clusters: 1252 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1639 insertions WITH sequences → 975 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2551 | Unclustered:     0 | Clusters: 1477 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +225 (from 1252 to 1477)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2551 | Unclustered:     0 | Clusters: 1280 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1639 insertions WITH sequences → 975 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2551 | Unclustered:     0 | Clusters: 1494 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +214 (from 1280 to 1494)
+
+==========================================================================================
+PROCESSING: NA12878_NA12885.db
+==========================================================================================
+Loading: NA12878_NA12885.db
+  Loaded 2509 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   616 | Unclustered:  1893 | Clusters:  276 | Ratio: 0.2455
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 492 insertions WITH sequences → 447 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   616 | Unclustered:  1893 | Clusters:  529 | Ratio: 0.2455
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +253 (from 276 to 529)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:    97 | Unclustered:  2412 | Clusters:   43 | Ratio: 0.0387
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 64 insertions WITH sequences → 63 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:    97 | Unclustered:  2412 | Clusters:   81 | Ratio: 0.0387
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +38 (from 43 to 81)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2509 | Unclustered:     0 | Clusters: 1252 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1609 insertions WITH sequences → 970 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2509 | Unclustered:     0 | Clusters: 1471 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +219 (from 1252 to 1471)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2509 | Unclustered:     0 | Clusters: 1281 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1609 insertions WITH sequences → 970 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2509 | Unclustered:     0 | Clusters: 1492 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +211 (from 1281 to 1492)
+
+==========================================================================================
+PROCESSING: NA12878_NA12886.db
+==========================================================================================
+Loading: NA12878_NA12886.db
+  Loaded 2525 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   642 | Unclustered:  1883 | Clusters:  288 | Ratio: 0.2543
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 514 insertions WITH sequences → 469 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   642 | Unclustered:  1883 | Clusters:  555 | Ratio: 0.2543
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +267 (from 288 to 555)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   113 | Unclustered:  2412 | Clusters:   50 | Ratio: 0.0448
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 74 insertions WITH sequences → 73 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   113 | Unclustered:  2412 | Clusters:   95 | Ratio: 0.0448
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +45 (from 50 to 95)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2525 | Unclustered:     0 | Clusters: 1249 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1628 insertions WITH sequences → 969 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2525 | Unclustered:     0 | Clusters: 1468 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +219 (from 1249 to 1468)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2525 | Unclustered:     0 | Clusters: 1280 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1628 insertions WITH sequences → 969 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2525 | Unclustered:     0 | Clusters: 1487 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +207 (from 1280 to 1487)
+
+==========================================================================================
+PROCESSING: NA12879_NA12881.db
+==========================================================================================
+Loading: NA12879_NA12881.db
+  Loaded 2548 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   630 | Unclustered:  1918 | Clusters:  282 | Ratio: 0.2473
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 517 insertions WITH sequences → 466 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   630 | Unclustered:  1918 | Clusters:  543 | Ratio: 0.2473
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +261 (from 282 to 543)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   120 | Unclustered:  2428 | Clusters:   50 | Ratio: 0.0471
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 86 insertions WITH sequences → 84 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   120 | Unclustered:  2428 | Clusters:  102 | Ratio: 0.0471
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +52 (from 50 to 102)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2548 | Unclustered:     0 | Clusters: 1229 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1660 insertions WITH sequences → 955 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2548 | Unclustered:     0 | Clusters: 1438 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +209 (from 1229 to 1438)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2548 | Unclustered:     0 | Clusters: 1253 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1660 insertions WITH sequences → 955 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2548 | Unclustered:     0 | Clusters: 1453 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +200 (from 1253 to 1453)
+
+==========================================================================================
+PROCESSING: NA12879_NA12882.db
+==========================================================================================
+Loading: NA12879_NA12882.db
+  Loaded 2586 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   660 | Unclustered:  1926 | Clusters:  297 | Ratio: 0.2552
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 531 insertions WITH sequences → 476 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   660 | Unclustered:  1926 | Clusters:  560 | Ratio: 0.2552
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +263 (from 297 to 560)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   115 | Unclustered:  2471 | Clusters:   48 | Ratio: 0.0445
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 77 insertions WITH sequences → 76 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   115 | Unclustered:  2471 | Clusters:   96 | Ratio: 0.0445
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +48 (from 48 to 96)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2586 | Unclustered:     0 | Clusters: 1245 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1673 insertions WITH sequences → 965 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2586 | Unclustered:     0 | Clusters: 1459 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +214 (from 1245 to 1459)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2586 | Unclustered:     0 | Clusters: 1270 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1673 insertions WITH sequences → 965 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2586 | Unclustered:     0 | Clusters: 1476 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +206 (from 1270 to 1476)
+
+==========================================================================================
+PROCESSING: NA12879_NA12885.db
+==========================================================================================
+Loading: NA12879_NA12885.db
+  Loaded 2544 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   630 | Unclustered:  1914 | Clusters:  284 | Ratio: 0.2476
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 510 insertions WITH sequences → 459 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   630 | Unclustered:  1914 | Clusters:  539 | Ratio: 0.2476
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +255 (from 284 to 539)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   112 | Unclustered:  2432 | Clusters:   46 | Ratio: 0.0440
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 74 insertions WITH sequences → 74 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   112 | Unclustered:  2432 | Clusters:   94 | Ratio: 0.0440
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +48 (from 46 to 94)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2544 | Unclustered:     0 | Clusters: 1208 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1643 insertions WITH sequences → 927 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2544 | Unclustered:     0 | Clusters: 1402 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +194 (from 1208 to 1402)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2544 | Unclustered:     0 | Clusters: 1229 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1643 insertions WITH sequences → 927 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2544 | Unclustered:     0 | Clusters: 1417 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +188 (from 1229 to 1417)
+
+==========================================================================================
+PROCESSING: NA12879_NA12886.db
+==========================================================================================
+Loading: NA12879_NA12886.db
+  Loaded 2560 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   656 | Unclustered:  1904 | Clusters:  296 | Ratio: 0.2562
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 532 insertions WITH sequences → 481 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   656 | Unclustered:  1904 | Clusters:  565 | Ratio: 0.2562
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +269 (from 296 to 565)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   114 | Unclustered:  2446 | Clusters:   49 | Ratio: 0.0445
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 79 insertions WITH sequences → 79 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   114 | Unclustered:  2446 | Clusters:   98 | Ratio: 0.0445
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +49 (from 49 to 98)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2560 | Unclustered:     0 | Clusters: 1252 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1662 insertions WITH sequences → 971 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2560 | Unclustered:     0 | Clusters: 1470 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +218 (from 1252 to 1470)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2560 | Unclustered:     0 | Clusters: 1281 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1662 insertions WITH sequences → 971 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2560 | Unclustered:     0 | Clusters: 1489 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +208 (from 1281 to 1489)
+
+==========================================================================================
+PROCESSING: NA12881_NA12882.db
+==========================================================================================
+Loading: NA12881_NA12882.db
+  Loaded 2558 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   648 | Unclustered:  1910 | Clusters:  289 | Ratio: 0.2533
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 526 insertions WITH sequences → 476 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   648 | Unclustered:  1910 | Clusters:  557 | Ratio: 0.2533
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +268 (from 289 to 557)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   121 | Unclustered:  2437 | Clusters:   51 | Ratio: 0.0473
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 87 insertions WITH sequences → 86 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   121 | Unclustered:  2437 | Clusters:  104 | Ratio: 0.0473
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +53 (from 51 to 104)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2558 | Unclustered:     0 | Clusters: 1243 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1667 insertions WITH sequences → 965 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2558 | Unclustered:     0 | Clusters: 1457 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +214 (from 1243 to 1457)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2558 | Unclustered:     0 | Clusters: 1269 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1667 insertions WITH sequences → 965 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2558 | Unclustered:     0 | Clusters: 1474 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +205 (from 1269 to 1474)
+
+==========================================================================================
+PROCESSING: NA12881_NA12885.db
+==========================================================================================
+Loading: NA12881_NA12885.db
+  Loaded 2516 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   618 | Unclustered:  1898 | Clusters:  276 | Ratio: 0.2456
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 505 insertions WITH sequences → 459 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   618 | Unclustered:  1898 | Clusters:  536 | Ratio: 0.2456
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +260 (from 276 to 536)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   112 | Unclustered:  2404 | Clusters:   48 | Ratio: 0.0445
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 79 insertions WITH sequences → 79 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   112 | Unclustered:  2404 | Clusters:   96 | Ratio: 0.0445
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +48 (from 48 to 96)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2516 | Unclustered:     0 | Clusters: 1186 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1637 insertions WITH sequences → 913 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2516 | Unclustered:     0 | Clusters: 1381 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +195 (from 1186 to 1381)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2516 | Unclustered:     0 | Clusters: 1208 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1637 insertions WITH sequences → 913 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2516 | Unclustered:     0 | Clusters: 1396 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +188 (from 1208 to 1396)
+
+==========================================================================================
+PROCESSING: NA12881_NA12886.db
+==========================================================================================
+Loading: NA12881_NA12886.db
+  Loaded 2532 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   644 | Unclustered:  1888 | Clusters:  288 | Ratio: 0.2543
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 527 insertions WITH sequences → 481 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   644 | Unclustered:  1888 | Clusters:  562 | Ratio: 0.2543
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +274 (from 288 to 562)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   127 | Unclustered:  2405 | Clusters:   55 | Ratio: 0.0502
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 90 insertions WITH sequences → 90 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   127 | Unclustered:  2405 | Clusters:  111 | Ratio: 0.0502
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +56 (from 55 to 111)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2532 | Unclustered:     0 | Clusters: 1182 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1656 insertions WITH sequences → 902 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2532 | Unclustered:     0 | Clusters: 1363 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +181 (from 1182 to 1363)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2532 | Unclustered:     0 | Clusters: 1204 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1656 insertions WITH sequences → 902 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2532 | Unclustered:     0 | Clusters: 1379 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +175 (from 1204 to 1379)
+
+==========================================================================================
+PROCESSING: NA12882_NA12885.db
+==========================================================================================
+Loading: NA12882_NA12885.db
+  Loaded 2554 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   648 | Unclustered:  1906 | Clusters:  291 | Ratio: 0.2537
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 519 insertions WITH sequences → 469 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   648 | Unclustered:  1906 | Clusters:  553 | Ratio: 0.2537
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +262 (from 291 to 553)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   111 | Unclustered:  2443 | Clusters:   47 | Ratio: 0.0435
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 77 insertions WITH sequences → 77 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   111 | Unclustered:  2443 | Clusters:   96 | Ratio: 0.0435
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +49 (from 47 to 96)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2554 | Unclustered:     0 | Clusters: 1221 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1650 insertions WITH sequences → 948 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2554 | Unclustered:     0 | Clusters: 1428 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +207 (from 1221 to 1428)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2554 | Unclustered:     0 | Clusters: 1248 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1650 insertions WITH sequences → 948 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2554 | Unclustered:     0 | Clusters: 1447 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +199 (from 1248 to 1447)
+
+==========================================================================================
+PROCESSING: NA12882_NA12886.db
+==========================================================================================
+Loading: NA12882_NA12886.db
+  Loaded 2570 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   674 | Unclustered:  1896 | Clusters:  303 | Ratio: 0.2623
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 541 insertions WITH sequences → 491 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   674 | Unclustered:  1896 | Clusters:  579 | Ratio: 0.2623
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +276 (from 303 to 579)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   129 | Unclustered:  2441 | Clusters:   56 | Ratio: 0.0502
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 89 insertions WITH sequences → 89 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   129 | Unclustered:  2441 | Clusters:  112 | Ratio: 0.0502
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +56 (from 56 to 112)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2570 | Unclustered:     0 | Clusters: 1199 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1669 insertions WITH sequences → 924 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2570 | Unclustered:     0 | Clusters: 1399 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +200 (from 1199 to 1399)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2570 | Unclustered:     0 | Clusters: 1228 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1669 insertions WITH sequences → 924 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2570 | Unclustered:     0 | Clusters: 1417 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +189 (from 1228 to 1417)
+
+==========================================================================================
+PROCESSING: NA12885_NA12886.db
+==========================================================================================
+Loading: NA12885_NA12886.db
+  Loaded 2528 variants from chromosome 1
+
+DBSCAN Analysis:
+  WITHOUT Hamming...
+    Clustered:   644 | Unclustered:  1884 | Clusters:  290 | Ratio: 0.2547
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 520 insertions WITH sequences → 474 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   644 | Unclustered:  1884 | Clusters:  558 | Ratio: 0.2547
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +268 (from 290 to 558)
+
+OPTICS Analysis:
+  WITHOUT Hamming...
+    Clustered:   120 | Unclustered:  2408 | Clusters:   50 | Ratio: 0.0475
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 80 insertions WITH sequences → 80 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:   120 | Unclustered:  2408 | Clusters:  103 | Ratio: 0.0475
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +53 (from 50 to 103)
+
+INTERVAL_TREE Analysis:
+  WITHOUT Hamming...
+    Clustered:  2528 | Unclustered:     0 | Clusters: 1166 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1639 insertions WITH sequences → 882 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2528 | Unclustered:     0 | Clusters: 1347 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +181 (from 1166 to 1347)
+
+OVERLAP Analysis:
+  WITHOUT Hamming...
+    Clustered:  2528 | Unclustered:     0 | Clusters: 1192 | Ratio: 1.0000
+  WITH Hamming...
+    Hamming re-clustering applied:
+      • 1639 insertions WITH sequences → 882 sequence-based clusters
+      • 0 insertions WITHOUT sequences → kept spatial clusters
+    Clustered:  2528 | Unclustered:     0 | Clusters: 1364 | Ratio: 1.0000
+    Hamming Improvement:
+      Ratio:    +0.0000 (+0.00%)
+      Clusters: +172 (from 1192 to 1364)
+                                                CLUSTERING RATIO SUMMARY                                                
+
+NA12877_NA12878:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                607         1903        269     0.2418
+  DBSCAN          Yes               607         1903        522     0.2418
+  OPTICS          No                105         2405         45     0.0418
+  OPTICS          Yes               105         2405         88     0.0418
+  INTERVAL_TREE   No               2510            0       1380     1.0000
+  INTERVAL_TREE   Yes              2510            0       1684     1.0000
+  OVERLAP         No               2510            0       1426     1.0000
+  OVERLAP         Yes              2510            0       1706     1.0000
+
+NA12877_NA12879:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                621         1924        277     0.2440
+  DBSCAN          Yes               621         1924        532     0.2440
+  OPTICS          No                 91         2454         39     0.0358
+  OPTICS          Yes                91         2454         78     0.0358
+  INTERVAL_TREE   No               2545            0       1270     1.0000
+  INTERVAL_TREE   Yes              2545            0       1490     1.0000
+  OVERLAP         No               2545            0       1299     1.0000
+  OVERLAP         Yes              2545            0       1505     1.0000
+
+NA12877_NA12881:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                609         1908        269     0.2420
+  DBSCAN          Yes               609         1908        529     0.2420
+  OPTICS          No                102         2415         44     0.0405
+  OPTICS          Yes               102         2415         89     0.0405
+  INTERVAL_TREE   No               2517            0       1267     1.0000
+  INTERVAL_TREE   Yes              2517            0       1496     1.0000
+  OVERLAP         No               2517            0       1293     1.0000
+  OVERLAP         Yes              2517            0       1510     1.0000
+
+NA12877_NA12882:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                639         1916        284     0.2501
+  DBSCAN          Yes               639         1916        546     0.2501
+  OPTICS          No                 98         2457         41     0.0384
+  OPTICS          Yes                98         2457         85     0.0384
+  INTERVAL_TREE   No               2555            0       1257     1.0000
+  INTERVAL_TREE   Yes              2555            0       1477     1.0000
+  OVERLAP         No               2555            0       1288     1.0000
+  OVERLAP         Yes              2555            0       1496     1.0000
+
+NA12877_NA12885:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                609         1904        271     0.2423
+  DBSCAN          Yes               609         1904        525     0.2423
+  OPTICS          No                 94         2419         40     0.0374
+  OPTICS          Yes                94         2419         81     0.0374
+  INTERVAL_TREE   No               2513            0       1256     1.0000
+  INTERVAL_TREE   Yes              2513            0       1474     1.0000
+  OVERLAP         No               2513            0       1282     1.0000
+  OVERLAP         Yes              2513            0       1490     1.0000
+
+NA12877_NA12886:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                635         1894        283     0.2511
+  DBSCAN          Yes               635         1894        551     0.2511
+  OPTICS          No                105         2424         46     0.0415
+  OPTICS          Yes               105         2424         93     0.0415
+  INTERVAL_TREE   No               2529            0       1256     1.0000
+  INTERVAL_TREE   Yes              2529            0       1488     1.0000
+  OVERLAP         No               2529            0       1286     1.0000
+  OVERLAP         Yes              2529            0       1505     1.0000
+
+NA12878_NA12879:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                628         1913        282     0.2471
+  DBSCAN          Yes               628         1913        536     0.2471
+  OPTICS          No                105         2436         45     0.0413
+  OPTICS          Yes               105         2436         87     0.0413
+  INTERVAL_TREE   No               2541            0       1252     1.0000
+  INTERVAL_TREE   Yes              2541            0       1476     1.0000
+  OVERLAP         No               2541            0       1281     1.0000
+  OVERLAP         Yes              2541            0       1496     1.0000
+
+NA12878_NA12881:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                616         1897        274     0.2451
+  DBSCAN          Yes               616         1897        533     0.2451
+  OPTICS          No                110         2403         46     0.0438
+  OPTICS          Yes               110         2403         95     0.0438
+  INTERVAL_TREE   No               2513            0       1248     1.0000
+  INTERVAL_TREE   Yes              2513            0       1463     1.0000
+  OVERLAP         No               2513            0       1276     1.0000
+  OVERLAP         Yes              2513            0       1481     1.0000
+
+NA12878_NA12882:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                646         1905        289     0.2532
+  DBSCAN          Yes               646         1905        550     0.2532
+  OPTICS          No                118         2433         51     0.0463
+  OPTICS          Yes               118         2433         98     0.0463
+  INTERVAL_TREE   No               2551            0       1252     1.0000
+  INTERVAL_TREE   Yes              2551            0       1477     1.0000
+  OVERLAP         No               2551            0       1280     1.0000
+  OVERLAP         Yes              2551            0       1494     1.0000
+
+NA12878_NA12885:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                616         1893        276     0.2455
+  DBSCAN          Yes               616         1893        529     0.2455
+  OPTICS          No                 97         2412         43     0.0387
+  OPTICS          Yes                97         2412         81     0.0387
+  INTERVAL_TREE   No               2509            0       1252     1.0000
+  INTERVAL_TREE   Yes              2509            0       1471     1.0000
+  OVERLAP         No               2509            0       1281     1.0000
+  OVERLAP         Yes              2509            0       1492     1.0000
+
+NA12878_NA12886:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                642         1883        288     0.2543
+  DBSCAN          Yes               642         1883        555     0.2543
+  OPTICS          No                113         2412         50     0.0448
+  OPTICS          Yes               113         2412         95     0.0448
+  INTERVAL_TREE   No               2525            0       1249     1.0000
+  INTERVAL_TREE   Yes              2525            0       1468     1.0000
+  OVERLAP         No               2525            0       1280     1.0000
+  OVERLAP         Yes              2525            0       1487     1.0000
+
+NA12879_NA12881:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                630         1918        282     0.2473
+  DBSCAN          Yes               630         1918        543     0.2473
+  OPTICS          No                120         2428         50     0.0471
+  OPTICS          Yes               120         2428        102     0.0471
+  INTERVAL_TREE   No               2548            0       1229     1.0000
+  INTERVAL_TREE   Yes              2548            0       1438     1.0000
+  OVERLAP         No               2548            0       1253     1.0000
+  OVERLAP         Yes              2548            0       1453     1.0000
+
+NA12879_NA12882:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                660         1926        297     0.2552
+  DBSCAN          Yes               660         1926        560     0.2552
+  OPTICS          No                115         2471         48     0.0445
+  OPTICS          Yes               115         2471         96     0.0445
+  INTERVAL_TREE   No               2586            0       1245     1.0000
+  INTERVAL_TREE   Yes              2586            0       1459     1.0000
+  OVERLAP         No               2586            0       1270     1.0000
+  OVERLAP         Yes              2586            0       1476     1.0000
+
+NA12879_NA12885:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                630         1914        284     0.2476
+  DBSCAN          Yes               630         1914        539     0.2476
+  OPTICS          No                112         2432         46     0.0440
+  OPTICS          Yes               112         2432         94     0.0440
+  INTERVAL_TREE   No               2544            0       1208     1.0000
+  INTERVAL_TREE   Yes              2544            0       1402     1.0000
+  OVERLAP         No               2544            0       1229     1.0000
+  OVERLAP         Yes              2544            0       1417     1.0000
+
+NA12879_NA12886:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                656         1904        296     0.2562
+  DBSCAN          Yes               656         1904        565     0.2562
+  OPTICS          No                114         2446         49     0.0445
+  OPTICS          Yes               114         2446         98     0.0445
+  INTERVAL_TREE   No               2560            0       1252     1.0000
+  INTERVAL_TREE   Yes              2560            0       1470     1.0000
+  OVERLAP         No               2560            0       1281     1.0000
+  OVERLAP         Yes              2560            0       1489     1.0000
+
+NA12881_NA12882:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                648         1910        289     0.2533
+  DBSCAN          Yes               648         1910        557     0.2533
+  OPTICS          No                121         2437         51     0.0473
+  OPTICS          Yes               121         2437        104     0.0473
+  INTERVAL_TREE   No               2558            0       1243     1.0000
+  INTERVAL_TREE   Yes              2558            0       1457     1.0000
+  OVERLAP         No               2558            0       1269     1.0000
+  OVERLAP         Yes              2558            0       1474     1.0000
+
+NA12881_NA12885:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                618         1898        276     0.2456
+  DBSCAN          Yes               618         1898        536     0.2456
+  OPTICS          No                112         2404         48     0.0445
+  OPTICS          Yes               112         2404         96     0.0445
+  INTERVAL_TREE   No               2516            0       1186     1.0000
+  INTERVAL_TREE   Yes              2516            0       1381     1.0000
+  OVERLAP         No               2516            0       1208     1.0000
+  OVERLAP         Yes              2516            0       1396     1.0000
+
+NA12881_NA12886:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                644         1888        288     0.2543
+  DBSCAN          Yes               644         1888        562     0.2543
+  OPTICS          No                127         2405         55     0.0502
+  OPTICS          Yes               127         2405        111     0.0502
+  INTERVAL_TREE   No               2532            0       1182     1.0000
+  INTERVAL_TREE   Yes              2532            0       1363     1.0000
+  OVERLAP         No               2532            0       1204     1.0000
+  OVERLAP         Yes              2532            0       1379     1.0000
+
+NA12882_NA12885:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                648         1906        291     0.2537
+  DBSCAN          Yes               648         1906        553     0.2537
+  OPTICS          No                111         2443         47     0.0435
+  OPTICS          Yes               111         2443         96     0.0435
+  INTERVAL_TREE   No               2554            0       1221     1.0000
+  INTERVAL_TREE   Yes              2554            0       1428     1.0000
+  OVERLAP         No               2554            0       1248     1.0000
+  OVERLAP         Yes              2554            0       1447     1.0000
+
+NA12882_NA12886:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                674         1896        303     0.2623
+  DBSCAN          Yes               674         1896        579     0.2623
+  OPTICS          No                129         2441         56     0.0502
+  OPTICS          Yes               129         2441        112     0.0502
+  INTERVAL_TREE   No               2570            0       1199     1.0000
+  INTERVAL_TREE   Yes              2570            0       1399     1.0000
+  OVERLAP         No               2570            0       1228     1.0000
+  OVERLAP         Yes              2570            0       1417     1.0000
+
+NA12885_NA12886:
+  Algorithm       Hamming     Clustered  Unclustered   Clusters      Ratio
+  ---------------------------------------------------------------------------
+  DBSCAN          No                644         1884        290     0.2547
+  DBSCAN          Yes               644         1884        558     0.2547
+  OPTICS          No                120         2408         50     0.0475
+  OPTICS          Yes               120         2408        103     0.0475
+  INTERVAL_TREE   No               2528            0       1166     1.0000
+  INTERVAL_TREE   Yes              2528            0       1347     1.0000
+  OVERLAP         No               2528            0       1192     1.0000
+  OVERLAP         Yes              2528            0       1364     1.0000
+                                   ✓ ANALYSIS COMPLETE                                    
+Results saved to: clustering_ratios_20260207_161605.csv
+Total comparisons: 168
+Output files:
+  • clustering_ratios_20260207_161605.csv
+    Size: 16K
+    Lines: 169 (including header)
+
+Job ID: 21809
+Databases analyzed: 21
+
+Pairwise combinations analyzed:
+  • NA12877_NA12878
+  • NA12877_NA12879
+  • NA12877_NA12881
+  • NA12877_NA12882
+  • NA12877_NA12885
+  • NA12877_NA12886
+  • NA12878_NA12879
+  • NA12878_NA12881
+  • NA12878_NA12882
+  • NA12878_NA12885
+  • NA12878_NA12886
+  • NA12879_NA12881
+  • NA12879_NA12882
+  • NA12879_NA12885
+  • NA12879_NA12886
+  • NA12881_NA12882
+  • NA12881_NA12885
+  • NA12881_NA12886
+  • NA12882_NA12885
+  • NA12882_NA12886
+  • NA12885_NA12886
+
+Output location: /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/Degree_project/SVDB
+
+Quick Statistics Summary:
+
+Sample breakdown:
+  NA12877_NA12878:                 8 comparisons
+  NA12877_NA12879:                 8 comparisons
+  NA12877_NA12881:                 8 comparisons
+  NA12877_NA12882:                 8 comparisons
+  NA12877_NA12885:                 8 comparisons
+  NA12877_NA12886:                 8 comparisons
+  NA12878_NA12879:                 8 comparisons
+  NA12878_NA12881:                 8 comparisons
+  NA12878_NA12882:                 8 comparisons
+  NA12878_NA12885:                 8 comparisons
+  NA12878_NA12886:                 8 comparisons
+  NA12879_NA12881:                 8 comparisons
+  NA12879_NA12882:                 8 comparisons
+  NA12879_NA12885:                 8 comparisons
+  NA12879_NA12886:                 8 comparisons
+  NA12881_NA12882:                 8 comparisons
+  NA12881_NA12885:                 8 comparisons
+  NA12881_NA12886:                 8 comparisons
+  NA12882_NA12885:                 8 comparisons
+  NA12882_NA12886:                 8 comparisons
+  NA12885_NA12886:                 8 comparisons
+
+Average clustering ratios by algorithm:
+  DBSCAN:
+    WITHOUT Hamming: 0.2499
+    WITH Hamming:    0.2499
+  OPTICS:
+    WITHOUT Hamming: 0.0435
+    WITH Hamming:    0.0435
+  INTERVAL_TREE:
+    WITHOUT Hamming: 1.0000
+    WITH Hamming:    1.0000
+  OVERLAP:
+    WITHOUT Hamming: 1.0000
+    WITH Hamming:    1.0000
+
+For detailed results, see:
+  • clustering_ratios_20260207_161605.csv (machine-readable)
+  • ratio_stats_21809.out (human-readable with detailed statistics)
