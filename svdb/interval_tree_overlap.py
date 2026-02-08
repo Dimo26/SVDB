@@ -126,7 +126,7 @@ class SVIntervalTree:
              tree.build()
 
     
-    def query_overlaps(self, chrA, posA, chrB, posB, distance=1000):
+    def query_overlaps(self, chrA, posA, chrB, posB, distance=500):
         key = (chrA, chrB)
         if key not in self.trees:
             return []
@@ -139,7 +139,7 @@ class SVIntervalTree:
         return overlapping
 
 
-def interval_tree_cluster(coordinates, max_distance=1000):
+def interval_tree_cluster(coordinates, max_distance=500):
 
     n = len(coordinates)
     tree = IntervalTree()

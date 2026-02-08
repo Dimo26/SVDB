@@ -1,7 +1,7 @@
 import numpy as np
 
 class OPTICS:
-    def __init__(self, min_samples=2, max_eps=2000, metric='euclidean'):
+    def __init__(self, min_samples=2, max_eps=500, metric='euclidean'):
         self.min_samples = min_samples
         self.max_eps = max_eps
         self.metric = metric
@@ -145,7 +145,7 @@ class OPTICS:
         self.fit(data)
         return self.labels_
         
-def optics_cluster(coordinates, min_samples=2, max_eps=1000):
+def optics_cluster(coordinates, min_samples=2, max_eps=500):
 
     clusterer = OPTICS(min_samples=min_samples, max_eps=max_eps)
     labels = clusterer.fit_predict(coordinates)
