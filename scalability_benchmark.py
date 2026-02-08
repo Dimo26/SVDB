@@ -122,9 +122,9 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
     if algorithm == 'DBSCAN':
         labels = DBSCAN.cluster(coordinates, epsilon=500, m=2)
     elif algorithm == 'OPTICS':
-        labels = optics_cluster(coordinates, min_samples=2, max_eps=2000)
+        labels = optics_cluster(coordinates, min_samples=2, max_eps=500)
     elif algorithm == 'INTERVAL_TREE':
-        labels = interval_tree_cluster(coordinates, max_distance=1000)
+        labels = interval_tree_cluster(coordinates, max_distance=500)
     else:
         labels = None
     
@@ -145,7 +145,7 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
         'memory': memory_mb,
         'clusters': n_clusters
     }
-
+''
 
 def get_sample_count(db_file):
     """Extract sample count from filename."""
@@ -202,9 +202,9 @@ def plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms
     }
     
     descriptions = {
-        'DBSCAN',
-        'OPTICS',
-        'INTERVAL_TREE'
+        'DBSCAN': 'DBSCAN',
+        'OPTICS': 'OPTICS',
+        'INTERVAL_TREE': 'Interval Tree'
     }
     
     output_files = []
@@ -221,14 +221,15 @@ def plot_scalability_curves(results_no_hamming, results_with_hamming, algorithms
         
         hamming_label = "WITH Hamming" if 'with' in mode else "WITHOUT Hamming"
         
-        for algo in algorithms:
+        algo_list = list(algorithms) if isinstance(algorithms, set) else algorithms
+        for algo in algo_list:
             x_data = np.array(results[algo]['sizes'])
             y_data = np.array(results[algo][metric])
             
             if len(x_data) == 0:
                 continue
             
-            label = f"{algo}: {descriptions.get(algo, '')} ({hamming_label})"
+            label = f"{algo}: {descriptions.get(algo, algo)} ({hamming_label})"
             
             ax.plot(x_data, y_data,
                    color=colors[algo],
