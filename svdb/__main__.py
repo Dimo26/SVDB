@@ -84,10 +84,10 @@ def main():
                             help='Only include variants with a higher frequency than given here between 0 and 1. All new variants are always included. (default: 1)')
         parser.add_argument('--prefix', type=str, default=None,
                             help="the prefix of the output file, default = print to stdout. Required, if multiple databases are queried")
-        parser.add_argument('--bnd_distance', type=int, default=10000,
-                            help="the maximum distance between two similar breakpoints(default = 10000)")
-        parser.add_argument('--ins_distance', type=int, default=50,
-                            help="the maximum distance to merge two insertions(default = 50)")
+        parser.add_argument('--bnd_distance', type=int, default=500,
+                            help="the maximum distance between two similar breakpoints(default = 500)")
+        parser.add_argument('--ins_distance', type=int, default=500,
+                            help="the maximum distance to merge two insertions(default = 500)")
         parser.add_argument('--overlap', type=float, default=0.6,
                             help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.6")
         parser.add_argument('--memory',
@@ -152,10 +152,10 @@ def main():
         parser.add_argument('--db', type=str, required=True,
                             help="The SQLite database")
         parser.add_argument('--no_merge', help="skip the merging of variants, print all variants in the db to a vcf file", required=False, action="store_true")
-        parser.add_argument('--bnd_distance', type=int, default=2500,
-                            help="the maximum distance between two similar precise breakpoints(default = 2500)")
-        parser.add_argument('--ins_distance', type=int, default=50,
-                            help="the maximum distance to merge two insertions(default = 50)")
+        parser.add_argument('--bnd_distance', type=int, default=500,
+                            help="the maximum distance between two similar precise breakpoints(default = 500)")
+        parser.add_argument('--ins_distance', type=int, default=500,
+                            help="the maximum distance to merge two insertions(default = 500)")
         parser.add_argument('--overlap', type=float, default=0.8,
                             help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.8")
         parser.add_argument('--DBSCAN', help="use DBSCAN for clustering similar variants", required=False, action="store_true")
@@ -197,10 +197,10 @@ def main():
                             help="input vcf files, all input vcf files will be merged into one. Use the --prioriy flag to prioritize the callers/vcf files", required=True)
         parser.add_argument(
             '--priority', type=str, help="prioritise the input files, using the following format --vcf caller1.vcf:2 caller2.vcf:1 --priority: 1,2")
-        parser.add_argument('--bnd_distance', type=int, default=2000,
-                            help="the maximum distance between two similar precise breakpoints(default = 2000)")
-        parser.add_argument('--ins_distance', type=int, default=50,
-                            help="the maximum distance to merge two insertions(default = 50)")
+        parser.add_argument('--bnd_distance', type=int, default=500,
+                            help="the maximum distance between two similar precise breakpoints(default = 500)")
+        parser.add_argument('--ins_distance', type=int, default=500,
+                            help="the maximum distance to merge two insertions(default = 500)")
         parser.add_argument('--overlap', type=float, default=0.95,
                             help="the overlap required to merge two events(0 means anything that touches will be merged, 1 means that two events must be identical to be merged), default = 0.95)")
         parser.add_argument(
