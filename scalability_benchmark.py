@@ -50,14 +50,7 @@ def hamming_distance(seq1, seq2):
 
 
 def apply_hamming_reclustering(labels, variants, max_hamming=0.2):
-    """
-    Re-cluster INS variants within spatial clusters using Hamming distance.
-    
-    SVDB Clustering Rules:
-    1. First: Spatial clustering by position (DBSCAN/OPTICS/INTERVAL_TREE)
-    2. Then: For INS variants in each spatial cluster, re-cluster by sequence similarity
-    3. Non-INS variants keep their spatial cluster assignment
-    """
+
     if labels is None:
         return labels
     
@@ -133,7 +126,7 @@ def benchmark_algorithm(coordinates, variants, algorithm, use_hamming=False):
     
     elapsed_time = time.time() - start_time
     mem_after = process.memory_info().rss
-    memory_mb = (mem_after - mem_before) / 1024 / 1024
+    memory_mb = max(0.001, (mem_after - mem_before) / 1024 / 1024)
     
     n_clusters = 0
     if labels is not None:
