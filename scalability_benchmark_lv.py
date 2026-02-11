@@ -101,6 +101,7 @@ def apply_sequence_reclustering(labels, variants, max_threshold=0.2, distance_fu
                     new_labels[ins_with_seq[g]] = next_cluster_id
                 next_cluster_id += 1
     
+    new_labels[labels == -1] = -1 
     return new_labels
 
 
