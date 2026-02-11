@@ -1,23 +1,16 @@
-#!/usr/bin/env python3
+##!/usr/bin/env python3
 """
-Hamming vs Levenshtein Distance Comparison for SVDB Clustering
-Implements the full SVDB workflow: spatial clustering + sequence-based re-clustering
+Scalability benchmark comparing Hamming vs Levenshtein distance across database sizes.
+Analyzes how performance scales with increasing number of samples.
 """
 
 import sys
 import os
 import time
+import glob
+import psutil
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
-# Add SVDB to path
-sys.path.insert(0, os.getcwd())
-from svdb.database import DB
-from svdb.export_module import DBSCAN
-from svdb.optics_clustering import optics_cluster
-from svdb.interval_tree_overlap import interval_tree_cluster
 
 
 def hamming_distance(seq1, seq2):
@@ -39,10 +32,10 @@ def levenshtein_distance(seq1, seq2):
     seq1 = str(seq1).upper()
     seq2 = str(seq2).upper()
     
-    len1, len2 = len(seq1), len(seq2)
+    len1 = len(seq1)
+    len2 = len(seq2)
     max_len = max(len1, len2)
     
-    # DP table
     dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
     
     for i in range(len1 + 1):
@@ -60,33 +53,8 @@ def levenshtein_distance(seq1, seq2):
     return dp[len1][len2] / max_len if max_len > 0 else 0.0
 
 
-def load_variants(db_file, chromosome='1'):
-    """Load ALL variants (not just INS) from database."""
-    db = DB(db_file)
-    variants = []
-    
-    query = f'SELECT var, posA, posB, sequence FROM SVDB WHERE chrA = "{chromosome}" AND chrB = "{chromosome}"'
-    
-    for row in db.query(query):
-        var_type = row[0]
-        posA, posB = int(row[1]), int(row[2])
-        seq = row[3] if len(row) > 3 and row[3] else ''
-        
-        variants.append({
-            'type': var_type,
-            'posA': posA,
-            'posB': posB,
-            'sequence': seq
-        })
-    
-    return variants
-
-
-def apply_sequence_reclustering(labels, variants, max_threshold, distance_func):
-    """
-    Re-cluster INS variants within spatial clusters using sequence similarity.
-    This is SVDB's actual workflow.
-    """
+def apply_sequence_reclustering(labels, variants, max_threshold=0.2, distance_func='hamming'):
+    """Re-cluster INS variants using sequence similarity."""
     if labels is None:
         return labels
     
@@ -94,35 +62,26 @@ def apply_sequence_reclustering(labels, variants, max_threshold, distance_func):
     new_labels = np.full_like(labels, -1)
     next_cluster_id = 0
     
-    # Get unique spatial cluster IDs
-    unique_labels = sorted(set(labels.tolist()))
+    dist_func = levenshtein_distance if distance_func == 'levenshtein' else hamming_distance
     
-    for spatial_label in unique_labels:
-        if spatial_label == -1:  # Noise
+    for spatial_label in sorted(set(labels.tolist())):
+        if spatial_label == -1:
             continue
         
-        # Get all variants in this spatial cluster
         indices = np.where(labels == spatial_label)[0]
-        if len(indices) == 0:
-            continue
-        
-        # Separate INS with sequences from others
-        ins_with_seq = []
-        other_indices = []
+        ins_with_seq, other_indices = [], []
         
         for idx in indices:
             var = variants[idx]
-            if var['type'] == 'INS' and var['sequence'] and len(var['sequence']) >= 10:
+            if var['type'] == 'INS' and var['sequence']:
                 ins_with_seq.append(idx)
             else:
                 other_indices.append(idx)
         
-        # Non-INS variants keep their spatial cluster assignment
         if other_indices:
             new_labels[other_indices] = next_cluster_id
             next_cluster_id += 1
         
-        # Re-cluster INS by sequence similarity
         if ins_with_seq:
             assigned = set()
             for i in range(len(ins_with_seq)):
@@ -141,383 +100,330 @@ def apply_sequence_reclustering(labels, variants, max_threshold, distance_func):
                     idx_j = ins_with_seq[j]
                     seq_j = variants[idx_j]['sequence']
                     
-                    # Use specified distance function
-                    if distance_func == 'hamming':
-                        dist = hamming_distance(seq_i, seq_j)
-                    else:  # levenshtein
-                        dist = levenshtein_distance(seq_i, seq_j)
-                    
-                    if dist <= max_threshold:
+                    if dist_func(seq_i, seq_j) <= max_threshold:
                         group.append(j)
                         assigned.add(j)
                 
-                # Assign new cluster ID for this sequence group
                 for g in group:
                     new_labels[ins_with_seq[g]] = next_cluster_id
                 next_cluster_id += 1
-    
+    new_labels[labels == -1] = -1
     return new_labels
 
 
-def cluster_with_metric(variants, algorithm='DBSCAN', distance_func='hamming', max_threshold=0.2):
-    """
-    Full SVDB clustering pipeline:
-    1. Spatial clustering
-    2. Sequence-based re-clustering for INS
-    """
-    # Extract coordinates
-    coordinates = np.array([[v['posA'], v['posB']] for v in variants])
+def load_database(db_file, chromosome='1'):
+    """Load Chr 1 variants from database."""
+    try:
+        from svdb import database
+        db = database.DB(db_file)
+    except:
+        sys.path.insert(0, os.getcwd())
+        from svdb.database import DB
+        db = DB(db_file)
     
-    print(f"\n  Stage 1: Spatial clustering with {algorithm}...")
-    start = time.time()
+    coordinates, variants = [], []
     
-    # Stage 1: Spatial clustering
-    if algorithm == 'DBSCAN':
-        spatial_labels = DBSCAN.cluster(coordinates, epsilon=500, m=2)
-    elif algorithm == 'OPTICS':
-        spatial_labels = optics_cluster(coordinates, min_samples=2, max_eps=500)
-    elif algorithm == 'INTERVAL_TREE':
-        spatial_labels = interval_tree_cluster(coordinates, max_distance=500)
-    else:
-        raise ValueError(f"Unknown algorithm: {algorithm}")
+    query = f'SELECT * FROM SVDB WHERE chrA = "{chromosome}" AND chrB = "{chromosome}"'
     
-    spatial_time = time.time() - start
+    for row in db.query(query):
+        var_type, chrA, chrB = row[0], row[1], row[2]
+        posA, posB = int(row[3]), int(row[6])
+        seq = row[11] if len(row) > 11 else ''
+        
+        coordinates.append([posA, posB])
+        variants.append({
+            'type': var_type,
+            'sequence': seq,
+            'posA': posA,
+            'posB': posB
+        })
     
-    # Count spatial clusters
-    unique_spatial = set(spatial_labels.tolist())
-    n_spatial_clusters = len(unique_spatial) - (1 if -1 in unique_spatial else 0)
-    n_spatial_noise = (spatial_labels == -1).sum()
+    return np.array(coordinates), variants
+
+
+def get_sv_statistics(variants):
+    """Calculate SV type statistics."""
+    sv_types = {}
+    for var in variants:
+        var_type = var['type']
+        sv_types[var_type] = sv_types.get(var_type, 0) + 1
+    return sv_types
+
+
+def benchmark_algorithm(coordinates, variants, algorithm, use_sequence=False, distance_func='hamming'):
+    """Run clustering algorithm and measure performance."""
+    process = psutil.Process()
+    mem_before = process.memory_info().rss
     
-    print(f"    Spatial clusters: {n_spatial_clusters}")
-    print(f"    Spatial noise: {n_spatial_noise}")
-    print(f"    Time: {spatial_time:.2f}s")
+    start_time = time.time()
     
-    # Stage 2: Sequence-based re-clustering
-    print(f"  Stage 2: Re-clustering INS with {distance_func} (threshold={max_threshold})...")
-    start = time.time()
+    try:
+        if algorithm == 'DBSCAN':
+            from svdb.export_module import DBSCAN
+            labels = DBSCAN.cluster(coordinates, epsilon=500, m=2)
+        elif algorithm == 'OPTICS':
+            from svdb.optics_clustering import optics_cluster
+            labels = optics_cluster(coordinates, min_samples=2, max_eps=500)
+        elif algorithm == 'INTERVAL_TREE':
+            from svdb.interval_tree_overlap import interval_tree_cluster
+            labels = interval_tree_cluster(coordinates, max_distance=500)
+        else:
+            labels = None
+    except Exception as e:
+        print(f"Error in {algorithm}: {e}")
+        labels = None
     
-    final_labels = apply_sequence_reclustering(
-        spatial_labels, variants, max_threshold, distance_func
-    )
+    if use_sequence and labels is not None:
+        labels = apply_sequence_reclustering(labels, variants, max_threshold=0.2, distance_func=distance_func)
     
-    sequence_time = time.time() - start
+    elapsed_time = time.time() - start_time
+    mem_after = process.memory_info().rss
+    memory_mb = max(0.001, (mem_after - mem_before) / 1024 / 1024)
     
-    # Count final clusters
-    unique_final = set(final_labels.tolist())
-    n_final_clusters = len(unique_final) - (1 if -1 in unique_final else 0)
-    n_final_noise = (final_labels == -1).sum()
-    
-    print(f"    Final clusters: {n_final_clusters}")
-    print(f"    Final noise: {n_final_noise}")
-    print(f"    Time: {sequence_time:.2f}s")
+    n_clusters = 0
+    if labels is not None:
+        unique = set(labels.tolist())
+        n_clusters = len(unique) - (1 if -1 in unique else 0)
     
     return {
-        'spatial_labels': spatial_labels,
-        'final_labels': final_labels,
-        'n_spatial_clusters': n_spatial_clusters,
-        'n_final_clusters': n_final_clusters,
-        'n_spatial_noise': n_spatial_noise,
-        'n_final_noise': n_final_noise,
-        'spatial_time': spatial_time,
-        'sequence_time': sequence_time,
-        'total_time': spatial_time + sequence_time
+        'time': elapsed_time,
+        'memory': memory_mb,
+        'clusters': n_clusters
     }
 
 
-def compare_clustering_results(hamming_results, lev_results, variants):
-    """Compare clustering outcomes between Hamming and Levenshtein."""
-    h_labels = hamming_results['final_labels']
-    l_labels = lev_results['final_labels']
+def get_sample_count(db_file):
+    """Extract sample count from filename."""
+    basename = os.path.basename(db_file)
+    parts = basename.replace('.db', '').split('_')
+    for part in parts:
+        clean = part.replace('samples', '').replace('sample', '')
+        if clean.isdigit():
+            return int(clean)
+    return 0
+
+
+def run_scalability_benchmark(db_files, algorithms):
+    """Benchmark all algorithms across database sizes."""
+    db_files_sorted = sorted(db_files, key=get_sample_count)
     
-    print(f"\n{'-'*80}")
-    print("CLUSTERING COMPARISON")
-    print(f"{'-'*80}")
+    results = {}
+    for algo in algorithms:
+        for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
+            key = f"{algo}_{mode}"
+            results[key] = {'sizes': [], 'times': [], 'memory': [], 'variants': [], 'clusters': []}
     
-    # Basic metrics
-    print(f"{'Metric':<40} {'Hamming':>15} {'Levenshtein':>15}")
-    print(f"{'-'*80}")
-    print(f"{'Spatial clusters (same for both)':<40} {hamming_results['n_spatial_clusters']:>15} "
-          f"{lev_results['n_spatial_clusters']:>15}")
-    print(f"{'Final clusters':<40} {hamming_results['n_final_clusters']:>15} "
-          f"{lev_results['n_final_clusters']:>15}")
-    print(f"{'Noise points':<40} {hamming_results['n_final_noise']:>15} "
-          f"{lev_results['n_final_noise']:>15}")
-    print(f"{'-'*80}")
+    sv_stats_per_db = {}
     
-    # Agreement analysis
-    agreement = (h_labels == l_labels).sum()
-    total = len(h_labels)
-    agreement_pct = 100 * agreement / total
-    
-    print(f"\nCluster assignment agreement: {agreement}/{total} ({agreement_pct:.2f}%)")
-    
-    # Disagreement analysis
-    disagreement_mask = (h_labels != l_labels)
-    disagreements = disagreement_mask.sum()
-    
-    if disagreements > 0:
-        print(f"Disagreements: {disagreements} ({100*disagreements/total:.2f}%)")
+    for db_file in db_files_sorted:
+        sample_count = get_sample_count(db_file)
+        print(f"\nProcessing: {os.path.basename(db_file)} ({sample_count} samples)")
         
-        # Analyze disagreement types
-        ins_disagreements = sum(1 for i in range(len(variants)) 
-                               if disagreement_mask[i] and variants[i]['type'] == 'INS')
-        other_disagreements = disagreements - ins_disagreements
+        coordinates, variants = load_database(db_file, chromosome='1')
         
-        print(f"  INS disagreements: {ins_disagreements}")
-        print(f"  Other disagreements: {other_disagreements}")
+        if coordinates is None or len(coordinates) == 0:
+            print("  Skipped (no variants)")
+            continue
+        
+        n_variants = len(variants)
+        sv_stats = get_sv_statistics(variants)
+        sv_stats_per_db[sample_count] = {'total': n_variants, 'breakdown': sv_stats}
+        
+        print(f"  Variants: {n_variants}")
+        print(f"  SV breakdown: {sv_stats}")
+        
+        for algo in algorithms:
+            print(f"  {algo}...", end=' ', flush=True)
+            
+            result = benchmark_algorithm(coordinates, variants, algo, use_sequence=False)
+            key = f"{algo}_NO_SEQ"
+            results[key]['sizes'].append(sample_count)
+            results[key]['times'].append(result['time'])
+            results[key]['memory'].append(result['memory'])
+            results[key]['variants'].append(n_variants)
+            results[key]['clusters'].append(result['clusters'])
+            
+            result = benchmark_algorithm(coordinates, variants, algo, use_sequence=True, distance_func='hamming')
+            key = f"{algo}_HAMMING"
+            results[key]['sizes'].append(sample_count)
+            results[key]['times'].append(result['time'])
+            results[key]['memory'].append(result['memory'])
+            results[key]['variants'].append(n_variants)
+            results[key]['clusters'].append(result['clusters'])
+            
+            result = benchmark_algorithm(coordinates, variants, algo, use_sequence=True, distance_func='levenshtein')
+            key = f"{algo}_LEVENSHTEIN"
+            results[key]['sizes'].append(sample_count)
+            results[key]['times'].append(result['time'])
+            results[key]['memory'].append(result['memory'])
+            results[key]['variants'].append(n_variants)
+            results[key]['clusters'].append(result['clusters'])
+            
+            print("done")
     
-    # INS-specific analysis
-    ins_indices = [i for i, v in enumerate(variants) if v['type'] == 'INS' and v['sequence']]
-    if ins_indices:
-        ins_agreement = sum(1 for i in ins_indices if h_labels[i] == l_labels[i])
-        ins_agreement_pct = 100 * ins_agreement / len(ins_indices)
-        
-        print(f"\nINS with sequences: {len(ins_indices)}")
-        print(f"INS agreement: {ins_agreement}/{len(ins_indices)} ({ins_agreement_pct:.2f}%)")
-        
-        # Cluster size differences for INS
-        h_ins_clusters = len(set(h_labels[ins_indices])) - (1 if -1 in h_labels[ins_indices] else 0)
-        l_ins_clusters = len(set(l_labels[ins_indices])) - (1 if -1 in l_labels[ins_indices] else 0)
-        
-        print(f"INS clusters (Hamming): {h_ins_clusters}")
-        print(f"INS clusters (Levenshtein): {l_ins_clusters}")
-    
-    # Timing
-    print(f"\n{'-'*80}")
-    print("PERFORMANCE")
-    print(f"{'-'*80}")
-    print(f"{'Stage':<40} {'Hamming':>15} {'Levenshtein':>15}")
-    print(f"{'-'*80}")
-    print(f"{'Spatial clustering (s)':<40} {hamming_results['spatial_time']:>15.2f} "
-          f"{lev_results['spatial_time']:>15.2f}")
-    print(f"{'Sequence re-clustering (s)':<40} {hamming_results['sequence_time']:>15.2f} "
-          f"{lev_results['sequence_time']:>15.2f}")
-    print(f"{'Total time (s)':<40} {hamming_results['total_time']:>15.2f} "
-          f"{lev_results['total_time']:>15.2f}")
-    print(f"{'-'*80}")
-    
-    return {
-        'agreement': agreement,
-        'agreement_pct': agreement_pct,
-        'disagreements': disagreements,
-        'ins_agreement_pct': ins_agreement_pct if ins_indices else 0
+    return results, sv_stats_per_db
+
+
+def plot_scalability_comparison(results, algorithms):
+    """Generate scalability comparison plots."""
+    colors = {
+        'NO_SEQ': '#E74C3C',
+        'HAMMING': '#3498DB',
+        'LEVENSHTEIN': '#2ECC71'
     }
+    
+    markers = {
+        'NO_SEQ': 'o',
+        'HAMMING': 's',
+        'LEVENSHTEIN': '^'
+    }
+    
+    linestyles = {
+        'NO_SEQ': '-',
+        'HAMMING': '--',
+        'LEVENSHTEIN': ':'
+    }
+    
+    output_files = []
+    
+    for algo in algorithms:
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
+            key = f"{algo}_{mode}"
+            if key not in results or not results[key]['sizes']:
+                continue
+            
+            x_data = np.array(results[key]['sizes'])
+            y_data = np.array(results[key]['times'])
+            
+            label_suffix = {'NO_SEQ': 'Spatial only', 'HAMMING': '+ Hamming', 'LEVENSHTEIN': '+ Levenshtein'}[mode]
+            label = label_suffix
+            
+            ax.plot(x_data, y_data,
+                   color=colors[mode],
+                   marker=markers[mode],
+                   markersize=8,
+                   linewidth=2.5,
+                   linestyle=linestyles[mode],
+                   label=label,
+                   alpha=0.9)
+        
+        ax.set_xlabel('Database Size (Number of Samples)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
+        ax.set_yscale('log')
+        ax.legend(fontsize=12, frameon=True, loc='best')
+        ax.grid(False)
+        
+        plt.tight_layout()
+        filename = f"scalability_time_{algo.lower()}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        output_files.append(filename)
+        print(f"  ✓ {filename}")
+        
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
+            key = f"{algo}_{mode}"
+            if key not in results or not results[key]['sizes']:
+                continue
+            
+            x_data = np.array(results[key]['sizes'])
+            y_data = np.array(results[key]['memory'])
+            
+            label_suffix = {'NO_SEQ': 'Spatial only', 'HAMMING': '+ Hamming', 'LEVENSHTEIN': '+ Levenshtein'}[mode]
+            label = label_suffix
+            
+            ax.plot(x_data, y_data,
+                   color=colors[mode],
+                   marker=markers[mode],
+                   markersize=8,
+                   linewidth=2.5,
+                   linestyle=linestyles[mode],
+                   label=label,
+                   alpha=0.9)
+        
+        ax.set_xlabel('Database Size (Number of Samples)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('Memory (MB)', fontsize=14, fontweight='bold')
+        ax.set_yscale('log')
+        ax.legend(fontsize=12, frameon=True, loc='best')
+        ax.grid(False)
+        
+        plt.tight_layout()
+        filename = f"scalability_memory_{algo.lower()}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        output_files.append(filename)
+        print(f"  ✓ {filename}")
+    
+    return output_files
 
 
-def plot_comparison(hamming_results, lev_results, variants, output_prefix):
-    """Generate comparison plots."""
-    h_labels = hamming_results['final_labels']
-    l_labels = lev_results['final_labels']
+def print_summary_table(results, algorithms, sv_stats_per_db):
+    """Print summary table of results."""
+
+    print("SCALABILITY BENCHMARK SUMMARY")
+
+    print("\nSV STATISTICS PER DATABASE:")
+    print(f"{'Sample Count':<15} {'Total SVs':<15} {'SV Type Breakdown':<50}")
+
+    for sample_count in sorted(sv_stats_per_db.keys()):
+        stats = sv_stats_per_db[sample_count]
+        breakdown_str = ', '.join([f"{k}: {v}" for k, v in sorted(stats['breakdown'].items())])
+        print(f"{sample_count:<15} {stats['total']:<15} {breakdown_str:<50}")
     
-    # Plot 1: Cluster count comparison
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    categories = ['Spatial\nClusters', 'Final\nClusters', 'Noise\nPoints']
-    hamming_vals = [
-        hamming_results['n_spatial_clusters'],
-        hamming_results['n_final_clusters'],
-        hamming_results['n_final_noise']
-    ]
-    lev_vals = [
-        lev_results['n_spatial_clusters'],
-        lev_results['n_final_clusters'],
-        lev_results['n_final_noise']
-    ]
-    
-    x = np.arange(len(categories))
-    width = 0.35
-    
-    ax.bar(x - width/2, hamming_vals, width, label='Hamming', 
-           color='#3498DB', alpha=0.9, edgecolor='black', linewidth=1.5)
-    ax.bar(x + width/2, lev_vals, width, label='Levenshtein',
-           color='#E74C3C', alpha=0.9, edgecolor='black', linewidth=1.5)
-    
-    ax.set_xlabel('Metric', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Count', fontsize=12, fontweight='bold')
-    ax.set_xticks(x)
-    ax.set_xticklabels(categories, fontsize=11)
-    ax.legend(fontsize=11, frameon=True)
-    ax.grid(True, alpha=0.3, axis='y')
-    
-    plt.tight_layout()
-    filename = f"{output_prefix}_cluster_comparison.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
-    print(f"  ✓ Saved: {filename}")
-    
-    # Plot 2: Agreement visualization
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    agreement = (h_labels == l_labels).sum()
-    disagreement = (h_labels != l_labels).sum()
-    
-    colors = ['#2ECC71', '#E74C3C']
-    labels_pie = ['Agreement', 'Disagreement']
-    values = [agreement, disagreement]
-    
-    ax.pie(values, labels=labels_pie, autopct='%1.1f%%', startangle=90,
-           colors=colors, textprops={'fontsize': 12, 'fontweight': 'bold'})
-    
-    plt.tight_layout()
-    filename = f"{output_prefix}_agreement.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
-    print(f"  ✓ Saved: {filename}")
-    
-    # Plot 3: Timing comparison
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    stages = ['Spatial\nClustering', 'Sequence\nRe-clustering', 'Total\nTime']
-    hamming_times = [
-        hamming_results['spatial_time'],
-        hamming_results['sequence_time'],
-        hamming_results['total_time']
-    ]
-    lev_times = [
-        lev_results['spatial_time'],
-        lev_results['sequence_time'],
-        lev_results['total_time']
-    ]
-    
-    x = np.arange(len(stages))
-    width = 0.35
-    
-    ax.bar(x - width/2, hamming_times, width, label='Hamming',
-           color='#3498DB', alpha=0.9, edgecolor='black', linewidth=1.5)
-    ax.bar(x + width/2, lev_times, width, label='Levenshtein',
-           color='#E74C3C', alpha=0.9, edgecolor='black', linewidth=1.5)
-    
-    ax.set_xlabel('Stage', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Time (seconds)', fontsize=12, fontweight='bold')
-    ax.set_xticks(x)
-    ax.set_xticklabels(stages, fontsize=11)
-    ax.legend(fontsize=11, frameon=True)
-    ax.grid(True, alpha=0.3, axis='y')
-    
-    plt.tight_layout()
-    filename = f"{output_prefix}_timing.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
-    print(f"  ✓ Saved: {filename}")
+    for algo in algorithms:
+        print(f"\n{algo}:")
+        print(f"{'Size':<10} {'Mode':<15} {'Time (s)':<12} {'Memory (MB)':<15} {'Clusters':<12}")
+  
+        
+        sizes = results[f"{algo}_NO_SEQ"]['sizes']
+        for i, size in enumerate(sizes):
+            for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
+                key = f"{algo}_{mode}"
+                if i < len(results[key]['times']):
+                    mode_label = {'NO_SEQ': 'Spatial', 'HAMMING': 'Hamming', 'LEVENSHTEIN': 'Levenshtein'}[mode]
+                    print(f"{size if mode == 'NO_SEQ' else '':<10} {mode_label:<15} "
+                          f"{results[key]['times'][i]:<12.4f} "
+                          f"{results[key]['memory'][i]:<15.2f} "
+                          f"{results[key]['clusters'][i]:<12}")
+            print()
 
 
 def main():
-    import glob
+    print(f"{'SCALABILITY BENCHMARK: Hamming vs Levenshtein':^90}")
+
     
-    # Find databases
-    db_pattern = "./Platinum_experiments/NA12*_NA12*.db"
-    db_files = sorted(glob.glob(db_pattern))
+    db_files = glob.glob("*.db")
+    sample_dbs = [f for f in db_files 
+                  if 'sample' in f.lower() and 'all' not in f.lower()]
     
-    if not db_files:
-        print(f"ERROR: No databases found matching {db_pattern}")
+    if not sample_dbs:
+        print("Error: No sample databases found (e.g., *_10samples.db, *_100samples.db)")
         sys.exit(1)
     
-    print(f"\n{'='*80}")
-    print(f"HAMMING vs LEVENSHTEIN CLUSTERING COMPARISON")
-    print(f"Full SVDB workflow: Spatial clustering + Sequence re-clustering")
-    print(f"{'='*80}")
-    print(f"Found {len(db_files)} pairwise databases")
+    print(f"\nFound {len(sample_dbs)} sample databases:")
+    for db in sorted(sample_dbs, key=get_sample_count):
+        print(f"  • {os.path.basename(db)} ({get_sample_count(db)} samples)")
     
-    # Configuration
-    algorithm = 'DBSCAN'  # or 'OPTICS' or 'INTERVAL_TREE'
-    threshold = 0.2
+    algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE']
     
-    print(f"\nConfiguration:")
-    print(f"  Spatial clustering: {algorithm}")
-    print(f"  Sequence threshold: {threshold}")
+    print("\nRunning benchmarks...")
     
-    # Process each database
-    all_results = []
+    results, sv_stats_per_db = run_scalability_benchmark(sample_dbs, algorithms)
     
-    for db_idx, db_file in enumerate(db_files, 1):
-        db_name = os.path.basename(db_file).replace('.db', '')
-        print(f"\n{'='*80}")
-        print(f"DATABASE {db_idx}/{len(db_files)}: {db_name}")
-        print(f"{'='*80}")
-        
-        # Load variants
-        print(f"Loading variants from chromosome 1...")
-        variants = load_variants(db_file, chromosome='1')
-        print(f"  Total variants: {len(variants)}")
-        
-        # Count by type
-        type_counts = {}
-        for v in variants:
-            type_counts[v['type']] = type_counts.get(v['type'], 0) + 1
-        
-        print(f"  Variant types:")
-        for vtype, count in sorted(type_counts.items()):
-            print(f"    {vtype}: {count}")
-        
-        ins_with_seq = sum(1 for v in variants if v['type'] == 'INS' and v['sequence'])
-        print(f"  INS with sequences: {ins_with_seq}")
-        
-        if len(variants) < 2:
-            print(f"Skipping {db_name} - insufficient variants")
-            continue
-        
-        # Cluster with Hamming
-        print(f"\n{'─'*80}")
-        print("HAMMING DISTANCE CLUSTERING")
-        print(f"{'─'*80}")
-        hamming_results = cluster_with_metric(
-            variants, algorithm=algorithm, 
-            distance_func='hamming', max_threshold=threshold
-        )
-        
-        # Cluster with Levenshtein
-        print(f"\n{'─'*80}")
-        print("LEVENSHTEIN DISTANCE CLUSTERING")
-        print(f"{'─'*80}")
-        lev_results = cluster_with_metric(
-            variants, algorithm=algorithm,
-            distance_func='levenshtein', max_threshold=threshold
-        )
-        
-        # Compare results
-        comparison = compare_clustering_results(hamming_results, lev_results, variants)
-        
-        # Generate plots
-        print(f"\nGenerating plots...")
-        output_prefix = f"clustering_comparison_{db_name}"
-        plot_comparison(hamming_results, lev_results, variants, output_prefix)
-        
-        all_results.append({
-            'db_name': db_name,
-            'n_variants': len(variants),
-            'n_ins': ins_with_seq,
-            'hamming': hamming_results,
-            'levenshtein': lev_results,
-            'comparison': comparison
-        })
+    print("\nGenerating plots...")
     
-    # Summary across all databases
-    if all_results:
-        print(f"\n{'='*80}")
-        print(f"SUMMARY ACROSS ALL DATABASES")
-        print(f"{'='*80}")
-        
-        total_variants = sum(r['n_variants'] for r in all_results)
-        total_ins = sum(r['n_ins'] for r in all_results)
-        avg_agreement = np.mean([r['comparison']['agreement_pct'] for r in all_results])
-        avg_ins_agreement = np.mean([r['comparison']['ins_agreement_pct'] for r in all_results if r['n_ins'] > 0])
-        
-        print(f"Total databases analyzed: {len(all_results)}")
-        print(f"Total variants: {total_variants}")
-        print(f"Total INS with sequences: {total_ins}")
-        print(f"Average overall agreement: {avg_agreement:.2f}%")
-        print(f"Average INS agreement: {avg_ins_agreement:.2f}%")
-        
-        print(f"\n{'-'*80}")
-        print(f"{'Database':<30} {'Variants':>12} {'INS':>12} {'Agreement %':>15}")
-        print(f"{'-'*80}")
-        for r in all_results:
-            print(f"{r['db_name']:<30} {r['n_variants']:>12} {r['n_ins']:>12} "
-                  f"{r['comparison']['agreement_pct']:>15.2f}")
+    plot_files = plot_scalability_comparison(results, algorithms)
     
-    print(f"\n{'='*80}")
-    print(f"ANALYSIS COMPLETE")
-    print(f"{'='*80}\n")
+    print_summary_table(results, algorithms, sv_stats_per_db)
+    
+
+    print(f"{'✓ SCALABILITY BENCHMARK COMPLETE':^90}")
+    print(f"\nGenerated {len(plot_files)} plots:")
+    for f in plot_files:
+        print(f"  • {f}")
 
 
 if __name__ == "__main__":
