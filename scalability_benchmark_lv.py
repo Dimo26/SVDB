@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Scalability benchmark comparing Hamming vs Levenshtein distance across database sizes.
-Analyzes how performance scales with increasing number of samples.
-"""
 
 import sys
 import os
@@ -14,7 +10,6 @@ import matplotlib.pyplot as plt
 
 
 def hamming_distance(seq1, seq2):
-    """Calculate normalized Hamming distance."""
     if not seq1 or not seq2:
         return 1.0
     seq1, seq2 = str(seq1).upper(), str(seq2).upper()
@@ -25,7 +20,6 @@ def hamming_distance(seq1, seq2):
 
 
 def levenshtein_distance(seq1, seq2):
-    """Calculate normalized Levenshtein distance."""
     if not seq1 or not seq2:
         return 1.0
     
@@ -54,7 +48,6 @@ def levenshtein_distance(seq1, seq2):
 
 
 def apply_sequence_reclustering(labels, variants, max_threshold=0.2, distance_func='hamming'):
-    """Re-cluster INS variants using sequence similarity."""
     if labels is None:
         return labels
     
@@ -141,6 +134,15 @@ def load_database(db_file, chromosome='1'):
     return np.array(coordinates), variants
 
 
+def get_sv_statistics(variants):
+    """Calculate SV type statistics."""
+    sv_types = {}
+    for var in variants:
+        var_type = var['type']
+        sv_types[var_type] = sv_types.get(var_type, 0) + 1
+    return sv_types
+
+
 def benchmark_algorithm(coordinates, variants, algorithm, use_sequence=False, distance_func='hamming'):
     """Run clustering algorithm and measure performance."""
     process = psutil.Process()
@@ -198,12 +200,13 @@ def run_scalability_benchmark(db_files, algorithms):
     """Benchmark all algorithms across database sizes."""
     db_files_sorted = sorted(db_files, key=get_sample_count)
     
-    # Results dictionary for: {algo}_{mode} where mode is NO_SEQ, HAMMING, or LEVENSHTEIN
     results = {}
     for algo in algorithms:
         for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
             key = f"{algo}_{mode}"
             results[key] = {'sizes': [], 'times': [], 'memory': [], 'variants': [], 'clusters': []}
+    
+    sv_stats_per_db = {}
     
     for db_file in db_files_sorted:
         sample_count = get_sample_count(db_file)
@@ -216,12 +219,15 @@ def run_scalability_benchmark(db_files, algorithms):
             continue
         
         n_variants = len(variants)
+        sv_stats = get_sv_statistics(variants)
+        sv_stats_per_db[sample_count] = {'total': n_variants, 'breakdown': sv_stats}
+        
         print(f"  Variants: {n_variants}")
+        print(f"  SV breakdown: {sv_stats}")
         
         for algo in algorithms:
             print(f"  {algo}...", end=' ', flush=True)
             
-            # Spatial only
             result = benchmark_algorithm(coordinates, variants, algo, use_sequence=False)
             key = f"{algo}_NO_SEQ"
             results[key]['sizes'].append(sample_count)
@@ -230,7 +236,6 @@ def run_scalability_benchmark(db_files, algorithms):
             results[key]['variants'].append(n_variants)
             results[key]['clusters'].append(result['clusters'])
             
-            # With Hamming
             result = benchmark_algorithm(coordinates, variants, algo, use_sequence=True, distance_func='hamming')
             key = f"{algo}_HAMMING"
             results[key]['sizes'].append(sample_count)
@@ -239,7 +244,6 @@ def run_scalability_benchmark(db_files, algorithms):
             results[key]['variants'].append(n_variants)
             results[key]['clusters'].append(result['clusters'])
             
-            # With Levenshtein
             result = benchmark_algorithm(coordinates, variants, algo, use_sequence=True, distance_func='levenshtein')
             key = f"{algo}_LEVENSHTEIN"
             results[key]['sizes'].append(sample_count)
@@ -250,15 +254,15 @@ def run_scalability_benchmark(db_files, algorithms):
             
             print("done")
     
-    return results
+    return results, sv_stats_per_db
 
 
 def plot_scalability_comparison(results, algorithms):
     """Generate scalability comparison plots."""
     colors = {
-        'DBSCAN': '#E74C3C',
-        'OPTICS': '#3498DB',
-        'INTERVAL_TREE': '#2ECC71'
+        'NO_SEQ': '#E74C3C',
+        'HAMMING': '#3498DB',
+        'LEVENSHTEIN': '#2ECC71'
     }
     
     markers = {
@@ -275,10 +279,9 @@ def plot_scalability_comparison(results, algorithms):
     
     output_files = []
     
-    # Time comparison
-    fig, ax = plt.subplots(figsize=(14, 8))
-    
     for algo in algorithms:
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
         for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
             key = f"{algo}_{mode}"
             if key not in results or not results[key]['sizes']:
@@ -288,35 +291,32 @@ def plot_scalability_comparison(results, algorithms):
             y_data = np.array(results[key]['times'])
             
             label_suffix = {'NO_SEQ': 'Spatial only', 'HAMMING': '+ Hamming', 'LEVENSHTEIN': '+ Levenshtein'}[mode]
-            label = f"{algo} ({label_suffix})"
+            label = label_suffix
             
             ax.plot(x_data, y_data,
-                   color=colors[algo],
+                   color=colors[mode],
                    marker=markers[mode],
                    markersize=8,
                    linewidth=2.5,
                    linestyle=linestyles[mode],
                    label=label,
                    alpha=0.9)
-    
-    ax.set_xlabel('Database Size (Number of Samples)', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
-    ax.set_title('Scalability: Hamming vs Levenshtein', fontsize=16, fontweight='bold')
-    ax.set_yscale('log')
-    ax.legend(fontsize=10, frameon=True, loc='best', ncol=3)
-    ax.grid(True, alpha=0.3, which='both')
-    
-    plt.tight_layout()
-    filename = "scalability_time_hamming_vs_levenshtein.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
-    output_files.append(filename)
-    print(f"  ✓ {filename}")
-    
-    # Memory comparison
-    fig, ax = plt.subplots(figsize=(14, 8))
-    
-    for algo in algorithms:
+        
+        ax.set_xlabel('Database Size (Number of Samples)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
+        ax.set_yscale('log')
+        ax.legend(fontsize=12, frameon=True, loc='best')
+        ax.grid(False)
+        
+        plt.tight_layout()
+        filename = f"scalability_time_{algo.lower()}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        output_files.append(filename)
+        print(f"  ✓ {filename}")
+        
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
         for mode in ['NO_SEQ', 'HAMMING', 'LEVENSHTEIN']:
             key = f"{algo}_{mode}"
             if key not in results or not results[key]['sizes']:
@@ -326,37 +326,46 @@ def plot_scalability_comparison(results, algorithms):
             y_data = np.array(results[key]['memory'])
             
             label_suffix = {'NO_SEQ': 'Spatial only', 'HAMMING': '+ Hamming', 'LEVENSHTEIN': '+ Levenshtein'}[mode]
-            label = f"{algo} ({label_suffix})"
+            label = label_suffix
             
             ax.plot(x_data, y_data,
-                   color=colors[algo],
+                   color=colors[mode],
                    marker=markers[mode],
                    markersize=8,
                    linewidth=2.5,
                    linestyle=linestyles[mode],
                    label=label,
                    alpha=0.9)
-    
-    ax.set_xlabel('Database Size (Number of Samples)', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Memory (MB)', fontsize=14, fontweight='bold')
-    ax.set_title('Memory Usage: Hamming vs Levenshtein', fontsize=16, fontweight='bold')
-    ax.set_yscale('log')
-    ax.legend(fontsize=10, frameon=True, loc='best', ncol=3)
-    ax.grid(True, alpha=0.3, which='both')
-    
-    plt.tight_layout()
-    filename = "scalability_memory_hamming_vs_levenshtein.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
-    output_files.append(filename)
-    print(f"  ✓ {filename}")
+        
+        ax.set_xlabel('Database Size (Number of Samples)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('Memory (MB)', fontsize=14, fontweight='bold')
+        ax.set_yscale('log')
+        ax.legend(fontsize=12, frameon=True, loc='best')
+        ax.grid(False)
+        
+        plt.tight_layout()
+        filename = f"scalability_memory_{algo.lower()}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        output_files.append(filename)
+        print(f"  ✓ {filename}")
     
     return output_files
 
 
-def print_summary_table(results, algorithms):
+def print_summary_table(results, algorithms, sv_stats_per_db):
     """Print summary table of results."""
+
     print("SCALABILITY BENCHMARK SUMMARY")
+
+    
+    print("\nSV STATISTICS PER DATABASE:")
+    print(f"{'Sample Count':<15} {'Total SVs':<15} {'SV Type Breakdown':<50}")
+    print("-"*90)
+    for sample_count in sorted(sv_stats_per_db.keys()):
+        stats = sv_stats_per_db[sample_count]
+        breakdown_str = ', '.join([f"{k}: {v}" for k, v in sorted(stats['breakdown'].items())])
+        print(f"{sample_count:<15} {stats['total']:<15} {breakdown_str:<50}")
     
     for algo in algorithms:
         print(f"\n{algo}:")
@@ -395,20 +404,19 @@ def main():
     
     algorithms = ['DBSCAN', 'OPTICS', 'INTERVAL_TREE']
     
-    print("Running benchmarks...")
-
+    print("\nRunning benchmarks...")
     
-    results = run_scalability_benchmark(sample_dbs, algorithms)
+    results, sv_stats_per_db = run_scalability_benchmark(sample_dbs, algorithms)
     
-    print("Generating plots...")
-
+    print("\nGenerating plots...")
     
     plot_files = plot_scalability_comparison(results, algorithms)
     
-    print_summary_table(results, algorithms)
+    print_summary_table(results, algorithms, sv_stats_per_db)
     
 
     print(f"{'✓ SCALABILITY BENCHMARK COMPLETE':^90}")
+
     print(f"\nGenerated {len(plot_files)} plots:")
     for f in plot_files:
         print(f"  • {f}")
