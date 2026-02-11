@@ -102,6 +102,7 @@ def apply_hamming_reclustering(labels, variants, max_hamming=0.2):
                     new_labels[ins_with_seq[g]] = next_cluster_id
                 next_cluster_id += 1
     
+    new_labels[labels == -1] = -1 
     return new_labels
 
 
