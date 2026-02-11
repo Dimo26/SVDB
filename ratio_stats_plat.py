@@ -99,7 +99,7 @@ def apply_hamming_reclustering(labels, variants, max_hamming=0.2):
             
             seq_clusters += (next_id - before_id)
     
-    # *** CRITICAL FIX: Preserve noise labels ***
+
     new_labels[labels == -1] = -1
     
     # Print diagnostic information
