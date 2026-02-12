@@ -1,0 +1,167 @@
+Installing required Python packages...
+Looking in links: /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages
+Requirement already satisfied: numpy in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (1.20.3)
+Requirement already satisfied: matplotlib in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (3.4.2)
+Requirement already satisfied: kiwisolver>=1.0.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (1.3.1)
+Requirement already satisfied: pillow>=6.2.0 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (8.2.0)
+Requirement already satisfied: pyparsing>=2.2.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.4.7)
+Requirement already satisfied: python-dateutil>=2.7 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.8.1)
+Requirement already satisfied: cycler>=0.10 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (0.10.0)
+Requirement already satisfied: six in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from cycler>=0.10->matplotlib) (1.16.0)
+
+Verifying SVDB installation...
+✓ SVDB modules loaded
+
+Checking for pairwise databases...
+✓ Found 21 pairwise databases
+
+Starting Hamming vs Levenshtein comparison...
+========================================================================
+                      SCALABILITY BENCHMARK: Hamming vs Levenshtein                       
+
+Found 5 sample databases:
+  • svdb_10samples.db (10 samples)
+  • svdb_50samples.db (50 samples)
+  • svdb_100samples.db (100 samples)
+  • svdb_500samples.db (500 samples)
+  • svdb_1000samples.db (1000 samples)
+
+Running benchmarks...
+
+Processing: svdb_10samples.db (10 samples)
+  Variants: 7041
+  SV breakdown: {'DUP': 1061, 'DEL': 5980}
+  DBSCAN... done
+  OPTICS... done
+  INTERVAL_TREE... done
+
+Processing: svdb_50samples.db (50 samples)
+  Variants: 34376
+  SV breakdown: {'DUP': 5155, 'DEL': 29221}
+  DBSCAN... done
+  OPTICS... done
+  INTERVAL_TREE... done
+
+Processing: svdb_100samples.db (100 samples)
+  Variants: 67364
+  SV breakdown: {'DUP': 10342, 'DEL': 57022}
+  DBSCAN... done
+  OPTICS... done
+  INTERVAL_TREE... done
+
+Processing: svdb_500samples.db (500 samples)
+  Variants: 337653
+  SV breakdown: {'DUP': 52286, 'DEL': 285367}
+  DBSCAN... done
+  OPTICS... done
+  INTERVAL_TREE... done
+
+Processing: svdb_1000samples.db (1000 samples)
+  Variants: 673964
+  SV breakdown: {'DUP': 104364, 'DEL': 569600}
+  DBSCAN... done
+  OPTICS... done
+  INTERVAL_TREE... done
+
+Generating plots...
+  ✓ scalability_time_dbscan.png
+  ✓ scalability_memory_dbscan.png
+  ✓ scalability_time_optics.png
+  ✓ scalability_memory_optics.png
+  ✓ scalability_time_interval_tree.png
+  ✓ scalability_memory_interval_tree.png
+SCALABILITY BENCHMARK SUMMARY
+
+SV STATISTICS PER DATABASE:
+Sample Count    Total SVs       SV Type Breakdown                                 
+10              7041            DEL: 5980, DUP: 1061                              
+50              34376           DEL: 29221, DUP: 5155                             
+100             67364           DEL: 57022, DUP: 10342                            
+500             337653          DEL: 285367, DUP: 52286                           
+1000            673964          DEL: 569600, DUP: 104364                          
+
+DBSCAN:
+Size       Mode            Time (s)     Memory (MB)     Clusters    
+10         Spatial         0.0138       0.00            1           
+           Hamming         0.0111       0.00            1           
+           Levenshtein     0.0111       0.00            1           
+
+50         Spatial         0.0533       0.00            3           
+           Hamming         0.0550       0.00            3           
+           Levenshtein     0.0548       0.00            3           
+
+100        Spatial         0.1051       0.00            3           
+           Hamming         0.1085       0.00            3           
+           Levenshtein     0.1089       0.00            3           
+
+500        Spatial         0.5980       0.00            6           
+           Hamming         0.6188       2.58            6           
+           Levenshtein     0.6211       0.00            6           
+
+1000       Spatial         2.0497       0.00            12          
+           Hamming         2.0963       0.26            12          
+           Levenshtein     2.0873       0.00            12          
+
+
+OPTICS:
+Size       Mode            Time (s)     Memory (MB)     Clusters    
+10         Spatial         1.2469       0.00            347         
+           Hamming         1.2483       0.00            347         
+           Levenshtein     1.2481       0.00            347         
+
+50         Spatial         28.9319      1.03            3405        
+           Hamming         28.9292      0.00            3405        
+           Levenshtein     28.9293      0.00            3405        
+
+100        Spatial         109.9457     2.58            7254        
+           Hamming         110.1689     0.00            7254        
+           Levenshtein     110.0840     0.00            7254        
+
+500        Spatial         5154.3424    4.45            31474       
+           Hamming         4680.7483    0.00            31474       
+           Levenshtein     5129.6813    0.00            31474       
+
+1000       Spatial         11902.2091   31.45           53652       
+           Hamming         11862.3798   0.00            53652       
+           Levenshtein     11870.9909   0.00            53652       
+
+
+INTERVAL_TREE:
+Size       Mode            Time (s)     Memory (MB)     Clusters    
+10         Spatial         0.4523       2.03            1607        
+           Hamming         0.4684       0.00            1607        
+           Levenshtein     0.4627       0.00            1607        
+
+50         Spatial         4.5301       50.73           1890        
+           Hamming         4.6062       0.00            1890        
+           Levenshtein     4.6123       0.25            1890        
+
+100        Spatial         14.6834      222.32          1953        
+           Hamming         15.0232      0.00            1953        
+           Levenshtein     14.9273      0.00            1953        
+
+500        Spatial         444.4633     5918.20         2189        
+           Hamming         455.7559     0.25            2189        
+           Levenshtein     454.4248     0.00            2189        
+
+1000       Spatial         1822.0610    20551.38        2276        
+           Hamming         1859.5539    0.00            2276        
+           Levenshtein     1871.1196    0.00            2276        
+
+                             ✓ SCALABILITY BENCHMARK COMPLETE                             
+
+Generated 6 plots:
+  • scalability_time_dbscan.png
+  • scalability_memory_dbscan.png
+  • scalability_time_optics.png
+  • scalability_memory_optics.png
+  • scalability_time_interval_tree.png
+  • scalability_memory_interval_tree.png
+
+==================================================
+✓ Comparison completed successfully
+
+Generated files:
+  No plot files found
+
+Job completed: Thu Feb 12 11:26:55 CET 2026
