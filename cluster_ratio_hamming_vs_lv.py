@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-
+"""
+Three-way comparison: Spatial vs Hamming vs Levenshtein
+Fixed for compatibility with SLURM bash script
+Saves plots to current working directory
+"""
 
 import sys
 import os
 import time
 import psutil
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for SLURM
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
 
 def hamming_distance(seq1, seq2):
+    """Calculate normalized Hamming distance."""
     if not seq1 or not seq2:
         return 1.0
     
@@ -19,10 +26,7 @@ def hamming_distance(seq1, seq2):
     min_len = min(len(seq1), len(seq2))
     max_len = max(len(seq1), len(seq2))
     
-
     mismatches = sum(1 for i in range(min_len) if seq1[i] != seq2[i])
-    
-
     length_diff = max_len - min_len
     total_dist = mismatches + length_diff
     
@@ -30,10 +34,7 @@ def hamming_distance(seq1, seq2):
 
 
 def levenshtein_distance(seq1, seq2):
-    """
-    Calculate normalized Levenshtein (edit) distance.
-    Accounts for insertions, deletions, and substitutions.
-    """
+    """Calculate normalized Levenshtein (edit) distance."""
     if not seq1 or not seq2:
         return 1.0
     
@@ -44,20 +45,17 @@ def levenshtein_distance(seq1, seq2):
     len2 = len(seq2)
     max_len = max(len1, len2)
     
-    # Dynamic programming table
     dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
     
-    # Initialize base cases
     for i in range(len1 + 1):
         dp[i][0] = i
     for j in range(len2 + 1):
         dp[0][j] = j
     
-    # Fill table
     for i in range(1, len1 + 1):
         for j in range(1, len2 + 1):
             if seq1[i-1] == seq2[j-1]:
-                dp[i][j] = dp[i-1][j-1]  # No operation
+                dp[i][j] = dp[i-1][j-1]
             else:
                 dp[i][j] = 1 + min(
                     dp[i-1][j],      # Deletion
@@ -69,7 +67,7 @@ def levenshtein_distance(seq1, seq2):
 
 
 def apply_sequence_reclustering(labels, variants, distance_func, max_threshold=0.2, method_name="Unknown"):
-
+    """Re-cluster insertions using sequence similarity."""
     if labels is None:
         return labels, {}
     
@@ -77,7 +75,6 @@ def apply_sequence_reclustering(labels, variants, distance_func, max_threshold=0
     new_labels = np.full_like(labels, -1)
     next_cluster_id = 0
     
-    # Track how sequences are split
     split_info = {
         'splits_performed': 0,
         'insertions_processed': 0,
@@ -100,21 +97,17 @@ def apply_sequence_reclustering(labels, variants, distance_func, max_threshold=0
             else:
                 other_indices.append(idx)
         
-        # Keep non-insertions together
         if other_indices:
             new_labels[other_indices] = next_cluster_id
             next_cluster_id += 1
         
-        # Re-cluster insertions by sequence
         if len(ins_with_seq) > 0:
             split_info['insertions_processed'] += len(ins_with_seq)
             
             if len(ins_with_seq) == 1:
-                # Single insertion, keep it
                 new_labels[ins_with_seq[0]] = next_cluster_id
                 next_cluster_id += 1
             else:
-                # Multiple insertions - check sequences
                 original_cluster_count = 1
                 assigned = set()
                 
@@ -135,27 +128,21 @@ def apply_sequence_reclustering(labels, variants, distance_func, max_threshold=0
                         seq_j = variants[idx_j]['sequence']
                         
                         split_info['sequences_compared'] += 1
-                        
-                        # THIS IS THE KEY DIFFERENCE!
                         dist = distance_func(seq_i, seq_j)
                         
                         if dist <= max_threshold:
                             group.append(j)
                             assigned.add(j)
                     
-                    # Assign this group to a cluster
                     for g in group:
                         new_labels[ins_with_seq[g]] = next_cluster_id
                     next_cluster_id += 1
                 
-                # Track if we split the spatial cluster
                 final_cluster_count = len(set(new_labels[ins_with_seq]))
                 if final_cluster_count > original_cluster_count:
                     split_info['splits_performed'] += 1
     
-    # Preserve noise
     new_labels[labels == -1] = -1
-    
     return new_labels, split_info
 
 
@@ -230,6 +217,7 @@ def get_clustering_statistics(labels):
 
 
 def benchmark_algorithm(coordinates, variants, algorithm, mode='spatial'):
+    """Run clustering algorithm with different sequence comparison modes."""
     process = psutil.Process()
     mem_before = process.memory_info().rss
     start_time = time.time()
@@ -237,7 +225,6 @@ def benchmark_algorithm(coordinates, variants, algorithm, mode='spatial'):
     split_info = {}
     
     try:
-        # Step 1: Spatial clustering
         if algorithm == 'DBSCAN':
             from svdb.export_module import DBSCAN
             labels = DBSCAN.cluster(coordinates, epsilon=500, m=2)
@@ -250,7 +237,6 @@ def benchmark_algorithm(coordinates, variants, algorithm, mode='spatial'):
         else:
             labels = None
         
-        # Step 2: Apply sequence-based re-clustering if requested
         if mode == 'hamming' and labels is not None:
             labels, split_info = apply_sequence_reclustering(
                 labels, variants, hamming_distance, 
@@ -368,16 +354,13 @@ def run_comparison_benchmark(db_files, algorithms):
     return results
 
 
-def plot_comparison(results, algorithms, output_dir='/mnt/user-data/outputs'):
-    """Generate comprehensive comparison plots."""
+def plot_comparison(results, algorithms):
+
     
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Color scheme for three modes
     colors = {
-        'SPATIAL': '#E74C3C',      # Red
-        'HAMMING': '#F39C12',      # Orange
-        'LEVENSHTEIN': '#2ECC71'   # Green
+        'SPATIAL': '#E74C3C',      # Red - clustering algorithm only
+        'HAMMING': '#F39C12',      # Orange - algorithm + Hamming
+        'LEVENSHTEIN': '#2ECC71'   # Green - algorithm + Levenshtein
     }
     
     markers = {
@@ -395,95 +378,9 @@ def plot_comparison(results, algorithms, output_dir='/mnt/user-data/outputs'):
     output_files = []
     
     for algo in algorithms:
-        # Plot 1: Clustering Ratio Comparison
-        fig, ax = plt.subplots(figsize=(14, 8))
-        
-        for mode in ['SPATIAL', 'HAMMING', 'LEVENSHTEIN']:
-            key = f"{algo}_{mode}"
-            if key not in results or not results[key]['db_names']:
-                continue
-            
-            x_pos = np.arange(len(results[key]['db_names']))
-            y_data = np.array(results[key]['cluster_ratio']) * 100
-            
-            label = {
-                'SPATIAL': 'Spatial only',
-                'HAMMING': 'Spatial + Hamming',
-                'LEVENSHTEIN': 'Spatial + Levenshtein'
-            }[mode]
-            
-            ax.plot(x_pos, y_data,
-                   color=colors[mode],
-                   marker=markers[mode],
-                   markersize=10,
-                   linewidth=2.5,
-                   linestyle=linestyles[mode],
-                   label=label,
-                   alpha=0.9)
-        
-        ax.set_xlabel('Sample Pair', fontsize=14, fontweight='bold')
-        ax.set_ylabel('Clustering Ratio (%)', fontsize=14, fontweight='bold')
-        ax.set_title(f'{algo} - Clustering Ratio: Spatial vs Hamming vs Levenshtein',
-                    fontsize=16, fontweight='bold')
-        
         db_names = results[f"{algo}_SPATIAL"]['db_names']
-        ax.set_xticks(range(len(db_names)))
-        ax.set_xticklabels(db_names, rotation=45, ha='right')
         
-        ax.legend(fontsize=12, frameon=True, loc='best')
-
-        
-        plt.tight_layout()
-        filename = os.path.join(output_dir, f"clustering_ratio_{algo.lower()}.png")
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
-        plt.close()
-        output_files.append(filename)
-        print(f"  ✓ {os.path.basename(filename)}")
-        
-        # Plot 2: Number of Clusters Comparison
-        fig, ax = plt.subplots(figsize=(14, 8))
-        
-        for mode in ['SPATIAL', 'HAMMING', 'LEVENSHTEIN']:
-            key = f"{algo}_{mode}"
-            if key not in results or not results[key]['db_names']:
-                continue
-            
-            x_pos = np.arange(len(results[key]['db_names']))
-            y_data = np.array(results[key]['n_clusters'])
-            
-            label = {
-                'SPATIAL': 'Spatial only',
-                'HAMMING': 'Spatial + Hamming',
-                'LEVENSHTEIN': 'Spatial + Levenshtein'
-            }[mode]
-            
-            ax.plot(x_pos, y_data,
-                   color=colors[mode],
-                   marker=markers[mode],
-                   markersize=10,
-                   linewidth=2.5,
-                   linestyle=linestyles[mode],
-                   label=label,
-                   alpha=0.9)
-        
-        ax.set_xlabel('Sample Pair', fontsize=14, fontweight='bold')
-        ax.set_ylabel('Number of Clusters', fontsize=14, fontweight='bold')
-        ax.set_title(f'{algo} - Cluster Count: Impact of Sequence Distance Metric',
-                    fontsize=16, fontweight='bold')
-        
-        ax.set_xticks(range(len(db_names)))
-        ax.set_xticklabels(db_names, rotation=45, ha='right')
-        
-        ax.legend(fontsize=12, frameon=True, loc='best')
-
-        plt.tight_layout()
-        filename = os.path.join(output_dir, f"cluster_count_{algo.lower()}.png")
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
-        plt.close()
-        output_files.append(filename)
-        print(f"  ✓ {os.path.basename(filename)}")
-        
-        # Plot 3: Time Comparison (INCLUDING HAMMING!)
+        # Plot 1: Time Comparison
         fig, ax = plt.subplots(figsize=(14, 8))
         
         for mode in ['SPATIAL', 'HAMMING', 'LEVENSHTEIN']:
@@ -495,9 +392,9 @@ def plot_comparison(results, algorithms, output_dir='/mnt/user-data/outputs'):
             y_data = np.array(results[key]['times'])
             
             label = {
-                'SPATIAL': 'Spatial only',
-                'HAMMING': 'Spatial + Hamming',
-                'LEVENSHTEIN': 'Spatial + Levenshtein'
+                'SPATIAL': f'{algo} only',
+                'HAMMING': f'{algo} + Hamming',
+                'LEVENSHTEIN': f'{algo} + Levenshtein'
             }[mode]
             
             ax.plot(x_pos, y_data,
@@ -511,7 +408,7 @@ def plot_comparison(results, algorithms, output_dir='/mnt/user-data/outputs'):
         
         ax.set_xlabel('Sample Pair', fontsize=14, fontweight='bold')
         ax.set_ylabel('Time (seconds)', fontsize=14, fontweight='bold')
-        ax.set_title(f'{algo} - Processing Time: All Three Methods',
+        ax.set_title(f'{algo} - Processing Time Comparison',
                     fontsize=16, fontweight='bold')
         ax.set_yscale('log')
         
@@ -519,22 +416,66 @@ def plot_comparison(results, algorithms, output_dir='/mnt/user-data/outputs'):
         ax.set_xticklabels(db_names, rotation=45, ha='right')
         
         ax.legend(fontsize=12, frameon=True, loc='best')
+
         
         plt.tight_layout()
-        filename = os.path.join(output_dir, f"processing_time_{algo.lower()}.png")
+        filename = f"time_{algo.lower()}.png"
         plt.savefig(filename, dpi=300, bbox_inches='tight')
         plt.close()
         output_files.append(filename)
-        print(f"  ✓ {os.path.basename(filename)}")
+        print(f"  ✓ {filename}")
+        
+        # Plot 2: Memory Comparison
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        for mode in ['SPATIAL', 'HAMMING', 'LEVENSHTEIN']:
+            key = f"{algo}_{mode}"
+            if key not in results or not results[key]['db_names']:
+                continue
+            
+            x_pos = np.arange(len(results[key]['db_names']))
+            y_data = np.array(results[key]['memory'])
+            
+            label = {
+                'SPATIAL': f'{algo} only',
+                'HAMMING': f'{algo} + Hamming',
+                'LEVENSHTEIN': f'{algo} + Levenshtein'
+            }[mode]
+            
+            ax.plot(x_pos, y_data,
+                   color=colors[mode],
+                   marker=markers[mode],
+                   markersize=10,
+                   linewidth=2.5,
+                   linestyle=linestyles[mode],
+                   label=label,
+                   alpha=0.9)
+        
+        ax.set_xlabel('Sample Pair', fontsize=14, fontweight='bold')
+        ax.set_ylabel('Memory (MB)', fontsize=14, fontweight='bold')
+        ax.set_title(f'{algo} - Memory Usage Comparison',
+                    fontsize=16, fontweight='bold')
+        
+        ax.set_xticks(range(len(db_names)))
+        ax.set_xticklabels(db_names, rotation=45, ha='right')
+        
+        ax.legend(fontsize=12, frameon=True, loc='best')
+
+        
+        plt.tight_layout()
+        filename = f"memory_{algo.lower()}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        output_files.append(filename)
+        print(f"  ✓ {filename}")
     
     return output_files
 
 
 def print_summary_table(results, algorithms):
     """Print detailed summary table."""
-    print(f"\n{'='*140}")
+
     print(f"{'THREE-WAY CLUSTERING COMPARISON: SPATIAL vs HAMMING vs LEVENSHTEIN':^140}")
-    print(f"{'='*140}\n")
     
     for algo in algorithms:
         print(f"\n{algo} RESULTS:")
@@ -570,9 +511,9 @@ def print_summary_table(results, algorithms):
             
             print()
         
-        # Print difference analysis
+        # Difference analysis
         print(f"\nDIFFERENCE ANALYSIS:")
-
+        print("-" * 140)
         
         for i, db_name in enumerate(db_names):
             spatial_key = f"{algo}_SPATIAL"
@@ -593,7 +534,7 @@ def print_summary_table(results, algorithms):
             print(f"  Hamming vs Levenshtein: {hamming_vs_lev:+4d} clusters")
             
             if hamming_clusters == lev_clusters:
-                print(f"      This suggests insertions may not have sequences, or threshold is too loose.")
+                print(f"  ⚠️  WARNING: Hamming and Levenshtein produced IDENTICAL results!")
             elif abs(hamming_vs_lev) > 0:
                 print(f"  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)")
             
@@ -601,8 +542,9 @@ def print_summary_table(results, algorithms):
 
 
 def analyze_sequence_differences(results, algorithms):
-    print(f"{'SEQUENCE DISTANCE ANALYSIS':^100}")
+    """Analyze sequence distance impact."""
 
+    print(f"{'SEQUENCE DISTANCE ANALYSIS':^100}")
     
     print("Expected behavior:")
     print("  • Hamming: Counts mismatches + length differences")
@@ -613,13 +555,13 @@ def analyze_sequence_differences(results, algorithms):
 
 
 def main():
-    print(f"\n{'='*100}")
+
     print(f"{'COMPREHENSIVE CLUSTERING COMPARISON':^100}")
     print(f"{'Spatial vs Hamming vs Levenshtein':^100}")
-    print(f"{'='*100}\n")
+ 
     
-
-    base_dir = "/proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/Degree_project/SVDB/Platinum_experiments"
+    # Database paths - matching bash script expectation
+    base_dir = "./Platinum_experiments"
     
     db_files = [
         os.path.join(base_dir, "NA12877_NA12878.db"),
@@ -647,24 +589,29 @@ def main():
     print("Modes: Spatial only, Hamming sequence, Levenshtein sequence")
     print("Threshold: 0.2 (20% difference allowed)\n")
     
-
+    # Run benchmarks
     print("\nRunning benchmarks...")
     results = run_comparison_benchmark(db_files, algorithms)
     
-
+    # Generate plots
     print("\nGenerating plots...")
     plot_files = plot_comparison(results, algorithms)
     
-
+    # Print summary
     print_summary_table(results, algorithms)
     
+    # Analyze differences
     analyze_sequence_differences(results, algorithms)
     
 
-    print(f"{' COMPARISON COMPLETE':^100}")
-    print(f"Generated {len(plot_files)} plots:")
-    for f in plot_files:
-        print(f"  • {os.path.basename(f)}")
+    print(f"{'✓ COMPARISON COMPLETE':^100}")
+    print(f"Generated {len(plot_files)} plots (3 algorithms × 2 metrics):")
+    print("\nTime plots:")
+    for f in [p for p in plot_files if 'time_' in p]:
+        print(f"  • {f}")
+    print("\nMemory plots:")
+    for f in [p for p in plot_files if 'memory_' in p]:
+        print(f"  • {f}")
     print()
 
 
