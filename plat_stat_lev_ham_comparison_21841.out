@@ -1,0 +1,258 @@
+Installing required Python packages...
+Looking in links: /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages
+Requirement already satisfied: numpy in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (1.20.3)
+Requirement already satisfied: matplotlib in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (3.4.2)
+Requirement already satisfied: psutil in /castor/project/home/dimam/.local/lib/python3.9/site-packages (7.1.3)
+Requirement already satisfied: pyparsing>=2.2.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.4.7)
+Requirement already satisfied: python-dateutil>=2.7 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (2.8.1)
+Requirement already satisfied: pillow>=6.2.0 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (8.2.0)
+Requirement already satisfied: kiwisolver>=1.0.1 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (1.3.1)
+Requirement already satisfied: cycler>=0.10 in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from matplotlib) (0.10.0)
+Requirement already satisfied: six in /sw/comp/python/3.9.5/rackham/lib/python3.9/site-packages (from cycler>=0.10->matplotlib) (1.16.0)
+✓ SVDB modules loaded
+  ✓ NA12877_NA12878.db
+  ✓ NA12877_NA12879.db
+  ✓ NA12879_NA12881.db
+                                COMPREHENSIVE CLUSTERING COMPARISON                                 
+                                 Spatial vs Hamming vs Levenshtein                                  
+Checking database files:
+  ✓ NA12877_NA12878.db
+  ✓ NA12877_NA12879.db
+  ✓ NA12879_NA12881.db
+
+Algorithms: DBSCAN, OPTICS, INTERVAL_TREE
+Modes: Spatial only, Hamming sequence, Levenshtein sequence
+Threshold: 0.2 (20% difference allowed)
+
+
+Running benchmarks...
+
+================================================================================
+Processing: NA12877_NA12878
+================================================================================
+  Loaded 2510 variants from Chr 1
+  SV types: {'DEL': 874, 'INS': 1630, 'INV': 6}
+
+DBSCAN:
+  Running Spatial only... ✓ (Clustered: 607/2510, Ratio: 24.18%, Clusters: 269)
+  Running Spatial + Hamming... ✓ (Clustered: 607/2510, Ratio: 24.18%, Clusters: 522)
+    └─ Hamming: 491 insertions, 324 comparisons, 166 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 607/2510, Ratio: 24.18%, Clusters: 459)
+    └─ Levenshtein: 491 insertions, 277 comparisons, 122 splits
+
+OPTICS:
+  Running Spatial only... ✓ (Clustered: 105/2510, Ratio: 4.18%, Clusters: 45)
+  Running Spatial + Hamming... ✓ (Clustered: 105/2510, Ratio: 4.18%, Clusters: 88)
+    └─ Hamming: 73 insertions, 41 comparisons, 30 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 105/2510, Ratio: 4.18%, Clusters: 80)
+    └─ Levenshtein: 73 insertions, 38 comparisons, 24 splits
+
+INTERVAL_TREE:
+  Running Spatial only... ✓ (Clustered: 2510/2510, Ratio: 100.00%, Clusters: 1380)
+  Running Spatial + Hamming... ✓ (Clustered: 2510/2510, Ratio: 100.00%, Clusters: 1684)
+    └─ Hamming: 1630 insertions, 982 comparisons, 150 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 2510/2510, Ratio: 100.00%, Clusters: 1594)
+    └─ Levenshtein: 1630 insertions, 858 comparisons, 113 splits
+
+================================================================================
+Processing: NA12877_NA12879
+================================================================================
+  Loaded 2545 variants from Chr 1
+  SV types: {'DEL': 875, 'INS': 1664, 'INV': 6}
+
+DBSCAN:
+  Running Spatial only... ✓ (Clustered: 621/2545, Ratio: 24.40%, Clusters: 277)
+  Running Spatial + Hamming... ✓ (Clustered: 621/2545, Ratio: 24.40%, Clusters: 532)
+    └─ Hamming: 509 insertions, 336 comparisons, 171 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 621/2545, Ratio: 24.40%, Clusters: 464)
+    └─ Levenshtein: 509 insertions, 289 comparisons, 123 splits
+
+OPTICS:
+  Running Spatial only... ✓ (Clustered: 91/2545, Ratio: 3.58%, Clusters: 39)
+  Running Spatial + Hamming... ✓ (Clustered: 91/2545, Ratio: 3.58%, Clusters: 78)
+    └─ Hamming: 68 insertions, 44 comparisons, 28 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 91/2545, Ratio: 3.58%, Clusters: 68)
+    └─ Levenshtein: 68 insertions, 42 comparisons, 22 splits
+
+INTERVAL_TREE:
+  Running Spatial only... ✓ (Clustered: 2545/2545, Ratio: 100.00%, Clusters: 1270)
+  Running Spatial + Hamming... ✓ (Clustered: 2545/2545, Ratio: 100.00%, Clusters: 1490)
+    └─ Hamming: 1664 insertions, 1040 comparisons, 122 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 2545/2545, Ratio: 100.00%, Clusters: 1429)
+    └─ Levenshtein: 1664 insertions, 948 comparisons, 91 splits
+
+================================================================================
+Processing: NA12879_NA12881
+================================================================================
+  Loaded 2548 variants from Chr 1
+  SV types: {'DEL': 882, 'INS': 1660, 'INV': 6}
+
+DBSCAN:
+  Running Spatial only... ✓ (Clustered: 630/2548, Ratio: 24.73%, Clusters: 282)
+  Running Spatial + Hamming... ✓ (Clustered: 630/2548, Ratio: 24.73%, Clusters: 543)
+    └─ Hamming: 517 insertions, 338 comparisons, 176 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 630/2548, Ratio: 24.73%, Clusters: 468)
+    └─ Levenshtein: 517 insertions, 287 comparisons, 124 splits
+
+OPTICS:
+  Running Spatial only... ✓ (Clustered: 120/2548, Ratio: 4.71%, Clusters: 50)
+  Running Spatial + Hamming... ✓ (Clustered: 120/2548, Ratio: 4.71%, Clusters: 102)
+    └─ Hamming: 86 insertions, 53 comparisons, 36 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 120/2548, Ratio: 4.71%, Clusters: 91)
+    └─ Levenshtein: 86 insertions, 51 comparisons, 27 splits
+
+INTERVAL_TREE:
+  Running Spatial only... ✓ (Clustered: 2548/2548, Ratio: 100.00%, Clusters: 1229)
+  Running Spatial + Hamming... ✓ (Clustered: 2548/2548, Ratio: 100.00%, Clusters: 1438)
+    └─ Hamming: 1660 insertions, 1072 comparisons, 116 splits
+  Running Spatial + Levenshtein... ✓ (Clustered: 2548/2548, Ratio: 100.00%, Clusters: 1378)
+    └─ Levenshtein: 1660 insertions, 971 comparisons, 86 splits
+
+Generating plots...
+  ✓ time_dbscan.png
+  ✓ memory_dbscan.png
+  ✓ time_optics.png
+  ✓ memory_optics.png
+  ✓ time_interval_tree.png
+  ✓ memory_interval_tree.png
+                                     THREE-WAY CLUSTERING COMPARISON: SPATIAL vs HAMMING vs LEVENSHTEIN                                     
+
+DBSCAN RESULTS:
+--------------------------------------------------------------------------------------------------------------------------------------------
+Database             Mode                 Total    Clustered  Unclustered  Ratio      Clusters   Time (s)   Insertions  
+--------------------------------------------------------------------------------------------------------------------------------------------
+NA12877_NA12878      Spatial only         2510     607        1903         24.18%      269        0.0501     N/A         
+                     + Hamming            2510     607        1903         24.18%      522        0.0539     491         
+                     + Levenshtein        2510     607        1903         24.18%      459        656.0439   491         
+
+NA12877_NA12879      Spatial only         2545     621        1924         24.40%      277        0.0168     N/A         
+                     + Hamming            2545     621        1924         24.40%      532        0.0545     509         
+                     + Levenshtein        2545     621        1924         24.40%      464        774.7880   509         
+
+NA12879_NA12881      Spatial only         2548     630        1918         24.73%      282        0.0172     N/A         
+                     + Hamming            2548     630        1918         24.73%      543        0.0575     517         
+                     + Levenshtein        2548     630        1918         24.73%      468        1009.4627  517         
+
+
+DIFFERENCE ANALYSIS:
+--------------------------------------------------------------------------------------------------------------------------------------------
+NA12877_NA12878     
+  Spatial → Hamming:     +253 clusters (522 total)
+  Spatial → Levenshtein: +190 clusters (459 total)
+  Hamming vs Levenshtein:  +63 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+NA12877_NA12879     
+  Spatial → Hamming:     +255 clusters (532 total)
+  Spatial → Levenshtein: +187 clusters (464 total)
+  Hamming vs Levenshtein:  +68 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+NA12879_NA12881     
+  Spatial → Hamming:     +261 clusters (543 total)
+  Spatial → Levenshtein: +186 clusters (468 total)
+  Hamming vs Levenshtein:  +75 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+
+OPTICS RESULTS:
+--------------------------------------------------------------------------------------------------------------------------------------------
+Database             Mode                 Total    Clustered  Unclustered  Ratio      Clusters   Time (s)   Insertions  
+--------------------------------------------------------------------------------------------------------------------------------------------
+NA12877_NA12878      Spatial only         2510     105        2405         4.18%      45         0.2714     N/A         
+                     + Hamming            2510     105        2405         4.18%      88         0.2595     73          
+                     + Levenshtein        2510     105        2405         4.18%      80         72.3112    73          
+
+NA12877_NA12879      Spatial only         2545     91         2454         3.58%      39         0.2602     N/A         
+                     + Hamming            2545     91         2454         3.58%      78         0.2636     68          
+                     + Levenshtein        2545     91         2454         3.58%      68         202.0891   68          
+
+NA12879_NA12881      Spatial only         2548     120        2428         4.71%      50         0.2624     N/A         
+                     + Hamming            2548     120        2428         4.71%      102        0.2672     86          
+                     + Levenshtein        2548     120        2428         4.71%      91         183.1525   86          
+
+
+DIFFERENCE ANALYSIS:
+--------------------------------------------------------------------------------------------------------------------------------------------
+NA12877_NA12878     
+  Spatial → Hamming:      +43 clusters (88 total)
+  Spatial → Levenshtein:  +35 clusters (80 total)
+  Hamming vs Levenshtein:   +8 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+NA12877_NA12879     
+  Spatial → Hamming:      +39 clusters (78 total)
+  Spatial → Levenshtein:  +29 clusters (68 total)
+  Hamming vs Levenshtein:  +10 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+NA12879_NA12881     
+  Spatial → Hamming:      +52 clusters (102 total)
+  Spatial → Levenshtein:  +41 clusters (91 total)
+  Hamming vs Levenshtein:  +11 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+
+INTERVAL_TREE RESULTS:
+--------------------------------------------------------------------------------------------------------------------------------------------
+Database             Mode                 Total    Clustered  Unclustered  Ratio      Clusters   Time (s)   Insertions  
+--------------------------------------------------------------------------------------------------------------------------------------------
+NA12877_NA12878      Spatial only         2510     2510       0            100.00%      1380       0.2850     N/A         
+                     + Hamming            2510     2510       0            100.00%      1684       0.3795     1630        
+                     + Levenshtein        2510     2510       0            100.00%      1594       1652.7993  1630        
+
+NA12877_NA12879      Spatial only         2545     2545       0            100.00%      1270       0.2650     N/A         
+                     + Hamming            2545     2545       0            100.00%      1490       0.3618     1664        
+                     + Levenshtein        2545     2545       0            100.00%      1429       2229.8416  1664        
+
+NA12879_NA12881      Spatial only         2548     2548       0            100.00%      1229       0.2674     N/A         
+                     + Hamming            2548     2548       0            100.00%      1438       0.3724     1660        
+                     + Levenshtein        2548     2548       0            100.00%      1378       2802.8922  1660        
+
+
+DIFFERENCE ANALYSIS:
+--------------------------------------------------------------------------------------------------------------------------------------------
+NA12877_NA12878     
+  Spatial → Hamming:     +304 clusters (1684 total)
+  Spatial → Levenshtein: +214 clusters (1594 total)
+  Hamming vs Levenshtein:  +90 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+NA12877_NA12879     
+  Spatial → Hamming:     +220 clusters (1490 total)
+  Spatial → Levenshtein: +159 clusters (1429 total)
+  Hamming vs Levenshtein:  +61 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+NA12879_NA12881     
+  Spatial → Hamming:     +209 clusters (1438 total)
+  Spatial → Levenshtein: +149 clusters (1378 total)
+  Hamming vs Levenshtein:  +60 clusters
+  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)
+
+                                     SEQUENCE DISTANCE ANALYSIS                                     
+Expected behavior:
+  • Hamming: Counts mismatches + length differences
+  • Levenshtein: Counts minimum edits (insertions/deletions/substitutions)
+
+For insertions with variable lengths or internal indels:
+  • Levenshtein should be MORE ACCURATE
+  • May produce DIFFERENT cluster assignments
+
+                                       ✓ COMPARISON COMPLETE                                        
+Generated 6 plots (3 algorithms × 2 metrics):
+
+Time plots:
+  • time_dbscan.png
+  • time_optics.png
+  • time_interval_tree.png
+
+Memory plots:
+  • memory_dbscan.png
+  • memory_optics.png
+  • memory_interval_tree.png
+
+Generated files:
+  No plot files found
+
+Job completed: Sun Feb 15 23:26:11 CET 2026
