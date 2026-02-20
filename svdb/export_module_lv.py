@@ -110,12 +110,6 @@ def _levenshtein_distance(seq1, seq2):
 
 
 def apply_levenshtein_to_insertions(labels, variant_dict, max_edit=0.2):
-    """
-    Re-cluster insertions within spatial clusters using Levenshtein distance.
-    
-    This is the Levenshtein equivalent of apply_hamming_to_insertions.
-    Maintains same logic: spatial clusters first, then sequence-based re-clustering.
-    """
     if labels is None or variant_dict is None:
         return labels
     

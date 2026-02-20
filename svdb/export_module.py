@@ -95,10 +95,6 @@ def _hamming_distance(seq1, seq2):
 
 
 def apply_hamming_to_insertions(labels, variant_dict, max_hamming=0.2):
-    """
-    Apply Hamming distance re-clustering for insertions WITHIN spatial clusters.
-    Only processes insertions that were already spatially clustered.
-    """
     if labels is None or variant_dict is None:
         return labels
     
@@ -170,7 +166,6 @@ def apply_hamming_to_insertions(labels, variant_dict, max_hamming=0.2):
         new_labels[idx] = -1
     
     return new_labels
-
 
 def fetch_index_variant(db, index):
     A = 'SELECT posA, ci_A_lower, ci_A_upper, posB, ci_B_lower, ci_B_upper, sample, sequence FROM SVDB WHERE idx IN ({}) '.format(
