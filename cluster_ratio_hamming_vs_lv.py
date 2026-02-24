@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-Three-way comparison: Spatial vs Hamming vs Levenshtein
-Fixed for compatibility with SLURM bash script
-Saves plots to current working directory
-"""
+
 
 import sys
 import os
@@ -479,7 +475,7 @@ def print_summary_table(results, algorithms):
     
     for algo in algorithms:
         print(f"\n{algo} RESULTS:")
-        print("-" * 140)
+
         
         print(f"{'Database':<20} {'Mode':<20} {'Total':<8} {'Clustered':<10} "
               f"{'Unclustered':<12} {'Ratio':<10} {'Clusters':<10} {'Time (s)':<10} {'Insertions':<12}")
@@ -534,7 +530,7 @@ def print_summary_table(results, algorithms):
             print(f"  Hamming vs Levenshtein: {hamming_vs_lev:+4d} clusters")
             
             if hamming_clusters == lev_clusters:
-                print(f"  ⚠️  WARNING: Hamming and Levenshtein produced IDENTICAL results!")
+                print(f"   WARNING: Hamming and Levenshtein produced IDENTICAL results!")
             elif abs(hamming_vs_lev) > 0:
                 print(f"  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)")
             
