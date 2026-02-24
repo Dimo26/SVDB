@@ -142,30 +142,28 @@ class SVIntervalTree:
 def interval_tree_cluster(coordinates, max_distance=500):
 
     n = len(coordinates)
+
+    # FIX: Index only on posA (as a point interval) so the tree queries candidates
+    # near the START breakpoint only. posB proximity is then checked explicitly below.
+    # Previously, tree.add(posA, posB, ...) treated the entire SV span as an interval,
+    # causing large SVs to match anything within their genomic range — merging everything
+    # into one giant cluster.
     tree = IntervalTree()
-    for i, (posA, posB) in enumerate(coordinates):
-         tree.add(posA,posB, index=i)
+    for i, (posA, _) in enumerate(coordinates):
+        tree.add(posA, posA, index=i)  # point interval on posA only
     tree.build()
+
     adjacency = {i: set() for i in range(n)}
-    # build adjacency list by querying overlaps
+
     for i, (posA, posB) in enumerate(coordinates):
-        overlaps = tree.query(posA - max_distance, posB + max_distance)
-        for interval in overlaps:
+        # Find candidates whose posA is within max_distance of this posA
+        candidates = tree.query(posA - max_distance, posA + max_distance)
+        for interval in candidates:
             j = interval.index
             if i == j:
                 continue
-            
-            # Check if intervals actually overlap
-            overlap_start = max(coordinates[i][0], coordinates[j][0])
-            overlap_end = min(coordinates[i][1], coordinates[j][1])
-            intervals_overlap = overlap_end >= overlap_start
-            
-            # Check if they're within max_distance (for non-overlapping nearby SVs)
-            within_distance = (abs(coordinates[i][0] - coordinates[j][0]) <= max_distance and
-                              abs(coordinates[i][1] - coordinates[j][1]) <= max_distance)
-            
-            # Connect if they overlap OR are within distance
-            if intervals_overlap or within_distance:
+            # Also require posB to be within max_distance — both breakpoints must agree
+            if abs(coordinates[j][1] - posB) <= max_distance:
                 adjacency[i].add(j)
                 adjacency[j].add(i)
 
@@ -176,7 +174,6 @@ def interval_tree_cluster(coordinates, max_distance=500):
     # Iterative DFS using stack to avoid recursion depth issues
     for i in range(n):
         if i not in visited:
-            # Use stack instead of recursion
             stack = [i]
             visited.add(i)
             labels[i] = current_cluster
