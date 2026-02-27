@@ -6,7 +6,7 @@
 #SBATCH -t 36:00:00
 #SBATCH -J svdb_scalability
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=dima.mohsin.1749@student.uu.se
+#SBATCH --mail-user= 
 #SBATCH -o scalability_%j.out
 #SBATCH -e scalability_%j.err
 
@@ -16,7 +16,7 @@ module load scikit-learn/1.4.2
 cd /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/Degree_project/SVDB
 
 python3 -m pip install --user --no-index \
-    --find-links=/proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages \
+    --find-links=your_dir \
     numpy psutil matplotlib 2>&1 | grep -v "Requirement already satisfied" > /dev/null
 
 export PYTHONPATH="${PWD}:${PYTHONPATH}"

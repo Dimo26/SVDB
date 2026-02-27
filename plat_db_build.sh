@@ -6,7 +6,7 @@
 #SBATCH -t 8:00:00
 #SBATCH -J build_new_plat_db
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=dima.mohsin.1749@student.uu.se
+#SBATCH --mail-user=
 #SBATCH -o plat_db_%j.out
 #SBATCH -e plat_db_%j.err
 
@@ -17,11 +17,11 @@ module load bioinfo-tools
 # Install required packages
 echo "Installing required Python packages..."
 python3 -m pip install --user --no-index \
-    --find-links=/proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages \
+    --find-links=your_dir \
     numpy
 
-VCF_DIR="/proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/Degree_project/SVDB/platinum_samples/platinum_samples_reloaded"
-DB_DIR="/proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/Degree_project/SVDB/Platinum_experiments"
+VCF_DIR=
+DB_DIR=
 
 echo ""
 echo "--- Building G2 parents SVDB ---"
