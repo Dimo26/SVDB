@@ -6,9 +6,15 @@
 #SBATCH -t 36:00:00
 #SBATCH -J svdb_scalability
 #SBATCH --mail-type=ALL
+<<<<<<< Updated upstream
 #SBATCH --mail-user= 
 #SBATCH -o scalability_%j.out
 #SBATCH -e scalability_%j.err
+=======
+#SBATCH --mail-user=dima.mohsin.1749@student.uu.se
+#SBATCH -o scalability_1000g_plots_%j.out
+#SBATCH -e scalability_1000g_plots_%j.err
+>>>>>>> Stashed changes
 
 module load python/3.9.5
 module load scikit-learn/1.4.2

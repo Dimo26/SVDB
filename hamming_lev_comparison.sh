@@ -1,6 +1,3 @@
-Spatial lev comparison · SH
-Copy
-
 #!/bin/bash -l
 #SBATCH -A sens2023005
 #SBATCH -M bianca
@@ -9,9 +6,15 @@ Copy
 #SBATCH -t 26:00:00              
 #SBATCH -J spatial_lev_comparison
 #SBATCH --mail-type=ALL
+<<<<<<< Updated upstream
 #SBATCH --mail-user=
 #SBATCH -o spatial_lev_comparison_%j.out
 #SBATCH -e spatial_lev_comparison_%j.err
+=======
+#SBATCH --mail-user=dima.mohsin.1749@student.uu.se
+#SBATCH -o plat_stat_lev_ham_comparison_%j.out
+#SBATCH -e plat_stat_lev_ham_comparison_%j.err
+>>>>>>> Stashed changes
 
 # Load required modules
 module load python/3.9.5
@@ -63,7 +66,7 @@ fi
 
 
 # Run comparison
-python3 cluster_ratio_spatial_vs_lev.py
+python3 cluster_ratio_hamming_vs_lv.py
 
 # Check exit status
 if [ $? -eq 0 ]; then
@@ -76,4 +79,9 @@ else
     exit 1
 fi
 
+<<<<<<< Updated upstream
 echo "Job completed: $(date)"
+=======
+echo ""
+echo "Job completed: $(date)"
+>>>>>>> Stashed changes
