@@ -202,7 +202,6 @@ def main():
     
     results = run_benchmark(sample_dbs, algorithms)
     
-    # print cluster/variant counts (simple textual stats)
     print_summary(results, algorithms)
     
     plot_files = plot_scalability_curves(results, algorithms)

@@ -9,7 +9,7 @@ Copy
 #SBATCH -t 26:00:00              
 #SBATCH -J spatial_lev_comparison
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=dima.mohsin.1749@student.uu.se
+#SBATCH --mail-user=
 #SBATCH -o spatial_lev_comparison_%j.out
 #SBATCH -e spatial_lev_comparison_%j.err
 
@@ -17,12 +17,12 @@ Copy
 module load python/3.9.5
 
 # Change to SVDB directory
-cd /proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/Degree_project/SVDB
+cd 
 
 # Install required packages
 echo "Installing required Python packages..."
 python3 -m pip install --user --no-index \
-    --find-links=/proj/sens2023005/nobackup/wharf/dimam/dimam-sens2023005/python_packages \
+    --find-links=your_dir \
     numpy matplotlib psutil
 
 # Set PYTHONPATH
@@ -47,9 +47,9 @@ REQUIRED_DBS=(
 MISSING=0
 for db in "${REQUIRED_DBS[@]}"; do
     if [ -f "${DB_DIR}/${db}" ]; then
-        echo "  ✓ ${db}"
+        echo "   ${db}"
     else
-        echo "  ✗ ${db} - NOT FOUND"
+        echo "   ${db} - NOT FOUND"
         MISSING=$((MISSING + 1))
     fi
 done
@@ -71,10 +71,9 @@ if [ $? -eq 0 ]; then
     echo "Generated files:"
     ls -lh clustering_ratio_*.png processing_time_*.png 2>/dev/null || echo "  No plot files found"
 else
-    echo ""
+
     echo "✗ Error: Comparison failed"
     exit 1
 fi
 
-echo ""
 echo "Job completed: $(date)"
