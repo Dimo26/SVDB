@@ -1,0 +1,32 @@
+Found 5 databases
+svdb_1000samples.db
+svdb_100samples.db
+svdb_10samples.db
+svdb_500samples.db
+svdb_50samples.db
+
+Benchmark summary:
+  DBSCAN:
+    Size 10: Variants=7041, Clusters=1
+    Size 50: Variants=34376, Clusters=3
+    Size 100: Variants=67364, Clusters=3
+    Size 500: Variants=337653, Clusters=6
+    Size 1000: Variants=673964, Clusters=12
+    Total variants (sum across DBs)=1120398, Total clusters=25
+  OPTICS:
+    Size 10: Variants=7041, Clusters=347
+    Size 50: Variants=34376, Clusters=3405
+    Size 100: Variants=67364, Clusters=7254
+    Size 500: Variants=337653, Clusters=31474
+    Size 1000: Variants=673964, Clusters=53652
+    Total variants (sum across DBs)=1120398, Total clusters=96132
+  INTERVAL_TREE:
+    Size 10: Variants=7041, Clusters=3537
+    Size 50: Variants=34376, Clusters=8118
+    Size 100: Variants=67364, Clusters=11091
+    Size 500: Variants=337653, Clusters=23019
+    Size 1000: Variants=673964, Clusters=30206
+    Total variants (sum across DBs)=1120398, Total clusters=75971
+Complete
+scalability_memory.png
+scalability_time.png
