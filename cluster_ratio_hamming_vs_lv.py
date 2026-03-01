@@ -191,7 +191,8 @@ def get_clustering_statistics(labels):
             'clustered': 0,
             'unclustered': 0,
             'ratio': 0.0,
-            'n_clusters': 0
+            'n_clusters': 0,
+            'cluster_size_distribution': {}
         }
     
     labels = np.array(labels)
@@ -202,13 +203,20 @@ def get_clustering_statistics(labels):
     
     unique = set(labels.tolist())
     n_clusters = len(unique) - (1 if -1 in unique else 0)
+    cluster_size_distribution = {}
+    for label in unique:
+        if label == -1:
+            continue
+        cluster_size_distribution[label] = int(np.sum(labels == label))
     
+
     return {
         'total': total,
         'clustered': clustered,
         'unclustered': unclustered,
         'ratio': ratio,
-        'n_clusters': n_clusters
+        'n_clusters': n_clusters,
+        'cluster_size_distribution': cluster_size_distribution
     }
 
 
@@ -255,13 +263,22 @@ def benchmark_algorithm(coordinates, variants, algorithm, mode='spatial'):
     memory_mb = max(0.001, (mem_after - mem_before) / 1024 / 1024)
     
     clustering_stats = get_clustering_statistics(labels)
+    from collections import defaultdict
+    cluster_type_breakdown = defaultdict(lambda: defaultdict(int))
+    if labels is not None:
+        for idx, lbl in enumerate(labels):
+            if lbl == -1:
+                continue
+            sv_type = variants[idx]['type']
+            cluster_type_breakdown[lbl][sv_type] += 1
     
     return {
         'time': elapsed_time,
         'memory': memory_mb,
         'labels': labels,
         'split_info': split_info,
-        **clustering_stats
+        **clustering_stats,
+        'cluster_type_breakdown': dict(cluster_type_breakdown)
     }
 
 
@@ -290,7 +307,9 @@ def run_comparison_benchmark(db_files, algorithms):
                 'cluster_ratio': [],
                 'n_clusters': [],
                 'sv_stats': [],
-                'split_info': []
+                'split_info': [],
+                'cluster_type_breakdowns': [],
+                'cluster_size_distributions': []
             }
     
     for db_file in db_files:
@@ -336,6 +355,10 @@ def run_comparison_benchmark(db_files, algorithms):
                 results[key]['n_clusters'].append(result['n_clusters'])
                 results[key]['sv_stats'].append(sv_stats)
                 results[key]['split_info'].append(result.get('split_info', {}))
+                results[key]['cluster_type_breakdowns'].append(result.get('cluster_type_breakdown', {}))
+                results[key]['cluster_size_distributions'].append(
+                    result.get('cluster_size_distribution', {})
+                )
                 
                 print(f"✓ (Clustered: {result['clustered']}/{result['total']}, "
                       f"Ratio: {result['ratio']:.2%}, Clusters: {result['n_clusters']})")
@@ -503,6 +526,7 @@ def print_summary_table(results, algorithms):
                       f"{results[key]['cluster_ratio'][i]:.2%}{'':<5} "
                       f"{results[key]['n_clusters'][i]:<10} "
                       f"{results[key]['times'][i]:<10.4f} "
+
                       f"{ins_info:<12}")
             
             print()
@@ -535,6 +559,25 @@ def print_summary_table(results, algorithms):
                 print(f"  ✓ Hamming and Levenshtein produce DIFFERENT results (as expected)")
             
             print()
+            for mode in ['SPATIAL', 'HAMMING', 'LEVENSHTEIN']:
+                key = f"{algo}_{mode}"
+                cluster_type_breakdown = results[key]['cluster_type_breakdowns'][i]
+                dist = results[key]['cluster_size_distributions'][i]
+                sizes = list(dist.values())
+                if not sizes:
+                    continue
+                singletons   = sum(1 for s in sizes if s == 1)
+                small        = sum(1 for s in sizes if 2 <= s <= 5)
+                medium       = sum(1 for s in sizes if 6 <= s <= 10)
+                large        = sum(1 for s in sizes if s > 10)
+                print(f"  [{mode}] Cluster size breakdown:")
+                print(f"    Singletons (1 seq):   {singletons}")
+                print(f"    Small (2-5 seq):       {small}")
+                print(f"    Medium (6-10 seq):     {medium}")
+                print(f"    Large (>10 seq):       {large}")
+                print(f"    Avg sequences/cluster: {sum(sizes)/len(sizes):.2f}")
+                print(f"    Max sequences/cluster: {max(sizes)}")
+            
 
 
 def analyze_sequence_differences(results, algorithms):
