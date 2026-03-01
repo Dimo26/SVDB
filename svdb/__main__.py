@@ -168,18 +168,12 @@ def main():
                       help="Use Hamming distance for insertion sequence comparison (applied AFTER spatial clustering)")
         parser.add_argument('--max_hamming', type=float, default=0.2,
                      help="Maximum normalized Hamming distance for insertions (default=0.2)")
-        parser.add_argument('--distance_metric', type=str, default="euclidean", choices=['euclidean','weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
-        parser.add_argument('--benchmark', action = 'store_true', help= 'Run algorithm benchmark before export')
-        parser.add_argument('--prefix', type=str, default="SVDB",
-                            help="the prefix of the output file, default = same as input")
+        parser.add_argument('--distance_metric', type=str, default="euclidean", chparseroices=['euclidean','weighted'], help='Distance metric to use for comparing SVs where default is euclidean')
         parser.add_argument('--memory', help="load the database into memory: increases the memory requirements, but lowers the time consumption", required=False, action="store_true")
         args = parser.parse_args()
-        parser.add_argument('--use Levenshtein', action='store_true', help="Use Levenshtein distance for insertion sequence comparison (applied AFTER spatial clustering)")
+        parser.add_argument('--use_levenshtein', action='store_true', help="Use Levenshtein distance for insertion sequence comparison (applied AFTER spatial clustering)")
         parser.add_argument('--max_levenshtein', type=float, default=0.2, help="Maximum normalized Levenshtein distance for insertions (default=0.2)")
 
-        # merging will be impossible
-        if args.benchmark:
-            print('Running algorithm benchmark')
 
         if args.no_merge:
             args.overlap = float("inf")
