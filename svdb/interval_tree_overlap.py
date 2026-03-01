@@ -49,7 +49,7 @@ class IntervalNode:
     
     def query(self, start, end):
         results = []
-        # leaf node: center is None => scan stored intervals_by_start with early stop
+        # leaf node: center is None  scan stored intervals_by_start with early stop
         if self.center is None:
             for interval in self.intervals_by_start:
                 if interval.start > end:
@@ -94,7 +94,7 @@ class IntervalTree:
 
     def query(self, start, end):
         if self.root is None:
-             return []  # Return empty list instead of raising error
+             return []  
         return self.root.query(start,end)
 
     
@@ -142,12 +142,6 @@ class SVIntervalTree:
 def interval_tree_cluster(coordinates, max_distance=500):
 
     n = len(coordinates)
-
-    # FIX: Index only on posA (as a point interval) so the tree queries candidates
-    # near the START breakpoint only. posB proximity is then checked explicitly below.
-    # Previously, tree.add(posA, posB, ...) treated the entire SV span as an interval,
-    # causing large SVs to match anything within their genomic range — merging everything
-    # into one giant cluster.
     tree = IntervalTree()
     for i, (posA, _) in enumerate(coordinates):
         tree.add(posA, posA, index=i)  # point interval on posA only
@@ -156,13 +150,11 @@ def interval_tree_cluster(coordinates, max_distance=500):
     adjacency = {i: set() for i in range(n)}
 
     for i, (posA, posB) in enumerate(coordinates):
-        # Find candidates whose posA is within max_distance of this posA
         candidates = tree.query(posA - max_distance, posA + max_distance)
         for interval in candidates:
             j = interval.index
             if i == j:
                 continue
-            # Also require posB to be within max_distance — both breakpoints must agree
             if abs(coordinates[j][1] - posB) <= max_distance:
                 adjacency[i].add(j)
                 adjacency[j].add(i)

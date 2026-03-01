@@ -70,19 +70,7 @@ def weighted_reciprocal_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpo
 
 
 def levenshtein_distance(seq1, seq2):
-    """
-    Calculate Levenshtein (edit) distance between two sequences.
-    Handles insertions, deletions, and substitutions.
-    
-    Args:
-        seq1: First DNA sequence
-        seq2: Second DNA sequence
-        
-    Returns:
-        tuple: (raw_distance, normalized_distance)
-            raw_distance: Minimum number of edits needed
-            normalized_distance: Normalized to [0,1] range
-    """
+
     if seq1 is None or seq2 is None or len(seq1) == 0 or len(seq2) == 0:
         return (float('inf'), 1.0)
     
@@ -121,19 +109,6 @@ def levenshtein_distance(seq1, seq2):
 
 
 def compare_insertion_sequences(seq_query, seq_db, max_edit_distance=0.2):
-    """
-    Compare two insertion sequences using Levenshtein distance.
-    
-    Args:
-        seq_query: Query insertion sequence
-        seq_db: Database insertion sequence  
-        max_edit_distance: Maximum normalized edit distance threshold (0-1)
-        
-    Returns:
-        tuple: (similarity_score, is_match)
-            similarity_score: 1 - normalized_distance (higher = more similar)
-            is_match: True if sequences are similar enough
-    """
     if seq_query is None or seq_db is None or len(seq_query) == 0 or len(seq_db) == 0:
         return (None, False)
     
@@ -148,20 +123,7 @@ def compare_insertion_sequences(seq_query, seq_db, max_edit_distance=0.2):
 def insertion_overlap_with_sequence(chrApos_query, chrBpos_query, seq_query, 
                                    chrApos_db, chrBpos_db, seq_db, 
                                    distance, max_edit=0.2):
-    """
-    Check if two insertions overlap using both position and sequence (with Levenshtein).
-    
-    Args:
-        chrApos_query, chrBpos_query: Query insertion position
-        seq_query: Query insertion sequence
-        chrApos_db, chrBpos_db: Database insertion position
-        seq_db: Database insertion sequence
-        distance: Max position distance
-        max_edit: Max Levenshtein distance threshold
-        
-    Returns:
-        tuple: (similarity_score, is_match)
-    """
+
     pos_dist, pos_match = precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance)
     if not pos_match:
         return (None, False)
