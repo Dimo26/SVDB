@@ -71,9 +71,6 @@ def main():
                             help="path to a SV database of the following format chrA-posA-chrB-posB-type-count-frequency, or a or a comma separated list of dbs")
         parser.add_argument('--in_occ', type=str,
                             help="The allele count tag, if used, this tag must be present in the INFO column of the input DB(usually set to AC or OCC), required if multiple databases are queried. Use default (as shown in the example in README) if you'd like to use default tag for a specific database")
-        # BAM query support commented out - BCF support via pysam instead
-        # parser.add_argument('--query_bam', type=str, 
-        #             help="a BAM file used to query the db (alternative to --query_vcf)")
         parser.add_argument('--in_frq', type=str,
                             help="The frequency count tag, if used, this tag must be present in the INFO column of the input DB(usually set to AF or FRQ), required if multiple databases are queried. Use default (as shown in the example in README) if you'd like to use default tag for a specific database")
         parser.add_argument('--out_occ', type=str, default="OCC",
@@ -128,11 +125,6 @@ def main():
             '--folder', type=str, help="create a db using all the vcf and bcf files in the folders")  # bam removed
         parser.add_argument('--prefix', type=str, default="SVDB",
                             help="the prefix of the output file, default = SVDB")
-        # BAM-specific arguments commented out
-        # parser.add_argument('--min_sv_size', type=int, default=50,
-        #                     help="minimum SV size to extract from bam to files (default = 50)")
-        # parser.add_argument('--min_mapq', type=int, default=20,
-        #                     help="minimum mapping quality for bam files processing (default = 20)")
         args = parser.parse_args()
         args.version = version
         if (args.files and args.folder):
