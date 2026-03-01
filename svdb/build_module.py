@@ -6,7 +6,7 @@ import os
 
 from . import database
 from . import readVCF
-# from . import readBAM  # BAM integration commented out - BCF support via pysam instead
+
 
 
 def populate_db(args):
@@ -27,7 +27,7 @@ def populate_db(args):
 
     # Populate the tables
     for input_file in args.files:
-        sample_name = input_file.split("/")[-1].split(".vcf")[0].split(".bcf")[0]  # .split(".bam")[0]
+        sample_name = input_file.split("/")[-1].split(".vcf")[0].split(".bcf")[0]  
         sample_name = sample_name.replace(".", "_")
         sample_IDs.append(sample_name)
         
@@ -42,18 +42,7 @@ def populate_db(args):
 
         var = []
         
-        # BAM processing commented out - BCF support implemented instead
-        # if input_file.endswith('.bam'):
-        #     print(f'Processing BAM file: {input_file}')
-        #     variants = readBAM.read_bam_file(input_file, sample_name, 
-        #                                      min_sv_size=getattr(args, "min_sv_size", 50),
-        #                                      min_mapq=getattr(args, "min_mapq", 20))
-        #     
-        #     for chrA, posA, chrB, posB, event_type, INFO, FORMAT, _ in variants:
-        #         # ... BAM processing code ...
-        
         if input_file.endswith('.bcf'):
-            # Use pysam to read BCF files
             import pysam
             print(f'Processing BCF file: {input_file}')
             
@@ -212,7 +201,7 @@ def populate_db(args):
                             sample_index += 1
         
         else:
-            print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bcf are supported.")  # .bam removed
+            print(f"Error, the file format of {input_file} is not supported. Only .vcf, .vcf.gz and .bcf are supported.")  
             continue
 
         if var:
@@ -230,5 +219,5 @@ def main(args):
     if not args.files and hasattr(args, 'folder') and args.folder:
         args.files = glob.glob(os.path.join(args.folder, "*.vcf")) + \
                      glob.glob(os.path.join(args.folder, "*.vcf.gz")) + \
-                     glob.glob(os.path.join(args.folder, "*.bcf"))  # + glob.glob(os.path.join(args.folder, "*.bam"))
+                     glob.glob(os.path.join(args.folder, "*.bcf"))  
     populate_db(args)
