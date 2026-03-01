@@ -6,16 +6,9 @@
 #SBATCH -t 26:00:00              
 #SBATCH -J spatial_lev_comparison
 #SBATCH --mail-type=ALL
-<<<<<<< Updated upstream
 #SBATCH --mail-user=
-#SBATCH -o spatial_lev_comparison_%j.out
-#SBATCH -e spatial_lev_comparison_%j.err
-=======
-#SBATCH --mail-user=dima.mohsin.1749@student.uu.se
 #SBATCH -o plat_stat_lev_ham_comparison_%j.out
 #SBATCH -e plat_stat_lev_ham_comparison_%j.err
->>>>>>> Stashed changes
-
 # Load required modules
 module load python/3.9.5
 
@@ -25,7 +18,7 @@ cd
 # Install required packages
 echo "Installing required Python packages..."
 python3 -m pip install --user --no-index \
-    --find-links=your_dir \
+    --find-links= \
     numpy matplotlib psutil
 
 # Set PYTHONPATH
@@ -57,13 +50,6 @@ for db in "${REQUIRED_DBS[@]}"; do
     fi
 done
 
-if [ $MISSING -gt 0 ]; then
-    echo ""
-    echo "✗ Error: $MISSING required database file(s) not found in ${DB_DIR}"
-    exit 1
-fi
-
-
 
 # Run comparison
 python3 cluster_ratio_hamming_vs_lv.py
@@ -73,15 +59,5 @@ if [ $? -eq 0 ]; then
 
     echo "Generated files:"
     ls -lh clustering_ratio_*.png processing_time_*.png 2>/dev/null || echo "  No plot files found"
-else
-
-    echo "✗ Error: Comparison failed"
-    exit 1
 fi
 
-<<<<<<< Updated upstream
-echo "Job completed: $(date)"
-=======
-echo ""
-echo "Job completed: $(date)"
->>>>>>> Stashed changes
